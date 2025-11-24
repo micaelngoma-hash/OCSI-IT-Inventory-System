@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Products</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f4f6fb;}
+  header{background:#0f172a;color:white;padding:14px;}
+  main{max-width:1000px;margin:0 auto;padding:18px;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  input{padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
+  table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
+  th,td{padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:.9rem;}
+  th{background:#f1f5f9;}
+</style>
+</head>
+<body>
+<header><h2>Software Products</h2></header>
+<main>
+  <div class="row">
+    <input id="search" placeholder="Search software name, publisher..." />
+    <button id="refreshBtn">Refresh</button>
+  </div>
+  <table>
+    <thead><tr><th>Name</th><th>Version</th><th>Publisher</th><th>Category</th><th>Status</th></tr></thead>
+    <tbody id="body"></tbody>
+  </table>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+
+  const search = document.getElementById("search");
+  const body = document.getElementById("body");
+  const refreshBtn = document.getElementById("refreshBtn");
+
+  async function load(){
+    const q = (search.value||"").toLowerCase();
+    body.innerHTML = "";
+    const snap = await getDocs(collection(db,"software_product"));
+    snap.forEach(ds=>{
+      const s=ds.data();
+      const text=(s.softwareName+" "+s.publisher+" "+s.version).toLowerCase();
+      if(q && !text.includes(q)) return;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${s.softwareName||ds.id}</td>
+        <td>${s.version||"-"}</td>
+        <td>${s.publisher||"-"}</td>
+        <td>${s.softwareCategory||"-"}</td>
+        <td>${s.lifecycleStatus||"Active"}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  search.addEventListener("input", load);
+  refreshBtn.addEventListener("click", load);
+  load();
+</script>
+</body>
+</html>
