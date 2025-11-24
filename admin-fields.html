@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Fields</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f6f8fc;}
+header{background:#0f172a;color:white;padding:14px;}
+main{max-width:900px;margin:0 auto;padding:18px;}
+.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
+select,input{padding:8px;border:1px solid #cbd5e1;border-radius:7px;width:100%;}
+button{background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;margin-top:10px;}
+</style>
+</head>
+<body>
+<header><h2>Admin Fields</h2></header>
+<main>
+  <div class="box">
+    <label>Category</label>
+    <select id="catSel"></select>
+
+    <label style="margin-top:8px;">Field Name</label>
+    <input id="fname" placeholder="e.g., Switch Port" />
+
+    <label style="margin-top:8px;">Field Key</label>
+    <input id="fkey" placeholder="e.g., switchPort" />
+
+    <label style="margin-top:8px;">Type</label>
+    <select id="ftype">
+      <option value="text">Text</option>
+      <option value="number">Number</option>
+      <option value="date">Date</option>
+      <option value="boolean">Boolean</option>
+    </select>
+
+    <button id="addFieldBtn">Add Field</button>
+    <div id="msg"></div>
+  </div>
+
+  <div class="box">
+    <h3>Fields in Category</h3>
+    <ul id="fieldsList"></ul>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { 
+    getFirestore, collection, getDocs, doc, getDoc, updateDoc, arrayUnion 
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const db=getFirestore(app);
+
+  const catSel=document.getElementById("catSel");
+  const fname=document.getElementById("fname");
+  const fkey=document.getElementById("fkey");
+  const ftype=document.getElementById("ftype");
+  const msg=document.getElementById("msg");
+  const fieldsList=document.getElementById("fieldsList");
+  const addFieldBtn=document.getElementById("addFieldBtn");
+
+  async function loadCats(){
+    catSel.innerHTML="";
+    const snap=await getDocs(collection(db,"categories"));
+    snap.forEach(ds=>{
+      const o=document.createElement("option");
+      o.value=ds.id; o.textContent=ds.data().name||ds.id;
+      catSel.appendChild(o);
+    });
+    loadFields();
+  }
+
+  async function loadFields(){
+    fieldsList.innerHTML="";
+    const id=catSel.value;
+    const snap=await getDoc(doc(db,"categories",id));
+    if(!snap.exists()) return;
+
+    const data=snap.data();
+    const fields=(data.defaultFields||[]).concat(data.extraFields||[]);
+    fields.forEach(f=>{
+      const li=document.createElement("li");
+      li.textContent=`${f.name} (${f.key}) [${f.type}]`;
+      fieldsList.appendChild(li);
+    });
+  }
+
+  async function addField(){
+    msg.textContent="";
+    const id=catSel.value;
+    const field={name:fname.value.trim(), key:fkey.value.trim(), type:ftype.value};
+    if(!field.name||!field.key){msg.textContent="name and key required";return;}
+
+    await updateDoc(doc(db,"categories",id),{
+      extraFields: arrayUnion(field)
+    });
+
+    msg.textContent="Field added.";
+    fname.value=""; fkey.value="";
+    loadFields();
+  }
+
+  catSel.addEventListener("change",loadFields);
+  addFieldBtn.addEventListener("click",addField);
+
+  loadCats();
+</script>
+</body>
+</html>
