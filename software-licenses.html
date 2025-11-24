@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Licenses</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f4f6fb;}
+  header{background:#0f172a;color:white;padding:14px;}
+  main{max-width:1000px;margin:0 auto;padding:18px;}
+  table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
+  th,td{padding:8px 10px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:.9rem;}
+  th{background:#f1f5f9;}
+</style>
+</head>
+<body>
+<header><h2>Software Licenses</h2></header>
+<main>
+  <table>
+    <thead><tr><th>Software</th><th>Vendor</th><th>Seats</th><th>Expiry</th></tr></thead>
+    <tbody id="body"></tbody>
+  </table>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+
+  const body = document.getElementById("body");
+
+  function fmtDate(x){
+    const d = x?.toDate?.();
+    return d ? d.toISOString().slice(0,10) : "-";
+  }
+
+  async function load(){
+    body.innerHTML="";
+    const snap = await getDocs(collection(db,"software_license"));
+    snap.forEach(ds=>{
+      const l=ds.data();
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td><a href="software-license.html?id=${ds.id}">${l.softwareName||ds.id}</a></td>
+        <td>${l.vendor||"-"}</td>
+        <td>${l.assignedSeats||0} / ${l.totalSeats||0}</td>
+        <td>${fmtDate(l.expiryDate)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+  load();
+</script>
+</body>
+</html>
