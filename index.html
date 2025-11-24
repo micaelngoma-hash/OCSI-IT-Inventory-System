@@ -1,77 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>OCSI IT Inventory System</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <style>
-    body{margin:0;font-family:system-ui;background:#0b1020;color:#e5e7eb;}
-    header{padding:22px 26px;border-bottom:1px solid #1f2a44;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
-    h1{margin:0;font-size:1.4rem;}
-    main{max-width:1050px;margin:0 auto;padding:24px;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
-    .card{background:#111a33;border:1px solid #223257;border-radius:12px;padding:16px;}
-    .card h3{margin:0 0 6px;font-size:1rem;}
-    .card p{margin:0 0 10px;color:#b8c1d9;font-size:.9rem;}
-    a.btn{display:inline-block;background:#1a73e8;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
-    .muted{color:#9aa7c7;font-size:.85rem;margin-top:10px;}
-    footer{padding:16px;text-align:center;color:#9aa7c7;font-size:.8rem;}
-  </style>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory • Dashboard</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--card:#111a33;--line:#223257;--muted:#b8c1d9;--brand:#1a73e8;
+    --good:#16a34a;--warn:#f59e0b;--bad:#ef4444;
+  }
+  body{margin:0;font-family:system-ui;background:#f5f7fb;color:#0f172a;}
+  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;z-index:5;}
+  .brand{font-weight:700;letter-spacing:.3px;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;border-right:1px solid #111827;}
+  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .content{padding:18px;max-width:1200px;margin:0 auto;width:100%;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;}
+  .card{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;}
+  .card h3{margin:0 0 6px;font-size:1rem;}
+  .muted{color:#64748b;font-size:.9rem;}
+  .btn{display:inline-block;background:var(--brand);color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
+  .stat{font-size:1.8rem;font-weight:800;}
+  .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;}
+</style>
 </head>
 <body>
 
-<header>
-  <div>
-    <h1>OCSI IT Inventory & Asset Management System</h1>
-    <div class="muted">Hardware • Network • Phones • MPC • Ports/IPs • Software & Licensing</div>
-  </div>
-  <div class="muted">
-    Users:<br/>
-    Administrators • IT Staff • Faculty Staff • Office Staff • QR Scanners
-  </div>
-</header>
+<div class="topbar">
+  <div class="brand">OCSI IT Inventory System</div>
+  <div id="who" class="muted" style="color:#cbd5e1;">Loading user…</div>
+</div>
 
-<main>
-  <div class="grid">
-    <div class="card">
-      <h3>Inventory Module</h3>
-      <p>Hardware / Network Devices / Phones / MPC assets, QR lookup.</p>
-      <a class="btn" href="inventory-list.html">Open Inventory List</a>
-      <div class="muted">Pages: inventory-list, item, scan</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="muted" style="color:#94a3b8;margin:6px 0 10px;">Modules</div>
+    <nav class="nav">
+      <a class="active" href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a href="scan.html">Scan QR</a>
+      <a href="software-dashboard.html">Software</a>
+      <a href="software-compliance.html">Compliance</a>
+      <a href="admin-categories.html">Admin</a>
+      <a href="export.html">Export</a>
+      <a href="audits.html">Audits</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="grid">
+      <div class="card">
+        <h3>Total Hardware Assets</h3>
+        <div class="stat" id="hwCount">--</div>
+        <div class="muted">All devices in items collection</div>
+        <div class="row"><a class="btn" href="inventory-list.html">Open Inventory</a></div>
+      </div>
+
+      <div class="card">
+        <h3>Software Products</h3>
+        <div class="stat" id="swProd">--</div>
+        <div class="muted">Titles tracked in software_product</div>
+        <div class="row"><a class="btn" href="software-products.html">View Products</a></div>
+      </div>
+
+      <div class="card">
+        <h3>Licenses</h3>
+        <div class="stat" id="swLic">--</div>
+        <div class="muted">Pools tracked in software_license</div>
+        <div class="row"><a class="btn" href="software-licenses.html">View Licenses</a></div>
+      </div>
+
+      <div class="card">
+        <h3>Compliance Alerts</h3>
+        <div class="stat" id="alerts">--</div>
+        <div class="muted">Over-seats + expiring soon</div>
+        <div class="row"><a class="btn" href="software-compliance.html">Open Compliance</a></div>
+      </div>
     </div>
+  </main>
+</div>
 
-    <div class="card">
-      <h3>Software Management</h3>
-      <p>Products, licenses, assignments, expiry tracking.</p>
-      <a class="btn" href="software-dashboard.html">Open Software Dashboard</a>
-      <div class="muted">Pages: dashboard, products, licenses, assign</div>
-    </div>
-
-    <div class="card">
-      <h3>Administration</h3>
-      <p>Create categories/fields, import spreadsheet data.</p>
-      <a class="btn" href="admin-categories.html">Admin Categories</a>
-      <div class="muted">Pages: admin-categories, admin-fields, import-excel</div>
-    </div>
-
-    <div class="card">
-      <h3>Reports & Compliance</h3>
-      <p>Seat compliance, audits, exports.</p>
-      <a class="btn" href="software-compliance.html">Open Compliance</a>
-      <div class="muted">Pages: compliance, export, audits</div>
-    </div>
-  </div>
-</main>
-
-<footer>
-  OCSI Inventory System • GitHub Pages + Firebase + Mailjet • v1.0
-</footer>
-
-<!-- ✅ Firebase Modular Block -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
@@ -85,15 +97,45 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){ console.warn(e); }
-
+  try { getAnalytics(app); } catch(e){}
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // Optional: show logged-in user later
-  onAuthStateChanged(auth, (user) => {
-    if (user) console.log("Logged in:", user.email);
+  const who=document.getElementById("who");
+  const hwCount=document.getElementById("hwCount");
+  const swProd=document.getElementById("swProd");
+  const swLic=document.getElementById("swLic");
+  const alerts=document.getElementById("alerts");
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    who.textContent = user.email;
+    await loadStats();
   });
+
+  function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
+
+  async function loadStats(){
+    const itemsSnap = await getDocs(collection(db,"items"));
+    hwCount.textContent = itemsSnap.size;
+
+    const prodSnap  = await getDocs(collection(db,"software_product"));
+    swProd.textContent = prodSnap.size;
+
+    const licSnap   = await getDocs(collection(db,"software_license"));
+    swLic.textContent = licSnap.size;
+
+    let alertCount=0;
+    const now=new Date(); const lim30=new Date(now.getTime()+30*24*60*60*1000);
+    licSnap.forEach(d=>{
+      const l=d.data();
+      const t=Number(l.totalSeats||0), u=Number(l.assignedSeats||0);
+      if(t>0 && u>t) alertCount++;
+      const exp=toDate(l.expiryDate);
+      if(exp && exp<=lim30) alertCount++;
+    });
+    alerts.textContent=alertCount;
+  }
 </script>
 
 </body>
