@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Add / Edit Item</title>
+<style>
+  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
+  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .content{padding:18px;max-width:1000px;margin:0 auto;width:100%;}
+  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
+  label{display:block;margin-top:8px;font-size:.9rem;}
+  input,select,textarea{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
+  textarea{min-height:70px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .btn{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;margin-top:12px;}
+  .muted{color:#64748b;font-size:.85rem;margin-top:6px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="font-weight:700;">Add / Edit Item</div>
+  <div id="who" style="opacity:.8;">Loading…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a class="active" href="#">Add/Edit Item</a>
+      <a href="scan.html">Scan QR</a>
+      <a href="software-dashboard.html">Software</a>
+      <a href="admin-categories.html">Admin</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="box">
+      <h3 id="title">Add / Edit Inventory Item</h3>
+
+      <div class="row">
+        <div>
+          <label>Category</label>
+          <select id="catSel"></select>
+        </div>
+        <div>
+          <label>Lifecycle Status</label>
+          <select id="lifeSel"></select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div><label>Asset ID</label><input id="assetId"/></div>
+        <div><label>Device Name</label><input id="deviceName"/></div>
+      </div>
+
+      <div id="dynamicFields"></div>
+
+      <button class="btn" id="saveBtn">Save</button>
+      <div class="muted" id="msg"></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import {
+    getFirestore, collection, getDocs, doc, getDoc,
+    addDoc, updateDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // ✅ REQUIRED ROLE SETTING
+  const ALLOWED_ROLES = ["admin","it"];
+
+  const who = document.getElementById("who");
+  const id = new URLSearchParams(location.search).get("id");
+
+  const catSel = document.getElementById("catSel");
+  const lifeSel = document.getElementById("lifeSel");
+  const assetId = document.getElementById("assetId");
+  const deviceName = document.getElementById("deviceName");
+  const dynamicFields = document.getElementById("dynamicFields");
+  const msg = document.getElementById("msg");
+  const title = document.getElementById("title");
+  const saveBtn = document.getElementById("saveBtn");
+
+  let loadedItem = null;
+  let categoryFields = [];
+  let currentUser = null;
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    currentUser = user;
+
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role = uSnap.exists() ? (uSnap.data().role || "viewer") : "viewer";
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied."); location.href="index.html"; return;
+    }
+    who.textContent = user.email + " (" + role + ")";
+
+    await loadCategories();
+    await loadItemIfEdit();
+    await loadCategoryFields(catSel.value);
+  });
+
+  function renderDynamicFields(fields, values={}){
+    dynamicFields.innerHTML = "<hr/><h4>Category Fields</h4>";
+    fields.forEach(f=>{
+      const wrap = document.createElement("div");
+      wrap.innerHTML = `
+        <label>${f.name}</label>
+        ${f.type==="longtext"
+          ? `<textarea data-key="${f.key}"></textarea>`
+          : `<input data-key="${f.key}" type="${f.type==="number"?"number":f.type==="date"?"date":"text"}"/>`
+        }
+      `;
+      dynamicFields.appendChild(wrap);
+      const inp = wrap.querySelector("[data-key]");
+      if(values[f.key]!=null) inp.value = values[f.key];
+    });
+  }
+
+  async function loadCategories(){
+    catSel.innerHTML="";
+    const snap = await getDocs(collection(db,"categories"));
+    snap.forEach(ds=>{
+      const c = ds.data();
+      const o = document.createElement("option");
+      o.value=ds.id; o.textContent=c.name||ds.id;
+      catSel.appendChild(o);
+    });
+    catSel.value = catSel.value || snap.docs[0]?.id || "";
+  }
+
+  async function loadCategoryFields(catId){
+    if(!catId) return;
+    const snap = await getDoc(doc(db,"categories",catId));
+    if(!snap.exists()) return;
+
+    const cat = snap.data();
+    categoryFields = (cat.defaultFields||[]).concat(cat.extraFields||[]);
+    renderDynamicFields(categoryFields, loadedItem?.customFields || {});
+
+    lifeSel.innerHTML="";
+    (cat.defaultLifecycle || ["Active","Repair","Retired"]).forEach(s=>{
+      const o=document.createElement("option"); o.value=s; o.textContent=s;
+      lifeSel.appendChild(o);
+    });
+    lifeSel.value = loadedItem?.lifecycleStatus || lifeSel.value || "Active";
+  }
+
+  async function loadItemIfEdit(){
+    if(!id){ title.textContent="Add Inventory Item"; return; }
+
+    title.textContent="Edit Inventory Item";
+    saveBtn.textContent="Update";
+
+    const snap = await getDoc(doc(db,"items",id));
+    if(!snap.exists()){ msg.textContent="Item not found"; return; }
+    loadedItem = snap.data();
+
+    assetId.value = loadedItem.assetId||id;
+    deviceName.value = loadedItem.deviceName||loadedItem.name||"";
+    if(loadedItem.categoryId) catSel.value = loadedItem.categoryId;
+  }
+
+  async function save(){
+    msg.textContent="";
+    const catId = catSel.value;
+
+    const customFields = {};
+    dynamicFields.querySelectorAll("[data-key]").forEach(inp=>{
+      customFields[inp.dataset.key] = inp.value;
+    });
+
+    const payload = {
+      categoryId: catId,
+      assetId: assetId.value.trim(),
+      deviceName: deviceName.value.trim(),
+      lifecycleStatus: lifeSel.value,
+      customFields,
+      updatedAt: serverTimestamp(),
+      updatedBy: currentUser.uid
+    };
+
+    if(id){
+      await updateDoc(doc(db,"items",id), payload);
+      msg.textContent="Item updated.";
+    }else{
+      payload.createdAt = serverTimestamp();
+      payload.createdBy = currentUser.uid;
+      const ref = await addDoc(collection(db,"items"), payload);
+      location.href="item.html?id="+ref.id;
+    }
+  }
+
+  catSel.addEventListener("change", ()=>loadCategoryFields(catSel.value));
+  saveBtn.addEventListener("click", save);
+</script>
+
+</body>
+</html>
