@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Compliance</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f6f8fc;}
+header{background:#0f172a;color:white;padding:14px;}
+main{max-width:950px;margin:0 auto;padding:18px;}
+.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+<header><h2>Software Compliance</h2></header>
+<main>
+  <div class="box">
+    <h3>Over-assigned Licenses</h3>
+    <ul id="overList"></ul>
+  </div>
+  <div class="box">
+    <h3>Expiring Licenses (30 days)</h3>
+    <ul id="expList"></ul>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const db=getFirestore(app);
+
+  const overList=document.getElementById("overList");
+  const expList=document.getElementById("expList");
+
+  async function load(){
+    overList.innerHTML=""; expList.innerHTML="";
+    const snap=await getDocs(collection(db,"software_license"));
+    const now=new Date();
+    const limit30=new Date(now.getTime()+30*24*60*60*1000);
+
+    snap.forEach(ds=>{
+      const l=ds.data();
+      const used=l.assignedSeats||0;
+      const total=l.totalSeats||0;
+
+      if(total>0 && used>total){
+        const li=document.createElement("li");
+        li.textContent=`${l.softwareName||ds.id} over by ${used-total} seats`;
+        overList.appendChild(li);
+      }
+
+      const exp=l.expiryDate?.toDate?.();
+      if(exp && exp<=limit30){
+        const li=document.createElement("li");
+        li.textContent=`${l.softwareName||ds.id} expires on ${exp.toISOString().slice(0,10)}`;
+        expList.appendChild(li);
+      }
+    });
+  }
+
+  load();
+</script>
+</body>
+</html>
