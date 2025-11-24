@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OCSI IT Inventory System</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <style>
+    body{margin:0;font-family:system-ui;background:#0b1020;color:#e5e7eb;}
+    header{padding:22px 26px;border-bottom:1px solid #1f2a44;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+    h1{margin:0;font-size:1.4rem;}
+    main{max-width:1050px;margin:0 auto;padding:24px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+    .card{background:#111a33;border:1px solid #223257;border-radius:12px;padding:16px;}
+    .card h3{margin:0 0 6px;font-size:1rem;}
+    .card p{margin:0 0 10px;color:#b8c1d9;font-size:.9rem;}
+    a.btn{display:inline-block;background:#1a73e8;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
+    .muted{color:#9aa7c7;font-size:.85rem;margin-top:10px;}
+    footer{padding:16px;text-align:center;color:#9aa7c7;font-size:.8rem;}
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>OCSI IT Inventory & Asset Management System</h1>
+    <div class="muted">Hardware • Network • Phones • MPC • Ports/IPs • Software & Licensing</div>
+  </div>
+  <div class="muted">
+    Users:<br/>
+    Administrators • IT Staff • Faculty Staff • Office Staff • QR Scanners
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <div class="card">
+      <h3>Inventory Module</h3>
+      <p>Hardware / Network Devices / Phones / MPC assets, QR lookup.</p>
+      <a class="btn" href="inventory-list.html">Open Inventory List</a>
+      <div class="muted">Pages: inventory-list, item, scan</div>
+    </div>
+
+    <div class="card">
+      <h3>Software Management</h3>
+      <p>Products, licenses, assignments, expiry tracking.</p>
+      <a class="btn" href="software-dashboard.html">Open Software Dashboard</a>
+      <div class="muted">Pages: dashboard, products, licenses, assign</div>
+    </div>
+
+    <div class="card">
+      <h3>Administration</h3>
+      <p>Create categories/fields, import spreadsheet data.</p>
+      <a class="btn" href="admin-categories.html">Admin Categories</a>
+      <div class="muted">Pages: admin-categories, admin-fields, import-excel</div>
+    </div>
+
+    <div class="card">
+      <h3>Reports & Compliance</h3>
+      <p>Seat compliance, audits, exports.</p>
+      <a class="btn" href="software-compliance.html">Open Compliance</a>
+      <div class="muted">Pages: compliance, export, audits</div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  OCSI Inventory System • GitHub Pages + Firebase + Mailjet • v1.0
+</footer>
+
+<!-- ✅ Firebase Modular Block -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){ console.warn(e); }
+
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Optional: show logged-in user later
+  onAuthStateChanged(auth, (user) => {
+    if (user) console.log("Logged in:", user.email);
+  });
+</script>
+
+</body>
+</html>
