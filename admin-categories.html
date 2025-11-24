@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Categories</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f6f8fc;}
+header{background:#0f172a;color:white;padding:14px;}
+main{max-width:900px;margin:0 auto;padding:18px;}
+.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
+input{padding:8px;border:1px solid #cbd5e1;border-radius:7px;width:100%;}
+button{background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
+</style>
+</head>
+<body>
+<header><h2>Admin Categories</h2></header>
+<main>
+  <div class="box">
+    <h3>Add Category</h3>
+    <input id="nameInp" placeholder="Category Name (e.g., Network Device)" />
+    <input id="codeInp" placeholder="Code (e.g., network_device)" style="margin-top:8px;" />
+    <button style="margin-top:10px;" id="addBtn">Add</button>
+    <div id="msg"></div>
+  </div>
+
+  <div class="box">
+    <h3>Existing Categories</h3>
+    <ul id="list"></ul>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const db=getFirestore(app);
+
+  const nameInp=document.getElementById("nameInp");
+  const codeInp=document.getElementById("codeInp");
+  const msg=document.getElementById("msg");
+  const list=document.getElementById("list");
+  const addBtn=document.getElementById("addBtn");
+
+  async function addCat(){
+    const name=nameInp.value.trim();
+    const code=codeInp.value.trim();
+    if(!name||!code){msg.textContent="Name and code required";return;}
+
+    await setDoc(doc(db,"categories",code),{
+      name, code,
+      defaultFields:[],
+      extraFields:[],
+      defaultLifecycle:["Active","Repair","Retired"]
+    });
+
+    msg.textContent="Category added.";
+    nameInp.value=""; codeInp.value="";
+    load();
+  }
+
+  async function load(){
+    list.innerHTML="";
+    const snap=await getDocs(collection(db,"categories"));
+    snap.forEach(ds=>{
+      const li=document.createElement("li");
+      li.textContent=`${ds.id} — ${ds.data().name||ds.id}`;
+      list.appendChild(li);
+    });
+  }
+
+  addBtn.addEventListener("click",addCat);
+  load();
+</script>
+</body>
+</html>
