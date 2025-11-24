@@ -4,28 +4,52 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Export Reports</title>
 <style>
-body{font-family:system-ui;margin:0;background:#f6f8fc;}
-header{background:#0f172a;color:white;padding:14px;}
-main{max-width:800px;margin:0 auto;padding:18px;}
-.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;}
-button{background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
-pre{background:#0b1020;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;max-height:400px;}
+  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
+  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .content{padding:18px;max-width:1000px;margin:0 auto;width:100%;}
+  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;}
+  button{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;}
+  pre{background:#0b1020;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;max-height:420px;margin-top:10px;}
 </style>
 </head>
 <body>
-<header><h2>Export Reports</h2></header>
-<main>
-  <div class="box">
-    <p>Export inventory data as JSON (CSV later).</p>
-    <button id="exportBtn">Export Items JSON</button>
-    <pre id="out"></pre>
-  </div>
-</main>
+
+<div class="topbar">
+  <div style="font-weight:700;">Export Reports</div>
+  <div id="who" style="opacity:.8;">Loading…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a class="active" href="#">Export</a>
+      <a href="audits.html">Audits</a>
+      <a href="software-compliance.html">Compliance</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="box">
+      <p>Export inventory data as JSON (CSV can be added later).</p>
+      <button id="exportBtn">Export Items JSON</button>
+      <pre id="out"></pre>
+    </div>
+  </main>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -40,13 +64,28 @@ pre{background:#0b1020;color:#e2e8f0;padding:10px;border-radius:8px;overflow:aut
   const app=initializeApp(firebaseConfig);
   try{getAnalytics(app);}catch(e){}
   const db=getFirestore(app);
+  const auth=getAuth(app);
 
+  // ✅ REQUIRED ROLE SETTING
+  const ALLOWED_ROLES=["admin","it"];
+
+  const who=document.getElementById("who");
   const out=document.getElementById("out");
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    const uSnap=await getDoc(doc(db,"users",user.uid));
+    const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="index.html"; return; }
+    who.textContent=user.email+" ("+role+")";
+  });
+
   document.getElementById("exportBtn").addEventListener("click", async ()=>{
     const snap=await getDocs(collection(db,"items"));
     const arr=snap.docs.map(d=>({id:d.id,...d.data()}));
     out.textContent=JSON.stringify(arr,null,2);
   });
 </script>
+
 </body>
 </html>
