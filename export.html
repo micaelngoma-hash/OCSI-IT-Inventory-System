@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Export Reports</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f6f8fc;}
+header{background:#0f172a;color:white;padding:14px;}
+main{max-width:800px;margin:0 auto;padding:18px;}
+.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;}
+button{background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
+pre{background:#0b1020;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;max-height:400px;}
+</style>
+</head>
+<body>
+<header><h2>Export Reports</h2></header>
+<main>
+  <div class="box">
+    <p>Export inventory data as JSON (CSV later).</p>
+    <button id="exportBtn">Export Items JSON</button>
+    <pre id="out"></pre>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const db=getFirestore(app);
+
+  const out=document.getElementById("out");
+  document.getElementById("exportBtn").addEventListener("click", async ()=>{
+    const snap=await getDocs(collection(db,"items"));
+    const arr=snap.docs.map(d=>({id:d.id,...d.data()}));
+    out.textContent=JSON.stringify(arr,null,2);
+  });
+</script>
+</body>
+</html>
