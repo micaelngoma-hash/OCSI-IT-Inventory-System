@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Scan QR</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#0b1020;color:white;text-align:center;}
+  header{padding:14px;font-size:1.2rem;background:#0f172a;}
+  main{padding:20px;}
+  input{padding:10px;border-radius:8px;border:none;width:280px;}
+  button{padding:10px 12px;border-radius:8px;border:none;background:#1a73e8;color:white;margin-left:6px;cursor:pointer;}
+</style>
+</head>
+<body>
+<header>QR Scanner</header>
+<main>
+  <p>Paste or scan a QR code value (Firestore item ID or item URL).</p>
+  <input id="qrInput" placeholder="e.g., item Firestore id" />
+  <button id="openBtn">Open</button>
+
+  <p style="opacity:.7;margin-top:16px;">
+    Camera QR scanning can be added later (html5-qrcode / zxing).
+  </p>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+
+  const qrInput = document.getElementById("qrInput");
+  document.getElementById("openBtn").addEventListener("click", () => {
+    const v = qrInput.value.trim();
+    if(!v) return;
+    if(v.includes("item.html")) location.href = v;
+    else location.href = `item.html?id=${encodeURIComponent(v)}`;
+  });
+</script>
+</body>
+</html>
