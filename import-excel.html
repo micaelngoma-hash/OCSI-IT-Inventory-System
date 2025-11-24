@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Import Excel/CSV</title>
+<style>
+body{font-family:system-ui;margin:0;background:#f6f8fc;}
+header{background:#0f172a;color:white;padding:14px;}
+main{max-width:800px;margin:0 auto;padding:18px;}
+.box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;}
+input{padding:8px;border:1px solid #cbd5e1;border-radius:7px;width:100%;}
+button{margin-top:10px;background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
+</style>
+</head>
+<body>
+<header><h2>Import Spreadsheet</h2></header>
+<main>
+  <div class="box">
+    <p>Upload CSV exported from Excel. Columns map into Firestore fields.</p>
+    <input id="fileInp" type="file" accept=".csv"/>
+    <button id="importBtn">Import</button>
+    <div id="msg"></div>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const db=getFirestore(app);
+
+  const fileInp=document.getElementById("fileInp");
+  const msg=document.getElementById("msg");
+  const importBtn=document.getElementById("importBtn");
+
+  async function importCSV(){
+    const f=fileInp.files[0];
+    if(!f){msg.textContent="Pick a CSV file";return;}
+    const text=await f.text();
+    const lines=text.split(/\r?\n/).filter(x=>x.trim());
+    const headers=lines[0].split(",").map(h=>h.trim());
+
+    for(let i=1;i<lines.length;i++){
+      const cols=lines[i].split(",").map(c=>c.trim());
+      const obj={};
+      headers.forEach((h,idx)=>obj[h]=cols[idx]||"");
+      await addDoc(collection(db,"items"),obj);
+    }
+    msg.textContent="Import complete.";
+  }
+
+  importBtn.addEventListener("click",importCSV);
+</script>
+</body>
+</html>
