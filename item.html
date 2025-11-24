@@ -4,24 +4,47 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Item Details</title>
 <style>
-  body{font-family:system-ui;margin:0;background:#f6f8fc;}
-  header{background:#0f172a;color:white;padding:14px 18px;}
-  main{padding:18px;max-width:900px;margin:0 auto;}
-  .box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
-  .row{display:grid;grid-template-columns:160px 1fr;gap:6px;font-size:.95rem;}
+  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
+  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .content{padding:18px;max-width:1000px;margin:0 auto;width:100%;}
+  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
+  .row{display:grid;grid-template-columns:190px 1fr;gap:6px;font-size:.95rem;padding:4px 0;}
   .row b{color:#334155;}
+  .btn{display:inline-block;background:var(--brand);color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
 </style>
 </head>
 <body>
-<header><h2>Item Details</h2></header>
-<main>
-  <div class="box" id="itemBox">Loading...</div>
-</main>
+
+<div class="topbar">
+  <div style="font-weight:700;">Item Details</div>
+  <div id="who" style="opacity:.8;">Loading…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a class="active" href="#">Item</a>
+      <a href="scan.html">Scan QR</a>
+      <a href="software-dashboard.html">Software</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="box" id="itemBox">Loading…</div>
+  </main>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
   import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -33,59 +56,67 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){}
-  const db = getFirestore(app);
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  const auth=getAuth(app);
 
-  const itemBox = document.getElementById("itemBox");
-  const id = new URLSearchParams(location.search).get("id");
+  const ALLOWED_ROLES=["admin","it","viewer"];
+  const who=document.getElementById("who");
+  const itemBox=document.getElementById("itemBox");
+  const id=new URLSearchParams(location.search).get("id");
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    who.textContent=user.email;
+    await loadItem();
+  });
 
   async function loadItem(){
     if(!id){ itemBox.textContent="No item id provided."; return; }
-
-    const ref = doc(db, "items", id);
-    const snap = await getDoc(ref);
-
+    const snap=await getDoc(doc(db,"items",id));
     if(!snap.exists()){ itemBox.textContent="Item not found."; return; }
+    const it=snap.data();
 
-    const it = snap.data();
-    const fields = [
-      ["Asset ID", it.assetId || id],
-      ["Name", it.deviceName || it.name || "--"],
-      ["Category", it.categoryId || "--"],
-      ["Model", it.model || "--"],
-      ["Serial Number", it.serialNumber || "--"],
-      ["MAC Address", it.macAddress || "--"],
-      ["IP Address", it.ipAddress || "--"],
-      ["VLAN", it.vlan || "--"],
-      ["Location", it.location || "--"],
-      ["Lifecycle Status", it.lifecycleStatus || it.status || "--"]
+    const fields=[
+      ["Asset ID", it.assetId||id],
+      ["Name", it.deviceName||it.name||"--"],
+      ["Category", it.categoryId||"--"],
+      ["Model", it.model||"--"],
+      ["Serial Number", it.serialNumber||"--"],
+      ["MAC Address", it.macAddress||"--"],
+      ["IP Address", it.ipAddress||"--"],
+      ["VLAN", it.vlan||"--"],
+      ["Location", it.location||"--"],
+      ["Lifecycle Status", it.lifecycleStatus||it.status||"--"]
     ];
 
-    let html = `<h3>${it.deviceName || it.name || id}</h3>`;
+    let html=`<h3>${it.deviceName||it.name||id}</h3>
+      <div style="margin-bottom:8px;">
+        <a class="btn" href="item-form.html?id=${id}">Edit Item</a>
+      </div>`;
+
     fields.forEach(([k,v])=>{
-      html += `<div class="row"><b>${k}</b><div>${v}</div></div>`;
+      html+=`<div class="row"><b>${k}</b><div>${v}</div></div>`;
     });
 
     if(it.customFields){
-      html += `<hr/><h4>Custom Fields</h4>`;
+      html+=`<hr/><h4>Custom Fields</h4>`;
       Object.entries(it.customFields).forEach(([k,v])=>{
-        html += `<div class="row"><b>${k}</b><div>${v}</div></div>`;
+        html+=`<div class="row"><b>${k}</b><div>${v}</div></div>`;
       });
     }
 
     if(it.installedSoftware?.length){
-      html += `<hr/><h4>Installed Software</h4><ul>`;
+      html+=`<hr/><h4>Installed Software</h4><ul>`;
       it.installedSoftware.forEach(s=>{
-        html += `<li>${s.softwareName || "--"} ${s.version ? "(" + s.version + ")" : ""}</li>`;
+        html+=`<li>${s.softwareName||"--"} ${s.version?`(${s.version})`:""}</li>`;
       });
-      html += `</ul>`;
+      html+=`</ul>`;
     }
 
-    itemBox.innerHTML = html;
+    itemBox.innerHTML=html;
   }
-
-  loadItem();
 </script>
+
 </body>
 </html>
