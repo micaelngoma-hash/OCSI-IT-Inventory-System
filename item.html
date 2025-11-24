@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Item Details</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f6f8fc;}
+  header{background:#0f172a;color:white;padding:14px 18px;}
+  main{padding:18px;max-width:900px;margin:0 auto;}
+  .box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
+  .row{display:grid;grid-template-columns:160px 1fr;gap:6px;font-size:.95rem;}
+  .row b{color:#334155;}
+</style>
+</head>
+<body>
+<header><h2>Item Details</h2></header>
+<main>
+  <div class="box" id="itemBox">Loading...</div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+
+  const itemBox = document.getElementById("itemBox");
+  const id = new URLSearchParams(location.search).get("id");
+
+  async function loadItem(){
+    if(!id){ itemBox.textContent="No item id provided."; return; }
+
+    const ref = doc(db, "items", id);
+    const snap = await getDoc(ref);
+
+    if(!snap.exists()){ itemBox.textContent="Item not found."; return; }
+
+    const it = snap.data();
+    const fields = [
+      ["Asset ID", it.assetId || id],
+      ["Name", it.deviceName || it.name || "--"],
+      ["Category", it.categoryId || "--"],
+      ["Model", it.model || "--"],
+      ["Serial Number", it.serialNumber || "--"],
+      ["MAC Address", it.macAddress || "--"],
+      ["IP Address", it.ipAddress || "--"],
+      ["VLAN", it.vlan || "--"],
+      ["Location", it.location || "--"],
+      ["Lifecycle Status", it.lifecycleStatus || it.status || "--"]
+    ];
+
+    let html = `<h3>${it.deviceName || it.name || id}</h3>`;
+    fields.forEach(([k,v])=>{
+      html += `<div class="row"><b>${k}</b><div>${v}</div></div>`;
+    });
+
+    if(it.customFields){
+      html += `<hr/><h4>Custom Fields</h4>`;
+      Object.entries(it.customFields).forEach(([k,v])=>{
+        html += `<div class="row"><b>${k}</b><div>${v}</div></div>`;
+      });
+    }
+
+    if(it.installedSoftware?.length){
+      html += `<hr/><h4>Installed Software</h4><ul>`;
+      it.installedSoftware.forEach(s=>{
+        html += `<li>${s.softwareName || "--"} ${s.version ? "(" + s.version + ")" : ""}</li>`;
+      });
+      html += `</ul>`;
+    }
+
+    itemBox.innerHTML = html;
+  }
+
+  loadItem();
+</script>
+</body>
+</html>
