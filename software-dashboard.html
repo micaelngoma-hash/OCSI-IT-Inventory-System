@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Dashboard</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f5f7fb;}
+  header{background:#0f172a;color:white;padding:14px 18px;}
+  main{max-width:1100px;margin:0 auto;padding:18px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;}
+  .card{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:12px;}
+  .value{font-size:1.7rem;font-weight:700;}
+  table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;margin-top:10px;}
+  th,td{padding:8px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:.9rem;}
+  th{background:#f1f5f9;}
+  .section{margin-top:18px;}
+  .muted{color:#64748b;font-size:.85rem;}
+</style>
+</head>
+<body>
+<header><h2>Software Inventory Dashboard</h2></header>
+<main>
+  <div class="cards">
+    <div class="card"><div class="muted">Software Products</div><div class="value" id="prodCount">--</div></div>
+    <div class="card"><div class="muted">Licenses</div><div class="value" id="licCount">--</div></div>
+    <div class="card"><div class="muted">Seats Used / Total</div><div class="value"><span id="usedSeats">--</span> / <span id="totalSeats">--</span></div></div>
+    <div class="card" style="background:#ffebee;border-color:#ffcdd2;">
+      <div class="muted" style="color:#c62828;">Compliance Alerts</div>
+      <div class="value" id="overCount">--</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Licenses Expiring Soon (30 days)</h3>
+    <table>
+      <thead><tr><th>Software</th><th>Vendor</th><th>Expiry</th><th>Seats</th></tr></thead>
+      <tbody id="expBody"></tbody>
+    </table>
+    <div class="muted" id="expEmpty" style="display:none;">No expiring licenses.</div>
+  </div>
+
+  <div class="section">
+    <h3>Over-assigned Licenses</h3>
+    <table>
+      <thead><tr><th>Software</th><th>Vendor</th><th>Seats</th><th>Over By</th></tr></thead>
+      <tbody id="overBody"></tbody>
+    </table>
+    <div class="muted" id="overEmpty" style="display:none;">No compliance issues.</div>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+
+  const prodCount = document.getElementById("prodCount");
+  const licCount = document.getElementById("licCount");
+  const usedSeats = document.getElementById("usedSeats");
+  const totalSeats = document.getElementById("totalSeats");
+  const overCount = document.getElementById("overCount");
+  const expBody = document.getElementById("expBody");
+  const overBody = document.getElementById("overBody");
+  const expEmpty = document.getElementById("expEmpty");
+  const overEmpty = document.getElementById("overEmpty");
+
+  function toDate(x){
+    if(!x) return null;
+    if(x.toDate) return x.toDate();
+    const d = new Date(x);
+    return isNaN(d) ? null : d;
+  }
+
+  async function load(){
+    const prodSnap = await getDocs(collection(db,"software_product"));
+    prodCount.textContent = prodSnap.size;
+
+    const licSnap = await getDocs(collection(db,"software_license"));
+    licCount.textContent = licSnap.size;
+
+    let total=0, used=0;
+    const expiring=[], over=[];
+    const now=new Date();
+    const limit30=new Date(now.getTime()+30*24*60*60*1000);
+
+    licSnap.forEach(ds=>{
+      const l=ds.data();
+      const t=Number(l.totalSeats||0);
+      const u=Number(l.assignedSeats||0);
+      total+=t; used+=u;
+
+      const exp=toDate(l.expiryDate);
+      if(exp && exp<=limit30) expiring.push({id:ds.id,...l,exp});
+
+      if(t>0 && u>t) over.push({id:ds.id,...l,overBy:u-t});
+    });
+
+    totalSeats.textContent=total;
+    usedSeats.textContent=used;
+    overCount.textContent=over.length;
+
+    expBody.innerHTML="";
+    if(!expiring.length){ expEmpty.style.display="block"; }
+    else{
+      expEmpty.style.display="none";
+      expiring.sort((a,b)=>a.exp-b.exp).forEach(l=>{
+        expBody.innerHTML+=`
+          <tr>
+            <td>${l.softwareName||l.id}</td>
+            <td>${l.vendor||"-"}</td>
+            <td>${l.exp.toISOString().slice(0,10)}</td>
+            <td>${l.assignedSeats||0} / ${l.totalSeats||0}</td>
+          </tr>`;
+      });
+    }
+
+    overBody.innerHTML="";
+    if(!over.length){ overEmpty.style.display="block"; }
+    else{
+      overEmpty.style.display="none";
+      over.forEach(l=>{
+        overBody.innerHTML+=`
+          <tr>
+            <td>${l.softwareName||l.id}</td>
+            <td>${l.vendor||"-"}</td>
+            <td>${l.assignedSeats||0} / ${l.totalSeats||0}</td>
+            <td>${l.overBy}</td>
+          </tr>`;
+      });
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>
