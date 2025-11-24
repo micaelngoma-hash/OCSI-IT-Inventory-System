@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>License Detail</title>
+<style>
+  body{font-family:system-ui;margin:0;background:#f6f8fc;}
+  header{background:#0f172a;color:white;padding:14px;}
+  main{max-width:900px;margin:0 auto;padding:18px;}
+  .box{background:white;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:6px;border-bottom:1px solid #e2e8f0;text-align:left;font-size:.9rem;}
+  .btn{background:#1a73e8;color:white;padding:8px 12px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:8px;}
+</style>
+</head>
+<body>
+<header><h2>Software License Detail</h2></header>
+<main>
+  <div class="box" id="info">Loading...</div>
+
+  <div class="box">
+    <h3>Assignments</h3>
+    <table>
+      <thead><tr><th>Assigned To</th><th>Date</th></tr></thead>
+      <tbody id="assignBody"></tbody>
+    </table>
+    <a class="btn" id="assignLink" href="#">Assign License</a>
+  </div>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getFirestore, doc, getDoc, collection, getDocs, query, where } 
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+
+  const id = new URLSearchParams(location.search).get("id");
+  const info = document.getElementById("info");
+  const assignBody = document.getElementById("assignBody");
+  const assignLink = document.getElementById("assignLink");
+
+  function fmtDate(x){
+    const d = x?.toDate?.();
+    return d ? d.toISOString().slice(0,10) : "-";
+  }
+
+  async function load(){
+    const licSnap = await getDoc(doc(db,"software_license",id));
+    if(!licSnap.exists()){ info.textContent="License not found."; return; }
+    const l = licSnap.data();
+    assignLink.href = "assign-license.html?licenseId=" + id;
+
+    info.innerHTML = `
+      <h3>${l.softwareName||id}</h3>
+      <p><b>Vendor:</b> ${l.vendor||"-"}</p>
+      <p><b>Seats:</b> ${l.assignedSeats||0} / ${l.totalSeats||0}</p>
+      <p><b>Expiry:</b> ${fmtDate(l.expiryDate)}</p>
+    `;
+
+    const aSnap = await getDocs(query(
+      collection(db,"software_assignment"),
+      where("softwareLicenseId","==",id)
+    ));
+
+    assignBody.innerHTML="";
+    aSnap.forEach(ds=>{
+      const a=ds.data();
+      assignBody.innerHTML += `
+        <tr>
+          <td>${a.deviceId ? "Device: "+a.deviceId : (a.userId ? "User: "+a.userId : "--")}</td>
+          <td>${fmtDate(a.assignmentDate)}</td>
+        </tr>`;
+    });
+  }
+
+  load();
+</script>
+</body>
+</html>
