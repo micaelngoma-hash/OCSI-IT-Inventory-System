@@ -4,53 +4,38 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Software Compliance</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#0b1020;}
+  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .content{padding:18px;max-width:1000px;margin:0 auto;width:100%;}
+  .topbar{background:var(--bg);color:white;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;}
+  .wrap{max-width:1100px;margin:0 auto;padding:18px;}
   .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
-  ul{margin:0;padding-left:18px;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:8px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.92rem;}
+  th{background:#f1f5f9;}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.8rem;}
+  .ok{background:#dcfce7;color:#166534;}
+  .warn{background:#fef3c7;color:#92400e;}
+  .bad{background:#fee2e2;color:#991b1b;}
 </style>
 </head>
 <body>
-
 <div class="topbar">
-  <div style="font-weight:700;">Software Compliance</div>
+  <div>Software Compliance</div>
   <div id="who" style="opacity:.8;">Loading…</div>
 </div>
 
-<div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="software-dashboard.html">Dashboard</a>
-      <a href="software-licenses.html">Licenses</a>
-      <a class="active" href="#">Compliance</a>
-      <a href="export.html">Export</a>
-    </nav>
-  </aside>
-
-  <main class="content">
-    <div class="box">
-      <h3>Over-assigned Licenses</h3>
-      <ul id="overList"></ul>
-      <div id="overEmpty" style="color:#64748b;margin-top:6px;display:none;">No over-assigned licenses.</div>
-    </div>
-
-    <div class="box">
-      <h3>Expiring Licenses (30 days)</h3>
-      <ul id="expList"></ul>
-      <div id="expEmpty" style="color:#64748b;margin-top:6px;display:none;">No expiring licenses.</div>
-    </div>
-  </main>
+<div class="wrap">
+  <div class="box">
+    <h3>Compliance Alerts</h3>
+    <table>
+      <thead><tr><th>License</th><th>Issue</th><th>Expiry</th><th>Seats</th><th></th></tr></thead>
+      <tbody id="body"></tbody>
+    </table>
+  </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
   import { getFirestore, collection, getDocs, doc, getDoc }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import { getAuth, onAuthStateChanged }
@@ -65,67 +50,55 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-
   const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
   const db=getFirestore(app);
   const auth=getAuth(app);
 
-  // ✅ REQUIRED ROLE SETTING
-  const ALLOWED_ROLES=["admin","it"];
+  const ALLOWED_ROLES=["admin","it","viewer"];
 
   const who=document.getElementById("who");
-  const overList=document.getElementById("overList");
-  const expList=document.getElementById("expList");
-  const overEmpty=document.getElementById("overEmpty");
-  const expEmpty=document.getElementById("expEmpty");
+  const body=document.getElementById("body");
 
-  onAuthStateChanged(auth, async (user)=>{
+  onAuthStateChanged(auth, async user=>{
     if(!user){ location.href="login.html"; return; }
     const uSnap=await getDoc(doc(db,"users",user.uid));
     const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="index.html"; return; }
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); return; }
     who.textContent=user.email+" ("+role+")";
     await load();
   });
 
-  function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
+  function toDate(x){return x?.toDate?.()|| (x?new Date(x):null);}
+  function fmtDate(d){return d? d.toISOString().slice(0,10):"--";}
 
   async function load(){
-    overList.innerHTML=""; expList.innerHTML="";
-    overEmpty.style.display="none"; expEmpty.style.display="none";
-
     const snap=await getDocs(collection(db,"software_license"));
+    body.innerHTML="";
     const now=new Date();
     const lim30=new Date(now.getTime()+30*24*60*60*1000);
 
-    let overCount=0, expCount=0;
-
     snap.forEach(ds=>{
       const l=ds.data();
-      const used=Number(l.assignedSeats||0);
       const total=Number(l.totalSeats||0);
-
-      if(total>0 && used>total){
-        overCount++;
-        const li=document.createElement("li");
-        li.textContent=`${l.softwareName||ds.id} over by ${used-total} seats`;
-        overList.appendChild(li);
-      }
-
+      const used=Number(l.assignedSeats||0);
       const exp=toDate(l.expiryDate);
-      if(exp && exp<=lim30){
-        expCount++;
-        const li=document.createElement("li");
-        li.textContent=`${l.softwareName||ds.id} expires on ${exp.toISOString().slice(0,10)}`;
-        expList.appendChild(li);
-      }
-    });
 
-    if(!overCount) overEmpty.style.display="block";
-    if(!expCount) expEmpty.style.display="block";
+      let issue=null, chip="ok";
+      if(total>0 && used>total){ issue="Over-used seats"; chip="bad"; }
+      else if(exp && exp<=lim30){ issue="Expiring within 30 days"; chip="warn"; }
+
+      if(!issue) return;
+
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${l.softwareName||ds.id}</td>
+        <td><span class="chip ${chip}">${issue}</span></td>
+        <td>${fmtDate(exp)}</td>
+        <td>${used}/${total||"--"}</td>
+        <td><a href="software-license.html?id=${ds.id}">Open</a></td>`;
+      body.appendChild(tr);
+    });
   }
 </script>
-
 </body>
 </html>
