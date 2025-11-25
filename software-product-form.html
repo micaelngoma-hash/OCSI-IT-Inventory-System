@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Add / Edit Software Product</title>
+<style>
+  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
+  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .content{padding:18px;max-width:900px;margin:0 auto;width:100%;}
+  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
+  label{display:block;margin-top:8px;font-size:.9rem;}
+  input,select,textarea{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
+  textarea{min-height:90px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  button{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;margin-top:12px;}
+  .muted{color:#64748b;font-size:.85rem;margin-top:6px;}
+  .danger{background:#ef4444;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="font-weight:700;" id="pageTitle">Add Software Product</div>
+  <div id="who" style="opacity:.8;">Loading…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="software-dashboard.html">Dashboard</a>
+      <a class="active" href="software-products.html">Products</a>
+      <a href="software-licenses.html">Licenses</a>
+      <a href="assign-license.html">Assign License</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="box">
+      <h3 id="formTitle">Create Software Product</h3>
+
+      <label>Software Name *</label>
+      <input id="nameInp" placeholder="e.g., Microsoft 365, Adobe Acrobat, Chrome"/>
+
+      <div class="row">
+        <div>
+          <label>Version</label>
+          <input id="versionInp" placeholder="e.g., 2025 / v2.1"/>
+        </div>
+        <div>
+          <label>Publisher</label>
+          <input id="publisherInp" placeholder="e.g., Microsoft, Google, Adobe"/>
+        </div>
+      </div>
+
+      <label>Category</label>
+      <select id="catInp">
+        <option value="OS">OS</option>
+        <option value="Office Suite">Office Suite</option>
+        <option value="Security">Security</option>
+        <option value="Educational">Educational</option>
+        <option value="Utility">Utility</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <label>Description / Notes</label>
+      <textarea id="descInp" placeholder="Extra notes, installation info, support URL, etc."></textarea>
+
+      <label>Lifecycle Status</label>
+      <select id="lifeInp">
+        <option value="Active">Active</option>
+        <option value="Deprecated">Deprecated</option>
+        <option value="Retired">Retired</option>
+      </select>
+
+      <button id="saveBtn">Save Product</button>
+      <div class="muted" id="msg"></div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { 
+    getFirestore, collection, addDoc, updateDoc,
+    doc, getDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged } 
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // ✅ Admin + IT only
+  const ALLOWED_ROLES = ["admin","it"];
+
+  const who=document.getElementById("who");
+  const msg=document.getElementById("msg");
+  const saveBtn=document.getElementById("saveBtn");
+  const pageTitle=document.getElementById("pageTitle");
+  const formTitle=document.getElementById("formTitle");
+
+  const nameInp=document.getElementById("nameInp");
+  const versionInp=document.getElementById("versionInp");
+  const publisherInp=document.getElementById("publisherInp");
+  const catInp=document.getElementById("catInp");
+  const descInp=document.getElementById("descInp");
+  const lifeInp=document.getElementById("lifeInp");
+
+  const id = new URLSearchParams(location.search).get("id");
+  let editMode = false;
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role = uSnap.exists() ? (uSnap.data().role || "viewer") : "viewer";
+
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+
+    who.textContent = user.email + " (" + role + ")";
+
+    if(id){
+      editMode = true;
+      await loadProduct(id);
+    }
+  });
+
+  async function loadProduct(id){
+    msg.textContent="Loading product...";
+    const snap = await getDoc(doc(db,"software_product",id));
+    if(!snap.exists()){
+      msg.textContent="Product not found.";
+      return;
+    }
+
+    const p = snap.data();
+    nameInp.value = p.softwareName || "";
+    versionInp.value = p.version || "";
+    publisherInp.value = p.publisher || "";
+    catInp.value = p.softwareCategory || "Other";
+    descInp.value = p.description || "";
+    lifeInp.value = p.lifecycleStatus || "Active";
+
+    pageTitle.textContent="Edit Software Product";
+    formTitle.textContent="Edit Software Product";
+    saveBtn.textContent="Update Product";
+    msg.textContent="";
+  }
+
+  saveBtn.addEventListener("click", async ()=>{
+    msg.textContent="";
+
+    const softwareName = nameInp.value.trim();
+    const version = versionInp.value.trim();
+    const publisher = publisherInp.value.trim();
+    const softwareCategory = catInp.value;
+    const description = descInp.value.trim();
+    const lifecycleStatus = lifeInp.value;
+
+    if(!softwareName){
+      msg.textContent="Software name is required.";
+      return;
+    }
+
+    const payload = {
+      softwareName,
+      version,
+      publisher,
+      softwareCategory,
+      description,
+      lifecycleStatus,
+      updatedAt: serverTimestamp()
+    };
+
+    if(editMode){
+      await updateDoc(doc(db,"software_product",id), payload);
+      msg.textContent="Product updated.";
+      setTimeout(()=>location.href="software-products.html", 600);
+    } else {
+      payload.createdAt = serverTimestamp();
+      await addDoc(collection(db,"software_product"), payload);
+      msg.textContent="Product saved.";
+      setTimeout(()=>location.href="software-products.html", 600);
+    }
+  });
+</script>
+
+</body>
+</html>
