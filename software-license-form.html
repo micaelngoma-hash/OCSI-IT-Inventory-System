@@ -1,87 +1,77 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Add License</title>
-<style>
-  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .content{padding:18px;max-width:900px;margin:0 auto;width:100%;}
-  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
-  label{display:block;margin-top:8px;font-size:.9rem;}
-  input,select{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  button{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;margin-top:12px;}
-  .muted{color:#64748b;font-size:.85rem;margin-top:6px;}
-</style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software License Form • OCSI IT Inventory</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="topbar">
-  <div style="font-weight:700;">Add Software License</div>
-  <div id="who" style="opacity:.8;">Loading…</div>
+  <div>
+    <div class="topbar-title">Software License</div>
+    <div class="topbar-sub">Create or update a license pool</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="roleBadge" class="badge viewer">…</span>
+    <span id="who" style="opacity:.85;">Loading…</span>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <nav class="nav">
-      <a href="software-dashboard.html">Dashboard</a>
-      <a href="software-products.html">Products</a>
-      <a class="active" href="software-licenses.html">Licenses</a>
-      <a href="assign-license.html">Assign</a>
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a class="active" href="software-dashboard.html">Software</a>
+      <a href="admin-fields.html">Admin Fields</a>
+      <a href="admin-categories.html">Admin Categories</a>
+      <a href="admin-users.html">User Roles</a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="box">
-      <h3>Create License Pool</h3>
+    <div class="card">
+      <h3 id="formTitle">New Software License</h3>
+      <p class="muted" id="formSubtitle">
+        Link this license pool to an existing software product and define seats, expiry and vendor.
+      </p>
 
-      <label>Software Product</label>
-      <select id="prodSel"></select>
+      <form id="form">
+        <label>Software Product</label>
+        <select id="softwareProduct">
+          <option value="">Loading products…</option>
+        </select>
 
-      <label>License Key</label>
-      <input id="keyInp" type="password" placeholder="Enter key / subscription ID"/>
+        <label>License Key (optional)</label>
+        <input id="licenseKey" placeholder="Key, subscription ID, account ID…">
 
-      <div class="row">
-        <div>
-          <label>Total Seats</label>
-          <input id="totalInp" type="number" min="0" placeholder="e.g., 200"/>
-        </div>
-        <div>
-          <label>Seats Assigned (start)</label>
-          <input id="usedInp" type="number" min="0" value="0"/>
-        </div>
-      </div>
+        <label>Total Seats</label>
+        <input id="totalSeats" type="number" min="0" value="0">
 
-      <div class="row">
-        <div>
-          <label>Purchase Date</label>
-          <input id="purchaseInp" type="date"/>
-        </div>
-        <div>
-          <label>Expiry Date</label>
-          <input id="expiryInp" type="date"/>
-        </div>
-      </div>
+        <label>Assigned Seats (usually auto-managed)</label>
+        <input id="assignedSeats" type="number" min="0" value="0">
 
-      <div class="row">
-        <div>
-          <label>Vendor</label>
-          <input id="vendorInp" placeholder="Microsoft, Adobe, etc."/>
-        </div>
-        <div>
-          <label>Cost</label>
-          <input id="costInp" type="number" min="0" step="0.01"/>
-        </div>
-      </div>
+        <label>Purchase Date</label>
+        <input id="purchaseDate" type="date">
 
-      <button id="saveBtn">Save License</button>
-      <div class="muted" id="msg"></div>
+        <label>Expiry Date</label>
+        <input id="expiryDate" type="date">
+
+        <label>Vendor</label>
+        <input id="vendor" placeholder="e.g. Microsoft, Adobe, Distributor">
+
+        <label>Cost (total)</label>
+        <input id="cost" type="number" step="0.01" min="0" placeholder="e.g. 1200">
+
+        <div class="spacer"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="submit" class="btn" id="saveBtn">Save</button>
+          <a href="software-licenses.html" class="btn secondary">Back to Licenses</a>
+          <span id="status" class="muted"></span>
+        </div>
+      </form>
     </div>
   </main>
 </div>
@@ -89,11 +79,13 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import { 
-    getFirestore, collection, getDocs, addDoc, doc, getDoc, serverTimestamp 
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    collection, getDocs, serverTimestamp, Timestamp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } 
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -105,74 +97,157 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){}
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const auth=getAuth(app);
+  const db=getFirestore(app);
 
-  // ✅ Admin + IT only
-  const ALLOWED_ROLES = ["admin","it"];
+  const ALLOWED_ROLES=["admin","it"];
 
-  const who=document.getElementById("who");
-  const prodSel=document.getElementById("prodSel");
-  const msg=document.getElementById("msg");
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists() ? (uSnap.data().role || "viewer") : "viewer";
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
-      location.href="index.html";
-      return;
-    }
-    who.textContent=user.email+" ("+role+")";
-    await loadProducts();
-  });
-
-  async function loadProducts(){
-    prodSel.innerHTML="";
-    const snap=await getDocs(collection(db,"software_product"));
-    snap.forEach(ds=>{
-      const p=ds.data();
-      const o=document.createElement("option");
-      o.value=ds.id;
-      o.textContent=p.softwareName||p.name||ds.id;
-      prodSel.appendChild(o);
-    });
+  function setBadge(role){
+    const badge=document.getElementById("roleBadge");
+    if(!badge) return;
+    const r=(role||"viewer").toLowerCase();
+    badge.className="badge "+r;
+    badge.textContent=r.toUpperCase();
   }
 
-  document.getElementById("saveBtn").addEventListener("click", async ()=>{
-    msg.textContent="";
-    const softwareProductId = prodSel.value;
-    const softwareName = prodSel.options[prodSel.selectedIndex]?.textContent||"";
-    const licenseKey = document.getElementById("keyInp").value.trim();
-    const totalSeats = Number(document.getElementById("totalInp").value||0);
-    const assignedSeats = Number(document.getElementById("usedInp").value||0);
-    const vendor = document.getElementById("vendorInp").value.trim();
-    const cost = Number(document.getElementById("costInp").value||0);
-    const purchaseDate = document.getElementById("purchaseInp").value ? new Date(document.getElementById("purchaseInp").value) : null;
-    const expiryDate = document.getElementById("expiryInp").value ? new Date(document.getElementById("expiryInp").value) : null;
+  document.getElementById("logoutBtn").addEventListener("click",()=>{
+    signOut(auth).then(()=>location.href="login.html");
+  });
 
-    if(!softwareProductId){ msg.textContent="Select a software product."; return; }
+  function getId(){
+    const p=new URLSearchParams(location.search);
+    return p.get("id");
+  }
+  const id=getId();
 
-    await addDoc(collection(db,"software_license"),{
-      softwareProductId,
-      softwareName,
-      licenseKey,
-      totalSeats,
-      assignedSeats,
-      vendor,
-      cost,
-      purchaseDate,
-      expiryDate,
-      createdAt: serverTimestamp()
+  const productSelect=document.getElementById("softwareProduct");
+  const form=document.getElementById("form");
+  const statusEl=document.getElementById("status");
+  const saveBtn=document.getElementById("saveBtn");
+  const formTitle=document.getElementById("formTitle");
+  const formSub=document.getElementById("formSubtitle");
+
+  let productsMap={};
+
+  async function loadProducts(){
+    const snap=await getDocs(collection(db,"software_product"));
+    if(snap.empty){
+      productSelect.innerHTML='<option value="">No products. Create one first.</option>';
+      return;
+    }
+    const opts=[];
+    snap.forEach(d=>{
+      const data=d.data();
+      const name=data.softwareName || data.name || d.id;
+      productsMap[d.id]=name;
+      opts.push(`<option value="${d.id}">${name}</option>`);
     });
+    productSelect.innerHTML='<option value="">Select product…</option>'+opts.join("");
+  }
 
-    msg.textContent="License saved.";
-    location.href="software-licenses.html";
+  async function loadIfEditing(){
+    if(!id) return;
+    formTitle.textContent="Edit Software License";
+    formSub.textContent="Update license details. Assigned seats may be managed automatically by assignments.";
+
+    const ref=doc(db,"software_license",id);
+    const snap=await getDoc(ref);
+    if(!snap.exists()){
+      statusEl.textContent="License not found.";
+      return;
+    }
+    const l=snap.data();
+    if(l.softwareProductId){
+      productSelect.value=l.softwareProductId;
+    }
+    document.getElementById("licenseKey").value   = l.licenseKey || "";
+    document.getElementById("totalSeats").value   = l.totalSeats || 0;
+    document.getElementById("assignedSeats").value= l.assignedSeats || 0;
+    document.getElementById("vendor").value       = l.vendor || "";
+    document.getElementById("cost").value         = l.cost || "";
+
+    if(l.purchaseDate && l.purchaseDate.toDate){
+      document.getElementById("purchaseDate").value = l.purchaseDate.toDate().toISOString().slice(0,10);
+    }
+    if(l.expiryDate && l.expiryDate.toDate){
+      document.getElementById("expiryDate").value   = l.expiryDate.toDate().toISOString().slice(0,10);
+    }
+  }
+
+  onAuthStateChanged(auth, async (u)=>{
+    if(!u){location.href="login.html";return;}
+    const who=document.getElementById("who");
+    if(who) who.textContent=u.email||"";
+
+    const us=await getDoc(doc(db,"users",u.uid));
+    const role=us.exists()? (us.data().role||"viewer"):"viewer";
+    setBadge(role);
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Only Admin or IT may manage licenses.");
+      location.href="software-licenses.html";
+      return;
+    }
+
+    await loadProducts();
+    await loadIfEditing();
+  });
+
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    statusEl.textContent="";
+    saveBtn.disabled=true;
+    saveBtn.textContent="Saving…";
+
+    try{
+      const productId=document.getElementById("softwareProduct").value||"";
+      const name = productId ? productsMap[productId] : "";
+      const totalSeats=parseInt(document.getElementById("totalSeats").value||"0",10) || 0;
+      const assignedSeats=parseInt(document.getElementById("assignedSeats").value||"0",10) || 0;
+      const purchase=document.getElementById("purchaseDate").value;
+      const expiry  =document.getElementById("expiryDate").value;
+
+      const data={
+        softwareProductId: productId,
+        softwareName: name,
+        licenseKey: document.getElementById("licenseKey").value.trim(),
+        totalSeats,
+        assignedSeats,
+        vendor: document.getElementById("vendor").value.trim(),
+        cost: parseFloat(document.getElementById("cost").value||"0")||0,
+        updatedAt: serverTimestamp()
+      };
+      if(purchase){
+        data.purchaseDate = Timestamp.fromDate(new Date(purchase));
+      }
+      if(expiry){
+        data.expiryDate = Timestamp.fromDate(new Date(expiry));
+      }
+
+      if(!productId){
+        statusEl.textContent="Software Product is required.";
+        saveBtn.disabled=false;
+        saveBtn.textContent="Save";
+        return;
+      }
+
+      if(!id){
+        const newRef=doc(collection(db,"software_license"));
+        data.createdAt=serverTimestamp();
+        await setDoc(newRef,data);
+      }else{
+        await updateDoc(doc(db,"software_license",id),data);
+      }
+      statusEl.textContent="Saved.";
+      setTimeout(()=>location.href="software-licenses.html",800);
+    }catch(err){
+      statusEl.textContent="Error: "+err.message;
+    }finally{
+      saveBtn.disabled=false;
+      saveBtn.textContent="Save";
+    }
   });
 </script>
-
 </body>
 </html>
