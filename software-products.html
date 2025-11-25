@@ -12,15 +12,26 @@
   .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
   .nav a:hover,.nav a.active{background:#111a33;}
   .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  input{padding:8px;border:1px solid #cbd5e1;border-radius:8px;}
-  .btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  input{padding:8px;border:1px solid #cbd5e1;border-radius:8px;min-width:280px;}
+  .btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;font-size:.9rem;display:inline-block;}
+  .btn-lite{background:#0ea5e9;}
+  .btn-edit{background:#22c55e;}
+  .btn-del{background:#ef4444;}
   table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
   th,td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.92rem;}
   th{background:#f1f5f9;}
+  tr:hover{background:#f8fafc;}
+  .actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.8rem;}
+  .ok{background:#dcfce7;color:#166534;}
+  .warn{background:#fef3c7;color:#92400e;}
+  .bad{background:#fee2e2;color:#991b1b;}
+  .muted{color:#64748b;font-size:.9rem;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
   <div style="font-weight:700;">Software Products</div>
   <div id="who" style="opacity:.8;">Loading…</div>
@@ -32,18 +43,29 @@
       <a href="software-dashboard.html">Dashboard</a>
       <a class="active" href="#">Products</a>
       <a href="software-licenses.html">Licenses</a>
-      <a href="assign-license.html">Assign</a>
+      <a href="software-compliance.html">Compliance</a>
+      <a href="assign-license.html">Assign License</a>
     </nav>
   </aside>
 
   <main class="content">
     <div class="toolbar">
-      <input id="search" placeholder="Search software name / publisher..."/>
-      <a class="btn" href="software-product-form.html" style="text-decoration:none;">+ Add Product</a>
+      <input id="search" placeholder="Search software name / publisher..." />
+      <a class="btn" id="addBtn" href="software-product-form.html">+ Add Product</a>
+      <span id="hint" class="muted"></span>
     </div>
 
     <table>
-      <thead><tr><th>Name</th><th>Version</th><th>Publisher</th><th>Category</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Version</th>
+          <th>Publisher</th>
+          <th>Category</th>
+          <th>Lifecycle</th>
+          <th style="width:240px;">Actions</th>
+        </tr>
+      </thead>
       <tbody id="body"></tbody>
     </table>
   </main>
@@ -51,8 +73,11 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { 
+    getFirestore, collection, getDocs, doc, getDoc,
+    deleteDoc, query, where
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import { getAuth, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
@@ -66,51 +91,136 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
-  const auth=getAuth(app);
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
+  const db = getFirestore(app);
+  const auth = getAuth(app);
 
-  const ALLOWED_ROLES=["admin","it","viewer"];
+  // ✅ Viewer allowed
+  const ALLOWED_ROLES = ["admin","it","viewer"];
 
-  const who=document.getElementById("who");
-  const body=document.getElementById("body");
-  const search=document.getElementById("search");
+  const who = document.getElementById("who");
+  const body = document.getElementById("body");
+  const search = document.getElementById("search");
+  const addBtn = document.getElementById("addBtn");
+  const hint = document.getElementById("hint");
 
-  let products=[];
+  let products = [];
+  let currentRole = "viewer";
 
-  onAuthStateChanged(auth, async user=>{
+  onAuthStateChanged(auth, async (user)=>{
     if(!user){ location.href="login.html"; return; }
-    const uSnap=await getDoc(doc(db,"users",user.uid));
-    const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="index.html"; return; }
-    who.textContent=user.email+" ("+role+")";
+
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    currentRole = uSnap.exists() ? (uSnap.data().role || "viewer") : "viewer";
+
+    if(!ALLOWED_ROLES.includes(currentRole)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+
+    who.textContent = user.email + " (" + currentRole + ")";
+
+    if(currentRole === "viewer"){
+      addBtn.style.display = "none";
+      hint.textContent = "Viewer mode: read-only access.";
+    } else {
+      hint.textContent = "You can add/edit products. Admins can delete.";
+    }
+
     await load();
   });
 
   async function load(){
     body.innerHTML="";
-    const snap=await getDocs(collection(db,"software_product"));
-    products=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const snap = await getDocs(collection(db,"software_product"));
+    products = snap.docs.map(d=>({ id:d.id, ...d.data() }));
     render();
+  }
+
+  function lifecycleChip(status){
+    const s = (status||"Active").toLowerCase();
+    if(s==="active") return `<span class="chip ok">Active</span>`;
+    if(s==="deprecated") return `<span class="chip warn">Deprecated</span>`;
+    if(s==="retired") return `<span class="chip bad">Retired</span>`;
+    return `<span class="chip ok">${status||"Active"}</span>`;
+  }
+
+  async function safeDeleteProduct(productId, productName){
+    if(currentRole !== "admin"){
+      alert("Only Admin can delete products.");
+      return;
+    }
+
+    const sure = confirm(`Delete "${productName}"?\n\nThis cannot be undone.`);
+    if(!sure) return;
+
+    // Safety check: block if any licenses linked
+    const licSnap = await getDocs(query(
+      collection(db,"software_license"),
+      where("softwareProductId","==",productId)
+    ));
+
+    if(licSnap.size > 0){
+      alert(
+        `Cannot delete.\n\nThere are ${licSnap.size} license(s) linked to this product.\nDelete licenses first.`
+      );
+      return;
+    }
+
+    await deleteDoc(doc(db,"software_product",productId));
+    products = products.filter(p=>p.id!==productId);
+    render();
+    alert("Product deleted.");
   }
 
   function render(){
     body.innerHTML="";
-    const q=(search.value||"").toLowerCase();
+    const q = (search.value||"").toLowerCase();
+
     products.forEach(p=>{
-      const text=`${p.softwareName||p.name||""} ${p.publisher||""} ${p.version||""}`.toLowerCase();
+      const text = `${p.softwareName||p.name||""} ${p.publisher||""} ${p.version||""} ${p.softwareCategory||""}`.toLowerCase();
       if(q && !text.includes(q)) return;
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${p.softwareName||p.name||p.id}</td>
-        <td>${p.version||"--"}</td>
-        <td>${p.publisher||"--"}</td>
-        <td>${p.softwareCategory||"--"}</td>`;
+
+      const actions = [];
+      // View for everyone
+      actions.push(`<a class="btn btn-lite" href="software-product.html?id=${p.id}">View</a>`);
+
+      // Edit for admin/it
+      if(currentRole !== "viewer"){
+        actions.push(`<a class="btn btn-edit" href="software-product-form.html?id=${p.id}">Edit</a>`);
+      }
+
+      // Delete for admin only
+      if(currentRole === "admin"){
+        actions.push(`<button class="btn btn-del" data-del="${p.id}">Delete</button>`);
+      }
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${p.softwareName || p.name || p.id}</td>
+        <td>${p.version || "--"}</td>
+        <td>${p.publisher || "--"}</td>
+        <td>${p.softwareCategory || "--"}</td>
+        <td>${lifecycleChip(p.lifecycleStatus)}</td>
+        <td><div class="actions">${actions.join("")}</div></td>
+      `;
       body.appendChild(tr);
+    });
+
+    // wire delete buttons
+    body.querySelectorAll("[data-del]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const id = btn.getAttribute("data-del");
+        const prod = products.find(x=>x.id===id);
+        safeDeleteProduct(id, prod?.softwareName||prod?.name||id);
+      });
     });
   }
 
   search.addEventListener("input", render);
 </script>
+
 </body>
 </html>
