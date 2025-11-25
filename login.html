@@ -2,37 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Login • OCSI IT Inventory</title>
+<title>Login • IT Inventory</title>
 <style>
-  :root{
-    --bg:#0b1020;--card:#111a33;--muted:#b8c1d9;--line:#223257;--brand:#1a73e8;
-  }
-  body{margin:0;font-family:system-ui;background:var(--bg);color:#e5e7eb;display:grid;place-items:center;height:100vh;}
-  .card{width:min(440px,92vw);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;}
-  h2{margin:0 0 12px;}
-  label{display:block;margin-top:10px;font-size:.9rem;color:var(--muted);}
-  input{width:100%;padding:10px;border-radius:8px;border:1px solid #2c3a5c;background:#0f172a;color:white;}
-  button{width:100%;margin-top:14px;padding:10px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:600;cursor:pointer;}
-  .msg{margin-top:10px;font-size:.9rem;color:#f8b4b4;min-height:1.2em;}
-  .muted{opacity:.7;font-size:.85rem;margin-top:8px;}
+  body{margin:0;font-family:system-ui;background:#0f172a;color:white;display:grid;place-items:center;height:100vh;}
+  .card{background:white;color:#0f172a;border-radius:14px;padding:22px;width:min(420px,92vw);box-shadow:0 12px 30px rgba(0,0,0,.25);}
+  input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;margin-top:8px;}
+  button{width:100%;background:#1a73e8;color:white;border:none;padding:10px;border-radius:9px;margin-top:12px;font-weight:700;cursor:pointer;}
+  .muted{color:#64748b;font-size:.9rem;margin-top:8px;}
 </style>
 </head>
 <body>
-  <div class="card">
-    <h2>OCSI IT Inventory Login</h2>
-    <label>Email</label>
-    <input id="email" type="email" placeholder="you@ocsi.school"/>
-    <label>Password</label>
-    <input id="pass" type="password" placeholder="••••••••"/>
-    <button id="loginBtn">Sign In</button>
-    <div class="msg" id="msg"></div>
-    <div class="muted">No access? Contact IT Admin.</div>
-  </div>
+<div class="card">
+  <h2>OCSI IT Inventory</h2>
+  <p class="muted">Sign in to continue.</p>
+
+  <input id="email" type="email" placeholder="Email"/>
+  <input id="pass" type="password" placeholder="Password"/>
+
+  <button id="loginBtn">Login</button>
+  <div id="msg" class="muted"></div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
@@ -45,25 +39,25 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){}
-  const auth = getAuth(app);
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const auth=getAuth(app);
 
-  const email=document.getElementById("email");
-  const pass=document.getElementById("pass");
   const msg=document.getElementById("msg");
 
-  onAuthStateChanged(auth, (user)=>{
-    if(user) location.href="index.html";
+  onAuthStateChanged(auth,u=>{
+    if(u) location.href="index.html";
   });
 
   document.getElementById("loginBtn").addEventListener("click", async ()=>{
     msg.textContent="";
+    const email=document.getElementById("email").value.trim();
+    const pass=document.getElementById("pass").value.trim();
     try{
-      await signInWithEmailAndPassword(auth, email.value.trim(), pass.value);
+      await signInWithEmailAndPassword(auth,email,pass);
       location.href="index.html";
     }catch(e){
-      msg.textContent=e.message;
+      msg.textContent="Login failed: "+e.message;
     }
   });
 </script>
