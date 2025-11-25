@@ -1,36 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Audits</title>
-<style>
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{background:#0f172a;color:white;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;}
-  .wrap{max-width:1100px;margin:0 auto;padding:18px;}
-  table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
-  th,td{padding:9px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.92rem;}
-  th{background:#f1f5f9;}
-</style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Audit Logs • OCSI IT Inventory</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="topbar">
-  <div>Audit Logs</div>
-  <div id="who" style="opacity:.8;">Loading…</div>
+  <div>
+    <div class="topbar-title">Audit Logs</div>
+    <div class="topbar-sub">Lifecycle changes, status updates, movements</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="roleBadge" class="badge viewer">…</span>
+    <span id="who" style="opacity:.85;">Loading…</span>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
 </div>
 
-<div class="wrap">
-  <table>
-    <thead><tr><th>Date</th><th>Item</th><th>Action</th><th>User</th></tr></thead>
-    <tbody id="body"></tbody>
-  </table>
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a href="software-dashboard.html">Software</a>
+      <a href="admin-fields.html">Admin Fields</a>
+      <a href="admin-categories.html">Admin Categories</a>
+      <a href="export.html">Export</a>
+      <a class="active" href="audits.html">Audit Logs</a>
+      <a href="admin-users.html">User Roles</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="card">
+      <h3>Lifecycle Logs</h3>
+      <p class="muted">
+        Showing recent entries from <code>lifecycle_logs</code> collection (if you implement Cloud Functions).
+      </p>
+      <div class="spacer"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Item ID</th>
+            <th>Change</th>
+            <th>By</th>
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="4" class="muted">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -41,40 +77,78 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
+
   const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
+  try{getAnalytics(app);}catch(e){}
   const auth=getAuth(app);
+  const db=getFirestore(app);
 
-  const ALLOWED_ROLES=["admin"];
-  const who=document.getElementById("who");
-  const body=document.getElementById("body");
+  const ALLOWED_ROLES=["admin","it","viewer"];
 
-  onAuthStateChanged(auth, async user=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap=await getDoc(doc(db,"users",user.uid));
-    const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Admin only."); location.href="index.html"; return; }
-    who.textContent=user.email+" ("+role+")";
-    await load();
+  function setBadge(role){
+    const badge=document.getElementById("roleBadge");
+    if(!badge) return;
+    const r=(role||"viewer").toLowerCase();
+    badge.className="badge "+r;
+    badge.textContent=r.toUpperCase();
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click",()=>{
+    signOut(auth).then(()=>location.href="login.html");
   });
 
-  function toDate(x){return x?.toDate?.()|| (x?new Date(x):null);}
-  function fmtDate(d){return d? d.toISOString().slice(0,19).replace("T"," "):"--";}
+  const tbody=document.getElementById("tbody");
 
-  async function load(){
-    const snap=await getDocs(collection(db,"lifecycle_logs"));
-    body.innerHTML="";
-    snap.forEach(ds=>{
-      const a=ds.data();
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${fmtDate(toDate(a.timestamp))}</td>
-        <td>${a.itemId||"--"}</td>
-        <td>${a.action||"--"}</td>
-        <td>${a.userEmail||"--"}</td>`;
-      body.appendChild(tr);
-    });
+  function fmtDate(ts){
+    if(!ts) return "—";
+    try{
+      const d=ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toISOString().replace("T"," ").slice(0,16);
+    }catch{return "—";}
   }
+
+  async function loadLogs(){
+    try{
+      const snap=await getDocs(collection(db,"lifecycle_logs"));
+      if(snap.empty){
+        tbody.innerHTML='<tr><td colspan="4" class="muted">No logs yet.</td></tr>';
+        return;
+      }
+      const logs=snap.docs.map(d=>({id:d.id,...d.data()}));
+      logs.sort((a,b)=>{
+        const ta=a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime():0;
+        const tb=b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime():0;
+        return tb-ta;
+      });
+      tbody.innerHTML=logs.slice(0,200).map(l=>`
+        <tr>
+          <td>${l.itemId||"—"}</td>
+          <td>${l.change||l.message||"—"}</td>
+          <td>${l.performedBy||"—"}</td>
+          <td>${fmtDate(l.timestamp)}</td>
+        </tr>
+      `).join("");
+    }catch(err){
+      tbody.innerHTML='<tr><td colspan="4" class="muted">Error loading logs.</td></tr>';
+    }
+  }
+
+  onAuthStateChanged(auth, async (u)=>{
+    if(!u){location.href="login.html";return;}
+    const who=document.getElementById("who");
+    if(who) who.textContent=u.email||"";
+
+    const us=await getDoc(doc(db,"users",u.uid));
+    const role=us.exists()? (us.data().role||"viewer"):"viewer";
+    setBadge(role);
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+
+    await loadLogs();
+  });
 </script>
 </body>
 </html>
