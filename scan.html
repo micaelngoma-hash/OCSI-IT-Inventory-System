@@ -4,28 +4,29 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Scan QR</title>
 <style>
-  body{font-family:system-ui;margin:0;background:#0b1020;color:white;text-align:center;}
-  header{padding:14px;font-size:1.2rem;background:#0f172a;}
-  main{padding:20px;}
-  input{padding:10px;border-radius:8px;border:none;width:280px;}
-  button{padding:10px 12px;border-radius:8px;border:none;background:#1a73e8;color:white;margin-left:6px;cursor:pointer;}
+  :root{--bg:#0f172a;--bg2:#0b1020;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{background:var(--bg);color:white;padding:12px 16px;font-weight:700;}
+  .wrap{max-width:700px;margin:0 auto;padding:18px;}
+  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;}
 </style>
 </head>
 <body>
-<header>QR Scanner</header>
-<main>
-  <p>Paste or scan a QR code value (Firestore item ID or item URL).</p>
-  <input id="qrInput" placeholder="e.g., item Firestore id" />
-  <button id="openBtn">Open</button>
+<div class="topbar">Scan QR Code</div>
 
-  <p style="opacity:.7;margin-top:16px;">
-    Camera QR scanning can be added later (html5-qrcode / zxing).
-  </p>
-</main>
+<div class="wrap">
+  <div class="box">
+    <div id="reader" style="width:100%;"></div>
+    <p id="msg" style="color:#64748b;"></p>
+  </div>
+</div>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -36,17 +37,36 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
+  const app=initializeApp(firebaseConfig);
+  const auth=getAuth(app);
 
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){}
-
-  const qrInput = document.getElementById("qrInput");
-  document.getElementById("openBtn").addEventListener("click", () => {
-    const v = qrInput.value.trim();
-    if(!v) return;
-    if(v.includes("item.html")) location.href = v;
-    else location.href = `item.html?id=${encodeURIComponent(v)}`;
+  onAuthStateChanged(auth, user=>{
+    if(!user){ location.href="login.html"; return; }
+    startScanner();
   });
+
+  function startScanner(){
+    const msg=document.getElementById("msg");
+    const qr=new Html5Qrcode("reader");
+    qr.start(
+      { facingMode:"environment" },
+      { fps:10, qrbox:250 },
+      (decoded)=>{
+        msg.textContent="QR detected. Opening...";
+        qr.stop().then(()=>{
+          // QR contains URL to item.html?id=...
+          if(decoded.includes("item.html")){
+            location.href=decoded;
+          } else {
+            msg.textContent="Invalid QR (not an item link).";
+          }
+        });
+      },
+      ()=>{}
+    ).catch(err=>{
+      msg.textContent="Camera error: "+err;
+    });
+  }
 </script>
 </body>
 </html>
