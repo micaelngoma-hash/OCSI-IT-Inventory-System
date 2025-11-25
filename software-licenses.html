@@ -1,77 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Software Licenses</title>
-<style>
-  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
-  input{padding:8px;border:1px solid #cbd5e1;border-radius:8px;min-width:260px;}
-  table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
-  th,td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.92rem;}
-  th{background:#f1f5f9;}
-  tr:hover{background:#f8fafc;}
-  .btn{background:var(--brand);color:white;padding:6px 10px;border-radius:7px;text-decoration:none;font-size:.85rem;display:inline-block;}
-  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.8rem;}
-  .ok{background:#dcfce7;color:#166534;}
-  .warn{background:#fef3c7;color:#92400e;}
-  .bad{background:#fee2e2;color:#991b1b;}
-</style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Licenses • OCSI IT Inventory</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <div class="topbar">
-  <div style="font-weight:700;">Software Licenses</div>
-  <div id="who" style="opacity:.8;">Loading…</div>
+  <div>
+    <div class="topbar-title">Software Licenses</div>
+    <div class="topbar-sub">License pools and seat usage</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="roleBadge" class="badge viewer">…</span>
+    <span id="who" style="opacity:.85;">Loading…</span>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <nav class="nav">
-      <a href="software-dashboard.html">Dashboard</a>
-      <a href="software-products.html">Products</a>
-      <a class="active" href="#">Licenses</a>
-      <a href="software-compliance.html">Compliance</a>
-      <a href="assign-license.html">Assign License</a>
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a class="active" href="software-dashboard.html">Software</a>
+      <a href="admin-fields.html">Admin Fields</a>
+      <a href="admin-categories.html">Admin Categories</a>
+      <a href="admin-users.html">User Roles</a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="toolbar">
-      <input id="search" placeholder="Search software / vendor / key..." />
-      <a class="btn" href="software-license-form.html">+ Add License</a>
-    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;">
+        <input id="search" placeholder="Search by software / vendor…">
+        <a href="software-license-form.html" class="btn small" id="newBtn">+ New License</a>
+      </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Software</th>
-          <th>Total Seats</th>
-          <th>Used Seats</th>
-          <th>Expiry</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="body"></tbody>
-    </table>
+      <table>
+        <thead>
+          <tr>
+            <th>Software</th>
+            <th>Total Seats</th>
+            <th>Assigned</th>
+            <th>Expiry</th>
+            <th>Vendor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import { getFirestore, collection, getDocs, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -83,93 +75,113 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app = initializeApp(firebaseConfig);
-  try { getAnalytics(app); } catch(e){}
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const auth=getAuth(app);
+  const db=getFirestore(app);
 
-  // ✅ Viewer allowed
-  const ALLOWED_ROLES = ["admin","it","viewer"];
+  const ALLOWED_ROLES=["admin","it","viewer"];
+  let CURRENT_ROLE="viewer";
 
-  const who = document.getElementById("who");
-  const body = document.getElementById("body");
-  const search = document.getElementById("search");
+  function setBadge(role){
+    const badge=document.getElementById("roleBadge");
+    if(!badge) return;
+    const r=(role||"viewer").toLowerCase();
+    badge.className="badge "+r;
+    badge.textContent=r.toUpperCase();
+  }
 
-  let licenses = [];
+  document.getElementById("logoutBtn").addEventListener("click",()=>{
+    signOut(auth).then(()=>location.href="login.html");
+  });
 
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
+  const tbody=document.getElementById("tbody");
+  const search=document.getElementById("search");
+  const newBtn=document.getElementById("newBtn");
+  let licenses=[];
 
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists() ? (uSnap.data().role || "viewer") : "viewer";
+  function fmtDate(ts){
+    if(!ts) return "—";
+    try{
+      const d=ts.toDate ? ts.toDate(): new Date(ts);
+      return d.toISOString().slice(0,10);
+    }catch{return "—";}
+  }
+
+  function render(){
+    const q=search.value.trim().toLowerCase();
+    const filtered=licenses.filter(l=>{
+      const s=`${l.softwareName||""} ${l.vendor||""}`.toLowerCase();
+      return s.includes(q);
+    });
+
+    tbody.innerHTML=filtered.map(l=>{
+      const used=l.assignedSeats || 0;
+      const total=l.totalSeats || 0;
+      const percent = total>0 ? Math.round(used*100/total) : 0;
+      const exp=fmtDate(l.expiryDate);
+      const warn = l.expiryWarning ? "<span class='pill' style='border-color:#f97316;color:#b45309;'>Expiring</span>" : "";
+
+      const canEdit=["admin","it"].includes(CURRENT_ROLE);
+
+      return `
+        <tr>
+          <td>${l.softwareName || "—"}</td>
+          <td>${total}</td>
+          <td>${used} (${percent}%)</td>
+          <td>${exp} ${warn}</td>
+          <td>${l.vendor || "—"}</td>
+          <td>
+            <a class="btn small secondary" href="software-license_details.html?id=${l.id}">Details</a>
+            ${canEdit ? `<a class="btn small" href="software-license-form.html?id=${l.id}">Edit</a>` : ""}
+          </td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  async function loadLicenses(){
+    const snap=await getDocs(collection(db,"software_license"));
+    const now=new Date();
+    const soon=new Date(now.getTime()+30*86400000);
+    licenses=snap.docs.map(d=>{
+      const data=d.data();
+      let expiryWarning=false;
+      if(data.expiryDate && data.expiryDate.toDate){
+        const exp=data.expiryDate.toDate();
+        if(exp<=soon) expiryWarning=true;
+        data.expiryDate= data.expiryDate; // keep as is for fmtDate
+      }
+      return {id:d.id,expiryWarning,...data};
+    });
+    render();
+  }
+
+  onAuthStateChanged(auth, async (u)=>{
+    if(!u){location.href="login.html";return;}
+    const who=document.getElementById("who");
+    if(who) who.textContent=u.email||"";
+
+    const us=await getDoc(doc(db,"users",u.uid));
+    const role=us.exists()? (us.data().role||"viewer"):"viewer";
+    CURRENT_ROLE=role;
+    window.CURRENT_ROLE=role;
+    setBadge(role);
 
     if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
+      alert("Access denied for role: "+role);
       location.href="index.html";
       return;
     }
 
-    who.textContent = user.email + " (" + role + ")";
+    if(!["admin","it"].includes(role)){
+      newBtn.style.display="none";
+    }
+
     await loadLicenses();
   });
 
-  function toDate(x){
-    return x?.toDate?.() || (x ? new Date(x) : null);
-  }
-
-  function fmtDate(d){
-    if(!d) return "--";
-    return d.toISOString().slice(0,10);
-  }
-
-  async function loadLicenses(){
-    body.innerHTML="";
-    const snap = await getDocs(collection(db,"software_license"));
-
-    licenses = snap.docs.map(ds=>({
-      id: ds.id,
-      ...ds.data()
-    }));
-
-    render();
-  }
-
-  function render(){
-    body.innerHTML="";
-    const q = (search.value||"").toLowerCase();
-    const now = new Date();
-    const lim30 = new Date(now.getTime() + 30*24*60*60*1000);
-
-    licenses.forEach(l=>{
-      const text = `${l.softwareName||""} ${l.vendor||""} ${l.licenseKey||""}`.toLowerCase();
-      if(q && !text.includes(q)) return;
-
-      const total = Number(l.totalSeats||0);
-      const used  = Number(l.assignedSeats||0);
-      const exp   = toDate(l.expiryDate);
-
-      let statusChip = `<span class="chip ok">OK</span>`;
-      if(total>0 && used>total) statusChip = `<span class="chip bad">OVER-SEATS</span>`;
-      else if(exp && exp<=lim30) statusChip = `<span class="chip warn">EXPIRING SOON</span>`;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${l.softwareName || l.id}</td>
-        <td>${total || "--"}</td>
-        <td>${used || 0}</td>
-        <td>${fmtDate(exp)}</td>
-        <td>${statusChip}</td>
-        <td>
-          <a class="btn" href="software-license.html?id=${l.id}">View</a>
-          <a class="btn" href="assign-license.html?licenseId=${l.id}">Assign</a>
-        </td>
-      `;
-      body.appendChild(tr);
-    });
-  }
-
-  search.addEventListener("input", render);
+  search.addEventListener("input",render);
 </script>
-
 </body>
 </html>
