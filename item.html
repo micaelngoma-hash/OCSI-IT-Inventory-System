@@ -13,9 +13,10 @@
   .nav a:hover,.nav a.active{background:#111a33;}
   .content{padding:18px;max-width:1000px;margin:0 auto;width:100%;}
   .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
-  .row{display:grid;grid-template-columns:190px 1fr;gap:6px;font-size:.95rem;padding:4px 0;}
+  .row{display:grid;grid-template-columns:180px 1fr;gap:6px;font-size:.95rem;padding:4px 0;}
   .row b{color:#334155;}
-  .btn{display:inline-block;background:var(--brand);color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
+  .btn{display:inline-block;background:var(--brand);color:white;padding:7px 11px;border-radius:8px;text-decoration:none;font-size:.9rem;margin-right:6px;}
+  img{max-width:180px;border:1px solid #e5e7eb;border-radius:8px;padding:6px;background:white}
 </style>
 </head>
 <body>
@@ -29,22 +30,24 @@
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html">Dashboard</a>
-      <a href="inventory-list.html">Inventory</a>
-      <a class="active" href="#">Item</a>
+      <a class="active" href="inventory-list.html">Inventory</a>
       <a href="scan.html">Scan QR</a>
-      <a href="software-dashboard.html">Software</a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="box" id="itemBox">Loading…</div>
+    <div class="box" id="box">Loading…</div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -55,68 +58,75 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-
   const app=initializeApp(firebaseConfig);
   const db=getFirestore(app);
   const auth=getAuth(app);
 
   const ALLOWED_ROLES=["admin","it","viewer"];
-  const who=document.getElementById("who");
-  const itemBox=document.getElementById("itemBox");
-  const id=new URLSearchParams(location.search).get("id");
+  const EDIT_ROLES=["admin","it"];
 
-  onAuthStateChanged(auth, async (user)=>{
+  const who=document.getElementById("who");
+  const box=document.getElementById("box");
+  const id=new URLSearchParams(location.search).get("id");
+  let role="viewer", categoriesById={};
+
+  onAuthStateChanged(auth, async user=>{
     if(!user){ location.href="login.html"; return; }
-    who.textContent=user.email;
+    const uSnap=await getDoc(doc(db,"users",user.uid));
+    role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); return; }
+    who.textContent=user.email+" ("+role+")";
+    await loadCategories();
     await loadItem();
   });
 
+  async function loadCategories(){
+    const snap=await getDocs(collection(db,"categories"));
+    snap.forEach(d=>categoriesById[d.id]=d.data());
+  }
+
   async function loadItem(){
-    if(!id){ itemBox.textContent="No item id provided."; return; }
+    if(!id){ box.textContent="Missing item id."; return; }
     const snap=await getDoc(doc(db,"items",id));
-    if(!snap.exists()){ itemBox.textContent="Item not found."; return; }
+    if(!snap.exists()){ box.textContent="Item not found."; return; }
     const it=snap.data();
+    const cat=categoriesById[it.categoryId]||{};
+    const fields=[...(cat.defaultFields||[]), ...(cat.extraFields||[])];
 
-    const fields=[
-      ["Asset ID", it.assetId||id],
-      ["Name", it.deviceName||it.name||"--"],
-      ["Category", it.categoryId||"--"],
-      ["Model", it.model||"--"],
-      ["Serial Number", it.serialNumber||"--"],
-      ["MAC Address", it.macAddress||"--"],
-      ["IP Address", it.ipAddress||"--"],
-      ["VLAN", it.vlan||"--"],
-      ["Location", it.location||"--"],
-      ["Lifecycle Status", it.lifecycleStatus||it.status||"--"]
-    ];
+    const rows=[];
+    rows.push(`<h3>${it.deviceName||it.name||it.assetId||id}</h3>`);
+    rows.push(`<div style="margin:6px 0 10px;">
+      <a class="btn" href="inventory-list.html">Back</a>
+      ${EDIT_ROLES.includes(role)? `<a class="btn" href="item-form.html?id=${id}">Edit</a>`:""}
+    </div>`);
 
-    let html=`<h3>${it.deviceName||it.name||id}</h3>
-      <div style="margin-bottom:8px;">
-        <a class="btn" href="item-form.html?id=${id}">Edit Item</a>
-      </div>`;
+    rows.push(`<div class="row"><b>Asset ID</b><div>${it.assetId||"--"}</div></div>`);
+    rows.push(`<div class="row"><b>Category</b><div>${cat.name||it.categoryId||"--"}</div></div>`);
 
-    fields.forEach(([k,v])=>{
-      html+=`<div class="row"><b>${k}</b><div>${v}</div></div>`;
+    fields.forEach(f=>{
+      const v=it[f.key];
+      if(v===undefined) return;
+      rows.push(`<div class="row"><b>${f.name}</b><div>${v || "--"}</div></div>`);
     });
 
-    if(it.customFields){
-      html+=`<hr/><h4>Custom Fields</h4>`;
-      Object.entries(it.customFields).forEach(([k,v])=>{
-        html+=`<div class="row"><b>${k}</b><div>${v}</div></div>`;
-      });
-    }
+    rows.push(`<hr/><div style="display:flex;gap:16px;align-items:center;">
+      <div>
+        <b>QR Code</b><br/>
+        <img id="qrImg" alt="qr"/>
+      </div>
+      <div style="color:#64748b;font-size:.9rem;">
+        Scan to open: <br/>
+        <code>${location.origin}${location.pathname.replace("item.html","item.html?id="+id)}</code>
+      </div>
+    </div>`);
 
-    if(it.installedSoftware?.length){
-      html+=`<hr/><h4>Installed Software</h4><ul>`;
-      it.installedSoftware.forEach(s=>{
-        html+=`<li>${s.softwareName||"--"} ${s.version?`(${s.version})`:""}</li>`;
-      });
-      html+=`</ul>`;
-    }
+    box.innerHTML = rows.join("");
 
-    itemBox.innerHTML=html;
+    const url = location.origin + location.pathname.replace("item.html", "item.html?id=" + id);
+    QRCode.toDataURL(url).then(data=>{
+      document.getElementById("qrImg").src=data;
+    });
   }
 </script>
-
 </body>
 </html>
