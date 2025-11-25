@@ -6,62 +6,51 @@
 <style>
   :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .content{padding:18px;max-width:800px;margin:0 auto;width:100%;}
+  .topbar{background:var(--bg);color:white;padding:12px 16px;font-weight:700;display:flex;justify-content:space-between;}
+  .wrap{max-width:900px;margin:0 auto;padding:18px;}
   .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;}
-  label{display:block;margin-top:10px;font-size:.9rem;}
+  label{display:block;margin-top:8px;font-size:.9rem;}
   select,input{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
-  button{margin-top:12px;background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;}
-  .muted{color:#64748b;font-size:.85rem;margin-top:6px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  button{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;margin-top:12px;}
+  .muted{color:#64748b;font-size:.9rem;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="font-weight:700;">Assign Software License</div>
+  <div>Assign Software License</div>
   <div id="who" style="opacity:.8;">Loading…</div>
 </div>
 
-<div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a href="software-licenses.html">Licenses</a>
-      <a class="active" href="#">Assign License</a>
-      <a href="inventory-list.html">Inventory</a>
-    </nav>
-  </aside>
+<div class="wrap">
+  <div class="box">
+    <label>Select License</label>
+    <select id="licSel"></select>
 
-  <main class="content">
-    <div class="box">
-      <label>License</label>
-      <select id="licenseSel"></select>
-
-      <label>Assign to Device (optional)</label>
-      <select id="deviceSel"><option value="">-- None --</option></select>
-
-      <label>Assign to User (optional)</label>
-      <select id="userSel"><option value="">-- None --</option></select>
-
-      <label>Assignment Date</label>
-      <input id="dateInp" type="date"/>
-
-      <button id="assignBtn">Assign</button>
-      <div class="muted" id="msg"></div>
+    <div class="row">
+      <div>
+        <label>Assign to Device (optional)</label>
+        <select id="devSel"><option value="">-- none --</option></select>
+      </div>
+      <div>
+        <label>Assign to User (optional)</label>
+        <select id="usrSel"><option value="">-- none --</option></select>
+      </div>
     </div>
-  </main>
+
+    <label>Assignment Date</label>
+    <input id="dateInp" type="date"/>
+
+    <button id="assignBtn">Assign Seat</button>
+    <div id="msg" class="muted"></div>
+  </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import {
-    getFirestore, collection, getDocs, addDoc, doc, getDoc, runTransaction
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, getDoc, increment, serverTimestamp }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import { getAuth, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
@@ -74,90 +63,89 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-
   const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
   const db=getFirestore(app);
   const auth=getAuth(app);
 
-  // ✅ REQUIRED ROLE SETTING
-  const ALLOWED_ROLES=["admin","it"];
+  const ALLOWED_ROLES=["admin","it"]; // REQUIRED
 
   const who=document.getElementById("who");
-  const licenseSel=document.getElementById("licenseSel");
-  const deviceSel=document.getElementById("deviceSel");
-  const userSel=document.getElementById("userSel");
-  const dateInp=document.getElementById("dateInp");
+  const licSel=document.getElementById("licSel");
+  const devSel=document.getElementById("devSel");
+  const usrSel=document.getElementById("usrSel");
   const msg=document.getElementById("msg");
-  const assignBtn=document.getElementById("assignBtn");
 
-  const preLicense=new URLSearchParams(location.search).get("licenseId");
+  const presetLic=new URLSearchParams(location.search).get("licenseId");
 
-  onAuthStateChanged(auth, async (user)=>{
+  onAuthStateChanged(auth, async user=>{
     if(!user){ location.href="login.html"; return; }
     const uSnap=await getDoc(doc(db,"users",user.uid));
     const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="index.html"; return; }
+    if(!ALLOWED_ROLES.includes(role)){ alert("Admin/IT only."); location.href="software-dashboard.html"; return;}
     who.textContent=user.email+" ("+role+")";
-    await loadLists();
+    await loadAll();
   });
 
-  async function loadLists(){
-    licenseSel.innerHTML="";
+  async function loadAll(){
+    // licenses
     const licSnap=await getDocs(collection(db,"software_license"));
-    licSnap.forEach(ds=>{
+    licSel.innerHTML="";
+    licSnap.forEach(d=>{
+      const l=d.data();
       const o=document.createElement("option");
-      o.value=ds.id; o.textContent=ds.data().softwareName||ds.id;
-      licenseSel.appendChild(o);
+      o.value=d.id; o.textContent=(l.softwareName||d.id)+" ("+(l.assignedSeats||0)+"/"+(l.totalSeats||0)+")";
+      licSel.appendChild(o);
     });
-    if(preLicense) licenseSel.value=preLicense;
+    if(presetLic) licSel.value=presetLic;
 
-    const devSnap=await getDocs(collection(db,"items"));
-    devSnap.forEach(ds=>{
-      const it=ds.data();
+    // devices
+    const itemSnap=await getDocs(collection(db,"items"));
+    devSel.innerHTML='<option value="">-- none --</option>';
+    itemSnap.forEach(d=>{
+      const it=d.data();
       const o=document.createElement("option");
-      o.value=ds.id;
-      o.textContent=(it.assetId||ds.id)+" - "+(it.deviceName||it.name||"");
-      deviceSel.appendChild(o);
+      o.value=d.id; o.textContent=(it.assetId||d.id)+" - "+(it.deviceName||it.name||"");
+      devSel.appendChild(o);
     });
 
-    const uSnap=await getDocs(collection(db,"users"));
-    uSnap.forEach(ds=>{
-      const u=ds.data();
+    // users
+    const userSnap=await getDocs(collection(db,"users"));
+    usrSel.innerHTML='<option value="">-- none --</option>';
+    userSnap.forEach(d=>{
+      const u=d.data();
       const o=document.createElement("option");
-      o.value=ds.id; o.textContent=u.name||u.email||ds.id;
-      userSel.appendChild(o);
+      o.value=d.id; o.textContent=(u.name||u.email||d.id);
+      usrSel.appendChild(o);
     });
   }
 
-  async function assign(){
+  document.getElementById("assignBtn").addEventListener("click", async ()=>{
     msg.textContent="";
-    const licenseId=licenseSel.value;
-    const deviceId=deviceSel.value;
-    const userId=userSel.value;
-    if(!deviceId && !userId){ msg.textContent="Pick a device OR a user."; return; }
+    const licenseId=licSel.value;
+    const deviceId=devSel.value;
+    const userId=usrSel.value;
+    if(!licenseId){ msg.textContent="Choose a license."; return; }
+    if(!deviceId && !userId){ msg.textContent="Assign to device OR user."; return; }
 
-    const assignmentDate = dateInp.value ? new Date(dateInp.value) : new Date();
+    const assignmentDate = document.getElementById("dateInp").value
+      ? new Date(document.getElementById("dateInp").value)
+      : new Date();
 
     await addDoc(collection(db,"software_assignment"),{
       softwareLicenseId: licenseId,
-      deviceId: deviceId || null,
-      userId: userId || null,
-      assignmentDate
+      deviceId: deviceId||null,
+      userId: userId||null,
+      assignmentDate,
+      createdAt: serverTimestamp()
     });
 
-    const licRef=doc(db,"software_license",licenseId);
-    await runTransaction(db, async (t)=>{
-      const licSnap=await t.get(licRef);
-      const used=(licSnap.data().assignedSeats||0)+1;
-      t.update(licRef,{assignedSeats: used});
+    await updateDoc(doc(db,"software_license",licenseId),{
+      assignedSeats: increment(1)
     });
 
     msg.textContent="Assigned successfully.";
-  }
-
-  assignBtn.addEventListener("click", assign);
+    location.href="software-license.html?id="+licenseId;
+  });
 </script>
-
 </body>
 </html>
