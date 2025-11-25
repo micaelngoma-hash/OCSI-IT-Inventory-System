@@ -1,32 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Export</title>
-<style>
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{background:#0f172a;color:white;padding:12px 16px;font-weight:700;}
-  .wrap{max-width:1000px;margin:0 auto;padding:18px;}
-  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;}
-  button{background:#1a73e8;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;}
-  textarea{width:100%;min-height:320px;border:1px solid #cbd5e1;border-radius:8px;padding:8px;margin-top:8px;}
-</style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Export Data • OCSI IT Inventory</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="topbar">Export Inventory</div>
-<div class="wrap">
-  <div class="box">
-    <button id="exportBtn">Generate JSON Export</button>
-    <textarea id="out" placeholder="Export will appear here..."></textarea>
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Export Inventory</div>
+    <div class="topbar-sub">Download CSV snapshot of items</div>
   </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="roleBadge" class="badge viewer">…</span>
+    <span id="who" style="opacity:.85;">Loading…</span>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html">Dashboard</a>
+      <a href="inventory-list.html">Inventory</a>
+      <a href="software-dashboard.html">Software</a>
+      <a href="admin-fields.html">Admin Fields</a>
+      <a href="admin-categories.html">Admin Categories</a>
+      <a href="export.html" class="active">Export</a>
+      <a href="admin-users.html">User Roles</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <div class="card">
+      <h3>Export Items as CSV</h3>
+      <p class="muted">
+        This will generate a CSV from the <code>items</code> collection (basic fields only).
+      </p>
+      <div class="spacer"></div>
+      <button id="exportBtn" class="btn small">Export CSV</button>
+      <a id="downloadLink" style="display:none;margin-left:8px;" class="btn small secondary">Download</a>
+      <span id="status" class="muted" style="margin-left:8px;"></span>
+    </div>
+  </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import {
+    getAuth, onAuthStateChanged, signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -37,18 +65,86 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-  const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
-  const auth=getAuth(app);
 
-  onAuthStateChanged(auth, u=>{
-    if(!u) location.href="login.html";
+  const app=initializeApp(firebaseConfig);
+  try{getAnalytics(app);}catch(e){}
+  const auth=getAuth(app);
+  const db=getFirestore(app);
+
+  const ALLOWED_ROLES=["admin","it","viewer"];
+
+  function setBadge(role){
+    const badge=document.getElementById("roleBadge");
+    if(!badge) return;
+    const r=(role||"viewer").toLowerCase();
+    badge.className="badge "+r;
+    badge.textContent=r.toUpperCase();
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click",()=>{
+    signOut(auth).then(()=>location.href="login.html");
   });
 
-  document.getElementById("exportBtn").addEventListener("click", async ()=>{
-    const snap=await getDocs(collection(db,"items"));
-    const data=snap.docs.map(d=>({id:d.id,...d.data()}));
-    document.getElementById("out").value=JSON.stringify(data,null,2);
+  const exportBtn=document.getElementById("exportBtn");
+  const downloadLink=document.getElementById("downloadLink");
+  const statusEl=document.getElementById("status");
+
+  function toCsv(rows){
+    return rows.map(r=>r.map(v=>{
+      const s=(v==null?"":String(v)).replace(/"/g,'""');
+      return `"${s}"`;
+    }).join(",")).join("\n");
+  }
+
+  exportBtn.addEventListener("click", async ()=>{
+    statusEl.textContent="Exporting…";
+    downloadLink.style.display="none";
+    try{
+      const snap=await getDocs(collection(db,"items"));
+      if(snap.empty){
+        statusEl.textContent="No items found.";
+        return;
+      }
+      const header=["id","assetId","deviceName","categoryId","location","lifecycleStatus","serialNumber","ipAddress"];
+      const rows=[header];
+      snap.forEach(d=>{
+        const it=d.data();
+        rows.push([
+          d.id,
+          it.assetId||"",
+          it.deviceName||"",
+          it.categoryId||"",
+          it.location||"",
+          it.lifecycleStatus||"",
+          it.serialNumber||"",
+          it.ipAddress||""
+        ]);
+      });
+      const csv=toCsv(rows);
+      const blob=new Blob([csv],{type:"text/csv"});
+      const url=URL.createObjectURL(blob);
+      downloadLink.href=url;
+      downloadLink.download="ocsi_inventory_items.csv";
+      downloadLink.style.display="inline-flex";
+      statusEl.textContent="CSV ready.";
+    }catch(err){
+      statusEl.textContent="Error: "+err.message;
+    }
+  });
+
+  onAuthStateChanged(auth, async (u)=>{
+    if(!u){location.href="login.html";return;}
+    const who=document.getElementById("who");
+    if(who) who.textContent=u.email||"";
+
+    const us=await getDoc(doc(db,"users",u.uid));
+    const role=us.exists()? (us.data().role||"viewer"):"viewer";
+    setBadge(role);
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
   });
 </script>
 </body>
