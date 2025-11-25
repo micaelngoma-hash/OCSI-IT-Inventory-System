@@ -4,11 +4,25 @@
 <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Login • OCSI IT Inventory</title>
 <style>
-  body{margin:0;font-family:system-ui;background:#0f172a;color:white;display:grid;place-items:center;height:100vh;}
-  .card{background:white;color:#0f172a;border-radius:14px;padding:22px;width:min(420px,92vw);box-shadow:0 12px 30px rgba(0,0,0,.25);}
-  input{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;margin-top:8px;}
-  button{width:100%;border:none;padding:10px;border-radius:9px;margin-top:12px;font-weight:700;cursor:pointer;}
-  .google{background:#fff;border:1px solid #cbd5e1;color:#0f172a;display:flex;align-items:center;justify-content:center;gap:8px;}
+  body{
+    margin:0;font-family:system-ui;background:#0f172a;color:white;
+    display:grid;place-items:center;height:100vh;
+  }
+  .card{
+    background:white;color:#0f172a;border-radius:14px;padding:22px;
+    width:min(420px,92vw);box-shadow:0 12px 30px rgba(0,0,0,.25);
+  }
+  input{
+    width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px;margin-top:8px;
+  }
+  button{
+    width:100%;border:none;padding:10px;border-radius:9px;margin-top:12px;
+    font-weight:700;cursor:pointer;
+  }
+  .google{
+    background:#fff;border:1px solid #cbd5e1;color:#0f172a;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
   .emailpass{background:#1a73e8;color:white;}
   .muted{color:#64748b;font-size:.9rem;margin-top:8px;}
   .sep{display:flex;align-items:center;gap:8px;margin:12px 0;color:#94a3b8;}
@@ -48,6 +62,9 @@
     getFirestore, doc, getDoc, setDoc, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+  // -----------------------------
+  // Firebase Config
+  // -----------------------------
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
     authDomain: "ocsi-it-iventory-system.firebaseapp.com",
@@ -58,70 +75,106 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
-  const auth=getAuth(app);
-  const db=getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e){}
 
-  const msg=document.getElementById("msg");
-  const SCHOOL_DOMAIN="ocsi.school"; // <-- change to your real domain
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  onAuthStateChanged(auth,u=>{
-    if(u) location.href="index.html";
+  const msg = document.getElementById("msg");
+
+  // ✅ Allowed school domains (add more if needed)
+  const SCHOOL_DOMAINS = ["ocsi.school", "ocsi.org"];
+
+  // ✅ Super Admin(s)
+  const SUPER_ADMIN_EMAILS = ["micaelngoma@ocsi.org"];
+
+  // ✅ Auto-IT emails
+  const IT_EMAILS = ["micael@ocsi.school", "support@ocsi.school"];
+
+  // If already logged in → go to home
+  onAuthStateChanged(auth, u => {
+    if (u) location.href = "index.html";
   });
 
-  // ---- Google SSO ----
-  document.getElementById("googleBtn").addEventListener("click", async ()=>{
-    msg.textContent="";
-    try{
-      const provider=new GoogleAuthProvider();
+  // -----------------------------
+  // Google SSO Login
+  // -----------------------------
+  document.getElementById("googleBtn").addEventListener("click", async () => {
+    msg.textContent = "";
+    try {
+      const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
 
-      const res=await signInWithPopup(auth, provider);
-      const user=res.user;
+      const res  = await signInWithPopup(auth, provider);
+      const user = res.user;
 
-      // Domain restriction
-      const email=user.email || "";
-      if(!email.endsWith("@"+SCHOOL_DOMAIN)){
+      const email = (user.email || "").toLowerCase().trim();
+      const name  = user.displayName || "";
+
+      // ✅ Restrict to School Domains
+      const validDomain = SCHOOL_DOMAINS.some(d => email.endsWith("@"+d));
+      if (!validDomain) {
         await signOut(auth);
-        msg.textContent="Please use your school Google account only.";
+        msg.textContent = "Please use your OCSI school Google account only.";
         return;
       }
 
-      // Create user doc if missing (default role viewer)
-      const userRef=doc(db,"users",user.uid);
-      const userSnap=await getDoc(userRef);
+      // ✅ Decide auto role
+      let autoRole = "viewer";
+      if (IT_EMAILS.includes(email)) autoRole = "it";
+      if (SUPER_ADMIN_EMAILS.includes(email)) autoRole = "admin";
 
-      if(!userSnap.exists()){
-        await setDoc(userRef,{
-          email: user.email,
-          name: user.displayName || "",
-          role: "viewer",           // default role
+      const userRef  = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        // NEW USER → assign autoRole
+        await setDoc(userRef, {
+          email,
+          name,
+          role: autoRole,
           createdAt: serverTimestamp(),
           lastLoginAt: serverTimestamp()
         });
       } else {
-        await setDoc(userRef,{
-          lastLoginAt: serverTimestamp()
-        }, { merge:true });
+        // EXISTING USER → preserve role unless Super Admin
+        const currentRole = userSnap.data().role || "viewer";
+
+        if (SUPER_ADMIN_EMAILS.includes(email) && currentRole !== "admin") {
+          // Force upgrade to admin
+          await setDoc(userRef, {
+            role: "admin",
+            lastLoginAt: serverTimestamp()
+          }, { merge: true });
+        } else {
+          // Normal user → only update last login
+          await setDoc(userRef, {
+            lastLoginAt: serverTimestamp()
+          }, { merge: true });
+        }
       }
 
-      location.href="index.html";
-    }catch(e){
-      msg.textContent="Google sign-in failed: "+e.message;
+      location.href = "index.html";
+
+    } catch (e) {
+      msg.textContent = "Google sign-in failed: " + e.message;
     }
   });
 
-  // ---- Email/Password fallback ----
-  document.getElementById("loginBtn").addEventListener("click", async ()=>{
-    msg.textContent="";
-    const email=document.getElementById("email").value.trim();
-    const pass=document.getElementById("pass").value.trim();
-    try{
-      await signInWithEmailAndPassword(auth,email,pass);
-      location.href="index.html";
-    }catch(e){
-      msg.textContent="Login failed: "+e.message;
+  // -----------------------------
+  // Email/Password fallback
+  // -----------------------------
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    msg.textContent = "";
+    const email = document.getElementById("email").value.trim().toLowerCase();
+    const pass  = document.getElementById("pass").value.trim();
+
+    try {
+      await signInWithEmailAndPassword(auth, email, pass);
+      location.href = "index.html";
+    } catch (e) {
+      msg.textContent = "Login failed: " + e.message;
     }
   });
 </script>
