@@ -12,19 +12,19 @@
   .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
   .nav a:hover,.nav a.active{background:#111a33;}
   .content{padding:18px;max-width:1200px;margin:0 auto;width:100%;}
-  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
   input,select{padding:8px;border:1px solid #cbd5e1;border-radius:8px;}
-  .btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;}
+  .btn{background:var(--brand);color:white;padding:8px 12px;border-radius:8px;text-decoration:none;font-size:.9rem;}
   table{width:100%;border-collapse:collapse;background:white;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
   th,td{padding:9px 10px;border-bottom:1px solid #eef2f7;text-align:left;font-size:.92rem;}
   th{background:#f1f5f9;}
-  tr:hover{background:#f8fafc;}
+  tr:hover{background:#f8fafc;cursor:pointer;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="font-weight:700;">Inventory</div>
+  <div style="font-weight:700;">Inventory List</div>
   <div id="who" style="opacity:.8;">Loading…</div>
 </div>
 
@@ -32,36 +32,36 @@
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html">Dashboard</a>
-      <a class="active" href="inventory-list.html">Inventory</a>
-      <a href="item-form.html">Add Item</a>
+      <a class="active" href="#">Inventory</a>
       <a href="scan.html">Scan QR</a>
       <a href="software-dashboard.html">Software</a>
-      <a href="admin-categories.html">Admin</a>
     </nav>
   </aside>
 
   <main class="content">
     <div class="toolbar">
-      <input id="searchBox" placeholder="Search assetId, name, location, IP..." />
-      <select id="categoryFilter"><option value="">All Categories</option></select>
-      <button class="btn" id="refreshBtn">Refresh</button>
-      <a class="btn" href="item-form.html" style="text-decoration:none;">+ Add Item</a>
+      <input id="search" placeholder="Search assetId / name / serial..."/>
+      <select id="catFilter"><option value="">All Categories</option></select>
+      <a id="addBtn" class="btn" href="item-form.html">+ Add Item</a>
     </div>
 
     <table>
       <thead>
-        <tr><th>Asset ID</th><th>Name</th><th>Category</th><th>Location</th><th>Status</th></tr>
+        <tr>
+          <th>Asset ID</th><th>Name</th><th>Category</th><th>Status</th><th>Location</th>
+        </tr>
       </thead>
-      <tbody id="itemsBody"></tbody>
+      <tbody id="body"></tbody>
     </table>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, doc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -72,69 +72,74 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
+  const app=initializeApp(firebaseConfig);
+  const db=getFirestore(app);
+  const auth=getAuth(app);
 
   const ALLOWED_ROLES=["admin","it","viewer"];
-  const who=document.getElementById("who");
+  const EDIT_ROLES=["admin","it"];
 
-  onAuthStateChanged(auth, async (user)=>{
+  const who=document.getElementById("who");
+  const body=document.getElementById("body");
+  const search=document.getElementById("search");
+  const catFilter=document.getElementById("catFilter");
+  const addBtn=document.getElementById("addBtn");
+
+  let items=[], categoriesById={}, role="viewer";
+
+  onAuthStateChanged(auth, async user=>{
     if(!user){ location.href="login.html"; return; }
     const uSnap=await getDoc(doc(db,"users",user.uid));
-    const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="index.html"; return; }
+    role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); return; }
     who.textContent=user.email+" ("+role+")";
+    if(!EDIT_ROLES.includes(role)) addBtn.style.display="none";
     await loadCategories();
     await loadItems();
   });
 
-  const searchBox=document.getElementById('searchBox');
-  const categoryFilter=document.getElementById('categoryFilter');
-  const itemsBody=document.getElementById('itemsBody');
-  const refreshBtn=document.getElementById('refreshBtn');
-
   async function loadCategories(){
-    categoryFilter.innerHTML='<option value="">All Categories</option>';
-    const snap=await getDocs(collection(db,'categories'));
-    snap.forEach(d=>{
-      const c=d.data();
-      const opt=document.createElement('option');
-      opt.value=d.id; opt.textContent=c.name||d.id;
-      categoryFilter.appendChild(opt);
+    const cSnap=await getDocs(collection(db,"categories"));
+    categoriesById={};
+    catFilter.innerHTML='<option value="">All Categories</option>';
+    cSnap.forEach(d=>{
+      categoriesById[d.id]=d.data();
+      const opt=document.createElement("option");
+      opt.value=d.id; opt.textContent=d.data().name||d.id;
+      catFilter.appendChild(opt);
     });
   }
 
   async function loadItems(){
-    itemsBody.innerHTML='';
-    const search=(searchBox.value||'').toLowerCase();
-    const cat=categoryFilter.value;
+    const snap=await getDocs(collection(db,"items"));
+    items=snap.docs.map(d=>({id:d.id,...d.data()}));
+    render();
+  }
 
-    const base=collection(db,'items');
-    const qFinal=cat? query(base, where('categoryId','==',cat), limit(500)) : query(base, limit(500));
-    const snap=await getDocs(qFinal);
+  function render(){
+    body.innerHTML="";
+    const q=(search.value||"").toLowerCase();
+    const c=catFilter.value;
 
-    snap.forEach(d=>{
-      const it=d.data();
-      const text=((it.assetId||'')+' '+(it.deviceName||it.name||'')+' '+(it.location||'')+' '+(it.ipAddress||'')).toLowerCase();
-      if(search && !text.includes(search)) return;
+    items.forEach(it=>{
+      const text=`${it.assetId||""} ${it.deviceName||it.name||""} ${it.serialNumber||""}`.toLowerCase();
+      if(q && !text.includes(q)) return;
+      if(c && it.categoryId!==c) return;
 
-      const tr=document.createElement('tr');
+      const tr=document.createElement("tr");
       tr.innerHTML=`
-        <td>${it.assetId||d.id}</td>
-        <td><a href="item.html?id=${d.id}">${it.deviceName||it.name||'--'}</a></td>
-        <td>${it.categoryId||'--'}</td>
-        <td>${it.location||'--'}</td>
-        <td>${it.lifecycleStatus||it.status||'--'}</td>`;
-      itemsBody.appendChild(tr);
+        <td>${it.assetId||"--"}</td>
+        <td>${it.deviceName||it.name||"--"}</td>
+        <td>${categoriesById[it.categoryId]?.name||it.categoryId||"--"}</td>
+        <td>${it.lifecycleStatus||it.status||"Active"}</td>
+        <td>${it.location||"--"}</td>`;
+      tr.addEventListener("click", ()=>location.href=`item.html?id=${it.id}`);
+      body.appendChild(tr);
     });
   }
 
-  categoryFilter.addEventListener('change', loadItems);
-  searchBox.addEventListener('input', loadItems);
-  refreshBtn.addEventListener('click', loadItems);
+  search.addEventListener("input", render);
+  catFilter.addEventListener("change", render);
 </script>
-
 </body>
 </html>
