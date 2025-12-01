@@ -3,17 +3,62 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Item Details • OCSI IT Inventory</title>
-<link rel="stylesheet" href="style.css">
+<title>Item • OCSI IT Inventory</title>
+<style>
+  :root{--bg:#0f172a;--bg2:#111827;--brand:#1a73e8;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  .topbar{
+    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
+    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
+    box-shadow:0 2px 6px rgba(15,23,42,.6);
+  }
+  .topbar-title{font-weight:700;font-size:1.05rem;}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
+  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .nav a{
+    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
+    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+  }
+  .nav a span.icon{width:18px;text-align:center;}
+  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
+  .content{padding:18px 20px;max-width:900px;margin:0 auto;}
+  .card{background:white;border-radius:12px;padding:16px 18px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.08);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  label{font-size:.8rem;color:#4b5563;display:block;margin-bottom:3px;}
+  input,select,textarea{
+    width:100%;padding:7px 9px;border-radius:8px;border:1px solid #d1d5db;font-size:.85rem;
+  }
+  textarea{min-height:70px;resize:vertical;}
+  .row{margin-bottom:10px;}
+  .btn{
+    padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:500;
+  }
+  .btn.primary{background:var(--brand);color:white;}
+  .btn.secondary{background:white;color:#111827;border:1px solid #d1d5db;margin-right:8px;}
+  .muted{font-size:.8rem;color:#6b7280;margin-bottom:10px;}
+  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
+  .badge.super_admin{background:#7c3aed;color:white;}
+  .badge.admin{background:#f97316;color:white;}
+  .badge.it{background:#1d4ed8;color:white;}
+  .badge.viewer{background:#4b5563;color:white;}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;background:#e5e7eb;color:#111827;}
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .grid-2{grid-template-columns:1fr;}
+  }
+</style>
 </head>
 <body>
 <div class="topbar">
   <div>
-    <div class="topbar-title">Item Details</div>
-    <div class="topbar-sub">View hardware asset information</div>
+    <div class="topbar-title" id="pageTitle">Item</div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span id="roleBadge" class="badge viewer">…</span>
+  <div style="display:flex;align-items:center;font-size:.85rem;">
+    <span id="roleBadge" class="badge viewer">VIEWER</span>
     <span id="who" style="opacity:.85;">Loading…</span>
     <button id="logoutBtn" class="logout">Logout</button>
   </div>
@@ -21,75 +66,91 @@
 
 <div class="layout">
   <aside class="sidebar">
+    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a class="active" href="inventory-list.html">Inventory</a>
-      <a href="software-dashboard.html">Software</a>
-      <a href="admin-fields.html">Admin Fields</a>
-      <a href="admin-categories.html">Admin Categories</a>
-      <a href="admin-users.html">User Roles</a>
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a class="active" href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
+      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
+      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="card" id="itemCard">
-      <h3 id="deviceName">Loading item…</h3>
-      <p class="muted" id="itemIntro"></p>
-
-      <div class="spacer"></div>
-
-      <table>
-        <tbody id="itemDetails">
-          <!-- filled by JS -->
-        </tbody>
-      </table>
-
-      <div class="spacer"></div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <a id="editLink" href="#" class="btn small">Edit Item</a>
-        <a href="inventory-list.html" class="btn small secondary">Back to Inventory</a>
-      </div>
-    </div>
-
-    <div class="spacer"></div>
-
     <div class="card">
-      <h4>Installed Software / License Assignments</h4>
-      <p class="muted">
-        Licenses that are linked to this device. These come from the
-        <code>software_assignment</code> collection.
-      </p>
-      <div class="spacer"></div>
-      <table>
-        <thead>
-          <tr>
-            <th>Software</th>
-            <th>License</th>
-            <th>Assigned To</th>
-            <th>Assignment Date</th>
-          </tr>
-        </thead>
-        <tbody id="softwareBody">
-          <tr><td colspan="4" class="muted">Loading…</td></tr>
-        </tbody>
-      </table>
+      <p class="muted" id="infoText">Create or edit an inventory item. Fields may differ per category.</p>
+
+      <div class="grid-2">
+        <div class="row">
+          <label for="name">Item name</label>
+          <input id="name" placeholder="e.g., Dell Latitude 5420">
+        </div>
+        <div class="row">
+          <label for="category">Category</label>
+          <select id="category"></select>
+        </div>
+
+        <div class="row">
+          <label for="type">Type / Model</label>
+          <input id="type" placeholder="e.g., Laptop, Switch, Projector">
+        </div>
+        <div class="row">
+          <label for="location">Location / Room</label>
+          <input id="location" placeholder="e.g., HS Lab, Office 2F">
+        </div>
+
+        <div class="row">
+          <label for="owner">Assigned to / Owner</label>
+          <input id="owner" placeholder="Teacher / Office / Student ID">
+        </div>
+        <div class="row">
+          <label for="status">Status</label>
+          <select id="status">
+            <option value="Active">Active</option>
+            <option value="Repair">Repair</option>
+            <option value="Retired">Retired</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <label for="assetTag">Asset Tag</label>
+          <input id="assetTag" placeholder="OCSI-IT-XXXX">
+        </div>
+        <div class="row">
+          <label for="serialNumber">Serial Number</label>
+          <input id="serialNumber">
+        </div>
+      </div>
+
+      <div class="row">
+        <label for="notes">Notes</label>
+        <textarea id="notes" placeholder="Maintenance history, special instructions, etc."></textarea>
+      </div>
+
+      <div class="row" id="readonlyHint" style="display:none;">
+        <span class="pill">Read-only</span>
+        <span class="muted">You have viewer access; changes cannot be saved.</span>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button class="btn secondary" id="backBtn">← Back to list</button>
+        <button class="btn primary" id="saveBtn">Save item</button>
+      </div>
+
+      <div class="muted" id="message" style="margin-top:8px;"></div>
     </div>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
-    getAuth, onAuthStateChanged, signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc,
-    collection, getDocs, query, where
+    getFirestore, doc, getDoc, setDoc, collection, getDocs, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  // ---------- Firebase ----------
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
     authDomain: "ocsi-it-iventory-system.firebaseapp.com",
@@ -100,176 +161,116 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
-  const auth=getAuth(app);
-  const db=getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  // ---------- Auth Guard ----------
-  const ALLOWED_ROLES=["admin","it","viewer"]; // everyone can view
+  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+
+  const who   = document.getElementById("who");
+  const badge = document.getElementById("roleBadge");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const backBtn = document.getElementById("backBtn");
+  const saveBtn = document.getElementById("saveBtn");
+  const msg    = document.getElementById("message");
+  const readonlyHint = document.getElementById("readonlyHint");
+  const pageTitle   = document.getElementById("pageTitle");
+
+  const inputs = {
+    name:document.getElementById("name"),
+    category:document.getElementById("category"),
+    type:document.getElementById("type"),
+    location:document.getElementById("location"),
+    owner:document.getElementById("owner"),
+    status:document.getElementById("status"),
+    assetTag:document.getElementById("assetTag"),
+    serialNumber:document.getElementById("serialNumber"),
+    notes:document.getElementById("notes"),
+  };
+
+  let canEdit = false;
+  const params = new URLSearchParams(location.search);
+  const itemId = params.get("id");
 
   function setBadge(role){
-    const badge=document.getElementById("roleBadge");
-    if(!badge) return;
-    const r=(role||"viewer").toLowerCase();
-    badge.className="badge "+r;
-    badge.textContent=r.toUpperCase();
+    const r = (role||"viewer").toLowerCase();
+    badge.className = "badge "+r;
+    badge.textContent = r.toUpperCase();
   }
 
-  document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>location.href="login.html");
+  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
+  backBtn.addEventListener("click",()=>history.back());
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
+    who.textContent = user.email;
+    setBadge(role);
+    canEdit = (role==="it" || role==="admin" || role==="super_admin");
+    if(!canEdit){
+      saveBtn.disabled = true;
+      readonlyHint.style.display = "block";
+    }
+    await loadCategories();
+    if(itemId) await loadItem();
+    else pageTitle.textContent = "New Item";
   });
 
-  function getItemId(){
-    const p=new URLSearchParams(location.search);
-    return p.get("id");
-  }
-
-  const itemId=getItemId();
-  const deviceNameEl=document.getElementById("deviceName");
-  const introEl=document.getElementById("itemIntro");
-  const detailsBody=document.getElementById("itemDetails");
-  const softwareBody=document.getElementById("softwareBody");
-  const editLink=document.getElementById("editLink");
-
-  if(!itemId){
-    deviceNameEl.textContent="No item selected";
-    introEl.textContent="This page expects an ?id=ITEM_ID parameter in the URL.";
-    detailsBody.innerHTML='<tr><td colspan="2" class="muted">No data.</td></tr>';
-    softwareBody.innerHTML='<tr><td colspan="4" class="muted">No data.</td></tr>';
-  }else{
-    editLink.href=`item-form.html?id=${encodeURIComponent(itemId)}`;
+  async function loadCategories(){
+    const catSel = inputs.category;
+    const snap = await getDocs(collection(db,"categories"));
+    snap.forEach(d=>{
+      const c = d.data();
+      const opt = document.createElement("option");
+      opt.value = d.id;
+      opt.textContent = c.name || d.id;
+      catSel.appendChild(opt);
+    });
   }
 
   async function loadItem(){
-    if(!itemId) return;
-    const ref=doc(db,"items",itemId);
-    const snap=await getDoc(ref);
-    if(!snap.exists()){
-      deviceNameEl.textContent="Item not found";
-      introEl.textContent="This item does not exist in the database.";
-      detailsBody.innerHTML='<tr><td colspan="2" class="muted">No details available.</td></tr>';
-      return;
-    }
-
-    const it=snap.data();
-    const name=it.deviceName || it.assetId || "Unnamed device";
-    deviceNameEl.textContent=name;
-    introEl.textContent = (it.location? `Located at ${it.location}. `:"")
-      + (it.lifecycleStatus? `Lifecycle: ${it.lifecycleStatus}.`:"");
-
-    const rows=[
-      ["Asset ID", it.assetId],
-      ["Category", it.categoryId],
-      ["Location / Room", it.location],
-      ["Lifecycle", it.lifecycleStatus],
-      ["Serial Number", it.serialNumber],
-      ["IP Address", it.ipAddress],
-      ["Notes", it.notes],
-      ["Created By", it.createdBy],
-      ["Updated By", it.updatedBy]
-    ];
-
-    detailsBody.innerHTML = rows.map(([label,value])=>`
-      <tr>
-        <th style="width:180px;">${label}</th>
-        <td>${value || "<span class='muted'>—</span>"}</td>
-      </tr>
-    `).join("");
+    const ref = doc(db,"items",itemId);
+    const s = await getDoc(ref);
+    if(!s.exists()){ msg.textContent="Item not found."; return; }
+    const it = s.data();
+    pageTitle.textContent = it.name || "Item";
+    inputs.name.value = it.name || "";
+    inputs.category.value = it.categoryId || "";
+    inputs.type.value = it.type || "";
+    inputs.location.value = it.location || "";
+    inputs.owner.value = it.owner || "";
+    inputs.status.value = it.status || "Active";
+    inputs.assetTag.value = it.assetTag || "";
+    inputs.serialNumber.value = it.serialNumber || "";
+    inputs.notes.value = it.notes || "";
   }
 
-  async function loadSoftwareAssignments(){
+  saveBtn.addEventListener("click", async ()=>{
+    if(!canEdit){ return; }
+    msg.textContent = "Saving…";
+    const payload = {
+      name:inputs.name.value.trim(),
+      categoryId:inputs.category.value || null,
+      type:inputs.type.value.trim(),
+      location:inputs.location.value.trim(),
+      owner:inputs.owner.value.trim(),
+      status:inputs.status.value,
+      assetTag:inputs.assetTag.value.trim(),
+      serialNumber:inputs.serialNumber.value.trim(),
+      notes:inputs.notes.value.trim(),
+      updatedAt:serverTimestamp()
+    };
+    if(!itemId) payload.createdAt = serverTimestamp();
+
+    const id = itemId || crypto.randomUUID();
+    await setDoc(doc(db,"items",id),payload,{merge:true});
+    msg.textContent = "Saved.";
     if(!itemId){
-      softwareBody.innerHTML='<tr><td colspan="4" class="muted">No device selected.</td></tr>';
-      return;
+      // redirect to edit URL
+      location.replace(`item.html?id=${encodeURIComponent(id)}`);
     }
-
-    try{
-      const qAssign = query(
-        collection(db,"software_assignment"),
-        where("deviceId","==",itemId)
-      );
-      const assignSnap = await getDocs(qAssign);
-      if(assignSnap.empty){
-        softwareBody.innerHTML='<tr><td colspan="4" class="muted">No software assignments for this device.</td></tr>';
-        return;
-      }
-
-      // collect license IDs and user IDs for lookups
-      const assignments = assignSnap.docs.map(d=>({id:d.id,...d.data()}));
-      const licenseIds = [...new Set(assignments.map(a=>a.softwareLicenseId).filter(Boolean))];
-
-      // fetch license + product in a simple way
-      const licensesMap = {};
-      for(const licId of licenseIds){
-        const licSnap = await getDoc(doc(db,"software_license",licId));
-        if(licSnap.exists()){
-          licensesMap[licId]={id:licId,...licSnap.data()};
-        }
-      }
-
-      // fetch related products (based on license.softwareName relation id or text)
-      const productIds = [...new Set(
-        Object.values(licensesMap)
-          .map(l=>l.softwareNameId || l.softwareProductId)
-          .filter(Boolean)
-      )];
-      const productsMap={};
-      for(const pid of productIds){
-        const prodSnap = await getDoc(doc(db,"software_product",pid));
-        if(prodSnap.exists()) productsMap[pid]={id:pid,...prodSnap.data()};
-      }
-
-      softwareBody.innerHTML = assignments.map(a=>{
-        const lic = a.softwareLicenseId ? licensesMap[a.softwareLicenseId] : null;
-        let softwareLabel = "Unknown";
-        if(lic){
-          // try look up product
-          const prodId = lic.softwareNameId || lic.softwareProductId;
-          const prod = prodId ? productsMap[prodId] : null;
-          softwareLabel = prod ? (prod.softwareName || prod.name || "Software") :
-                          (lic.softwareName || "Software");
-        }
-
-        const licenseLabel = lic ? (lic.licenseKey || lic.vendor || lic.id) : "—";
-        const assignedTo = a.userId ? `User: ${a.userId}` : "This device";
-        const d = a.assignmentDate && a.assignmentDate.toDate
-                  ? a.assignmentDate.toDate().toISOString().slice(0,10)
-                  : "—";
-
-        return `
-          <tr>
-            <td>${softwareLabel}</td>
-            <td>${licenseLabel}</td>
-            <td>${assignedTo}</td>
-            <td>${d}</td>
-          </tr>
-        `;
-      }).join("");
-    }catch(err){
-      console.error(err);
-      softwareBody.innerHTML='<tr><td colspan="4" class="muted">Error loading assignments.</td></tr>';
-    }
-  }
-
-  // ---------- Auth + Init ----------
-  onAuthStateChanged(auth, async (u)=>{
-    if(!u){location.href="login.html";return;}
-    const who=document.getElementById("who");
-    if(who) who.textContent=u.email||"";
-
-    const us=await getDoc(doc(db,"users",u.uid));
-    const role=us.exists()? (us.data().role||"viewer"):"viewer";
-    setBadge(role);
-
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied for role: "+role);
-      location.href="index.html";
-      return;
-    }
-
-    await loadItem();
-    await loadSoftwareAssignments();
   });
 </script>
 </body>
