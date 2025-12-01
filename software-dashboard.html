@@ -1,364 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Software Dashboard</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Dashboard – OCSI IT Inventory</title>
 <style>
   :root{
-    --bg:#0f172a;
-    --bg2:#111827;
-    --brand:#1a73e8;
-    --accent:#10b981;
-    --warn:#f59e0b;
-    --danger:#ef4444;
+    --bg:#0f172a;--bg2:#111827;--brand:#1a73e8;
+    --accent:#10b981;--warn:#f59e0b;--danger:#ef4444;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-    background:#f3f4f6;
-    color:#0f172a;
-  }
-
-  /* Top bar */
+  body{margin:0;font-family:system-ui;background:#f3f4f6;}
   .topbar{
-    position:sticky;
-    top:0;
-    z-index:10;
-    background:var(--bg);
-    color:white;
-    padding:10px 18px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    box-shadow:0 2px 6px rgba(15,23,42,.5);
+    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
+    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
+    box-shadow:0 2px 6px rgba(15,23,42,.6);
   }
-  .topbar-title{
-    font-weight:700;
-    font-size:1.1rem;
-  }
-  .topbar-sub{
-    font-size:.8rem;
-    opacity:.7;
-  }
-
-  /* Layout */
-  .layout{
-    display:grid;
-    grid-template-columns:230px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-  .sidebar{
-    background:var(--bg2);
-    color:white;
-    padding:14px 10px;
-  }
-  .logo{
-    font-weight:700;
-    font-size:1rem;
-    margin-bottom:10px;
-    padding:0 8px;
-  }
+  .topbar-title{font-weight:700;font-size:1.05rem;}
+  .topbar-sub{font-size:.8rem;opacity:.75;}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
+  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
   .nav a{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    padding:9px 10px;
-    margin-bottom:5px;
-    border-radius:8px;
-    color:#d1d5db;
-    text-decoration:none;
-    font-size:.9rem;
+    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
+    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
   }
-  .nav a span.icon{
-    width:18px;
-    text-align:center;
-    opacity:.8;
-  }
-  .nav a:hover,
-  .nav a.active{
-    background:#1f2937;
-    color:#fff;
-  }
-
-  .content{
-    padding:18px 20px;
-    max-width:1300px;
-    width:100%;
-    margin:0 auto;
-  }
-
-  .muted{color:#6b7280;font-size:.85rem;}
-  .section-title{
-    font-weight:600;
-    margin-bottom:4px;
-  }
-
-  /* Summary tiles (top row) */
+  .nav a span.icon{width:18px;text-align:center;}
+  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
+  .content{padding:18px 20px;max-width:1300px;margin:0 auto;}
   .summary-row{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-    gap:14px;
-    margin-bottom:18px;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px;margin-bottom:18px;
   }
   .summary-card{
-    background:white;
-    border-radius:12px;
-    padding:14px 16px;
-    box-shadow:0 1px 3px rgba(15,23,42,.08);
-    border:1px solid #e5e7eb;
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
+    background:white;border-radius:12px;padding:14px 16px;
+    border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.08);
   }
-  .summary-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:8px;
-    font-size:.85rem;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:#6b7280;
-  }
-  .summary-icon{
-    font-size:1.3rem;
-    opacity:.7;
-  }
-  .summary-value{
-    font-size:2rem;
-    font-weight:700;
-    color:#111827;
-    text-align:left;
-  }
-  .summary-footer{
-    font-size:.8rem;
-    color:#6b7280;
-    margin-top:4px;
-  }
-  .summary-link{
-    font-size:.8rem;
-    color:var(--brand);
-    text-decoration:none;
-    font-weight:500;
-  }
+  .summary-header{display:flex;justify-content:space-between;font-size:.8rem;color:#6b7280;text-transform:uppercase;}
+  .summary-val{font-size:2rem;font-weight:700;margin-top:4px;}
+  .summary-footer{font-size:.8rem;color:#6b7280;margin-top:2px;}
+  .summary-link{font-size:.8rem;color:var(--brand);text-decoration:none;}
   .summary-link:hover{text-decoration:underline;}
-
-  /* Middle cards */
-  .grid-2{
-    display:grid;
-    grid-template-columns:2fr 1.5fr;
-    gap:16px;
-  }
+  .grid-2{display:grid;grid-template-columns:2fr 1.4fr;gap:16px;}
+  .card{background:white;border-radius:12px;padding:14px 16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.06);}
+  .muted{font-size:.85rem;color:#6b7280;}
+  .bar-wrap{margin-top:10px;background:#e5e7eb;border-radius:999px;overflow:hidden;height:14px;}
+  .bar-inner{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a,#22c55e);width:0%;transition:width .5s;}
+  .list{margin:0;padding-left:18px;font-size:.85rem;color:#4b5563;}
+  .list li{margin-bottom:4px;}
+  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
+  .badge.super_admin{background:#7c3aed;color:white;}
+  .badge.admin{background:#f97316;color:white;}
+  .badge.it{background:#1d4ed8;color:white;}
+  .badge.viewer{background:#4b5563;color:white;}
+  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
   @media(max-width:900px){
     .layout{grid-template-columns:1fr;}
-    .sidebar{display:none;} /* optional: hide on mobile */
+    .sidebar{display:none;}
     .grid-2{grid-template-columns:1fr;}
-  }
-  .card{
-    background:white;
-    border-radius:12px;
-    padding:14px 16px;
-    border:1px solid #e5e7eb;
-    box-shadow:0 1px 3px rgba(15,23,42,.08);
-  }
-
-  /* Seat usage mini chart */
-  .usage-row{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:6px;
-    font-size:.85rem;
-    color:#4b5563;
-  }
-  .usage-bar-wrap{
-    margin-top:10px;
-    background:#e5e7eb;
-    border-radius:999px;
-    height:10px;
-    overflow:hidden;
-  }
-  .usage-bar{
-    height:100%;
-    width:0%;
-    background:linear-gradient(90deg,var(--accent),var(--brand));
-    transition:width .4s ease-out;
-  }
-
-  /* Quick links */
-  .quick-list{
-    margin-top:8px;
-    display:grid;
-    grid-template-columns:1fr;
-    gap:8px;
-    font-size:.85rem;
-  }
-  .quick-item{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:6px 0;
-    border-bottom:1px solid #f3f4f6;
-  }
-  .quick-item:last-child{border-bottom:none;}
-  .btn-link{
-    padding:4px 9px;
-    border-radius:6px;
-    border:1px solid var(--brand);
-    color:var(--brand);
-    text-decoration:none;
-    font-size:.78rem;
-    font-weight:500;
-  }
-  .btn-link:hover{
-    background:var(--brand);
-    color:white;
   }
 </style>
 </head>
 <body>
-
 <div class="topbar">
   <div>
-    <div class="topbar-title">Software Dashboard</div>
-    <div class="topbar-sub">Licensing overview for OCSI IT Inventory</div>
+    <div class="topbar-title">Software & Licensing Dashboard</div>
+    <div class="topbar-sub">Overview of software titles, license pools and compliance</div>
   </div>
-  <div id="who" style="opacity:.85;font-size:.85rem;">Loading…</div>
+  <div style="display:flex;align-items:center;font-size:.85rem;">
+    <span id="roleBadge" class="badge viewer">VIEWER</span>
+    <span id="who" style="opacity:.85;">Loading…</span>
+    <button id="logoutBtn" class="logout">Logout</button>
+  </div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
-      <a href="index.html">
-        <span class="icon">🏠</span><span>Main Dashboard</span>
-      </a>
-      <a class="active" href="#">
-        <span class="icon">💻</span><span>Software Dashboard</span>
-      </a>
-      <a href="software-products.html">
-        <span class="icon">📦</span><span>Software Products</span>
-      </a>
-      <a href="software-licenses.html">
-        <span class="icon">🧾</span><span>License Pools</span>
-      </a>
-      <a href="assign-license.html">
-        <span class="icon">🎫</span><span>Assign License</span>
-      </a>
-      <a href="software-compliance.html">
-        <span class="icon">⚠️</span><span>Compliance</span>
-      </a>
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a class="active" href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
+      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
+      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <!-- TOP SUMMARY TILES -->
     <div class="summary-row">
-
       <div class="summary-card">
-        <div class="summary-header">
-          <span>Software Products</span>
-          <span class="summary-icon">📦</span>
-        </div>
-        <div class="summary-value" id="prodCount">--</div>
-        <div class="summary-footer">
-          Tracked titles in the catalog.<br>
-          <a class="summary-link" href="software-products.html">Open product list →</a>
-        </div>
+        <div class="summary-header"><span>Software Products</span><span>📦</span></div>
+        <div class="summary-val" id="prodCount">--</div>
+        <div class="summary-footer">Tracked software titles.</div>
+        <a class="summary-link" href="software-products.html">Open products →</a>
       </div>
 
       <div class="summary-card">
-        <div class="summary-header">
-          <span>License Pools</span>
-          <span class="summary-icon">🧾</span>
-        </div>
-        <div class="summary-value" id="licCount">--</div>
-        <div class="summary-footer">
-          Grouped licenses for each vendor/product.<br>
-          <a class="summary-link" href="software-licenses.html">View all licenses →</a>
-        </div>
+        <div class="summary-header"><span>License Pools</span><span>🎟</span></div>
+        <div class="summary-val" id="licCount">--</div>
+        <div class="summary-footer">Distinct license contracts / subscriptions.</div>
+        <a class="summary-link" href="software-licenses.html">Open licenses →</a>
       </div>
 
       <div class="summary-card">
-        <div class="summary-header">
-          <span>Available Seats</span>
-          <span class="summary-icon">🎟</span>
-        </div>
-        <div class="summary-value" id="availSeats">--</div>
-        <div class="summary-footer">
-          Remaining seats across all license pools.
-        </div>
+        <div class="summary-header"><span>Seats Used</span><span>👥</span></div>
+        <div class="summary-val" id="seatsUsed">--</div>
+        <div class="summary-footer" id="seatsDetail">Used vs total seats.</div>
       </div>
 
       <div class="summary-card">
-        <div class="summary-header">
-          <span>Compliance Alerts</span>
-          <span class="summary-icon">⚠️</span>
-        </div>
-        <div class="summary-value" id="alerts">--</div>
-        <div class="summary-footer">
-          Expiring soon or over-assigned.<br>
-          <a class="summary-link" href="software-compliance.html">Open compliance view →</a>
-        </div>
+        <div class="summary-header"><span>Compliance Alerts</span><span>⚠️</span></div>
+        <div class="summary-val" id="alerts">--</div>
+        <div class="summary-footer">Over-assigned or expiring licenses.</div>
+        <a class="summary-link" href="software-licenses.html#compliance">View compliance →</a>
       </div>
-
     </div>
 
-    <!-- SECOND ROW: usage + quick links -->
     <div class="grid-2">
       <div class="card">
-        <div class="section-title">Seat Usage</div>
-        <p class="muted">
-          Overview of total vs assigned seats for all license pools.
-        </p>
-        <div class="usage-row">
-          <div>Total seats: <strong id="seatTotal">--</strong></div>
-          <div>Assigned: <strong id="seatUsed">--</strong></div>
+        <h3 style="margin-top:0;">License Utilization</h3>
+        <p class="muted">Overall usage across all license pools.</p>
+        <div class="bar-wrap">
+          <div class="bar-inner" id="usageBar"></div>
         </div>
-        <div class="usage-row" style="margin-top:4px;">
-          <div class="muted">Utilization</div>
-          <div id="seatUsage" class="muted">--</div>
-        </div>
-        <div class="usage-bar-wrap">
-          <div class="usage-bar" id="seatUsageBar"></div>
-        </div>
+        <p class="muted" id="usageText" style="margin-top:8px;">–</p>
       </div>
 
       <div class="card">
-        <div class="section-title">Quick Actions</div>
-        <p class="muted">Frequently used pages for software management.</p>
-
-        <div class="quick-list">
-          <div class="quick-item">
-            <span>Register a new software product</span>
-            <a href="software-products.html" class="btn-link">Open Products</a>
-          </div>
-          <div class="quick-item">
-            <span>Create or update a license pool</span>
-            <a href="software-licenses.html" class="btn-link">License Pools</a>
-          </div>
-          <div class="quick-item">
-            <span>Assign a license to a user or device</span>
-            <a href="assign-license.html" class="btn-link">Assign License</a>
-          </div>
-          <div class="quick-item">
-            <span>Review compliance (expiry / overuse)</span>
-            <a href="software-compliance.html" class="btn-link">Compliance View</a>
-          </div>
-        </div>
+        <h3 style="margin-top:0;">Upcoming Renewals (30 days)</h3>
+        <ul class="list" id="renewalsList">
+          <li>No upcoming expiries.</li>
+        </ul>
       </div>
     </div>
-
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -370,79 +155,89 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth= getAuth(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  // ✅ Viewer allowed
-  const ALLOWED_ROLES=["admin","it","viewer"];
+  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
 
-  const who        = document.getElementById("who");
-  const prodCount  = document.getElementById("prodCount");
-  const licCount   = document.getElementById("licCount");
-  const availSeats = document.getElementById("availSeats");
-  const alertsEl   = document.getElementById("alerts");
+  const who   = document.getElementById("who");
+  const badge = document.getElementById("roleBadge");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  const seatTotalEl = document.getElementById("seatTotal");
-  const seatUsedEl  = document.getElementById("seatUsed");
-  const seatUsageEl = document.getElementById("seatUsage");
-  const seatBar     = document.getElementById("seatUsageBar");
+  const prodCount   = document.getElementById("prodCount");
+  const licCount    = document.getElementById("licCount");
+  const seatsUsed   = document.getElementById("seatsUsed");
+  const seatsDetail = document.getElementById("seatsDetail");
+  const alerts      = document.getElementById("alerts");
+  const usageBar    = document.getElementById("usageBar");
+  const usageText   = document.getElementById("usageText");
+  const renewalsList= document.getElementById("renewalsList");
 
-  onAuthStateChanged(auth, async user=>{
+  function setBadge(role){
+    const r = (role||"viewer").toLowerCase();
+    badge.className = "badge "+r;
+    badge.textContent = r.toUpperCase();
+  }
+
+  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
+
+  onAuthStateChanged(auth, async (user)=>{
     if(!user){ location.href="login.html"; return; }
-
     const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role  = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
-      location.href="index.html";
-      return;
-    }
-    who.textContent = `${user.email} (${role})`;
-
+    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
+    who.textContent = user.email;
+    setBadge(role);
     await loadStats();
   });
 
   function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
 
   async function loadStats(){
-    // Products
     const prodSnap = await getDocs(collection(db,"software_product"));
     prodCount.textContent = prodSnap.size;
 
-    // Licenses
     const licSnap = await getDocs(collection(db,"software_license"));
     licCount.textContent = licSnap.size;
 
-    let totalSeats=0, usedSeats=0, alertCount=0;
-    const now   = new Date();
+    let totalSeats=0, used=0, alertCount=0;
+    const now = new Date();
     const lim30 = new Date(now.getTime()+30*24*60*60*1000);
+    const expiring = [];
 
-    licSnap.forEach(ds=>{
-      const l = ds.data();
-      totalSeats += Number(l.totalSeats||0);
-      usedSeats  += Number(l.assignedSeats||0);
-
-      if(Number(l.totalSeats||0)>0 &&
-         Number(l.assignedSeats||0)>Number(l.totalSeats||0)) alertCount++;
-
-      const exp = toDate(l.expiryDate);
-      if(exp && exp<=lim30) alertCount++;
+    licSnap.forEach(d=>{
+      const l=d.data();
+      const t=Number(l.totalSeats||0);
+      const a=Number(l.assignedSeats||0);
+      totalSeats+=t;used+=a;
+      if(t>0 && a>t) alertCount++;
+      const exp=toDate(l.expiryDate);
+      if(exp && exp<=lim30){
+        alertCount++;
+        expiring.push({name:l.softwareName || d.id,exp});
+      }
     });
 
-    const available = Math.max(0,totalSeats-usedSeats);
-    availSeats.textContent = available;
-    alertsEl.textContent   = alertCount;
+    seatsUsed.textContent = used;
+    seatsDetail.textContent = `${used} of ${totalSeats} seats used.`;
+    alerts.textContent = alertCount;
 
-    // Seat usage card
-    seatTotalEl.textContent = totalSeats;
-    seatUsedEl.textContent  = usedSeats;
-    const pct = totalSeats>0 ? Math.round(usedSeats*100/totalSeats) : 0;
-    seatUsageEl.textContent = `${pct}% used`;
-    seatBar.style.width     = `${pct}%`;
+    const usage = totalSeats>0 ? Math.round(used*100/totalSeats) : 0;
+    usageBar.style.width = `${usage}%`;
+    usageText.textContent = totalSeats>0
+      ? `Overall utilization: ${usage}% of ${totalSeats} seats.`
+      : "No seats configured yet.";
+
+    if(expiring.length===0){
+      renewalsList.innerHTML = `<li>No upcoming expiries in 30 days.</li>`;
+    }else{
+      expiring.sort((a,b)=>a.exp-b.exp);
+      renewalsList.innerHTML = expiring.slice(0,6).map(
+        x=>`<li>${x.name} – <strong>${x.exp.toLocaleDateString()}</strong></li>`
+      ).join("");
+    }
   }
 </script>
-
 </body>
 </html>
