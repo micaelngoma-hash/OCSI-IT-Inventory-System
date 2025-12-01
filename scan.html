@@ -3,18 +3,47 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Scan Device • OCSI IT Inventory</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://unpkg.com/html5-qrcode" defer></script>
+<title>Scan QR • OCSI IT Inventory</title>
+<style>
+  :root{--bg:#0f172a;--bg2:#111827;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#020617;color:white;}
+  .topbar{
+    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
+    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
+    box-shadow:0 2px 6px rgba(15,23,42,.6);
+  }
+  .topbar-title{font-weight:700;font-size:1.05rem;}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
+  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .nav a{
+    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
+    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+  }
+  .nav a span.icon{width:18px;text-align:center;}
+  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
+  .content{padding:18px 20px;max-width:900px;margin:0 auto;}
+  .card{background:#020617;border-radius:14px;padding:16px 18px;border:1px solid #1f2937;box-shadow:0 1px 6px rgba(15,23,42,.9);}
+  video{width:100%;border-radius:12px;background:black;}
+  .muted{font-size:.8rem;color:#9ca3af;margin-top:8px;}
+  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
+  .badge.super_admin{background:#7c3aed;color:white;}
+  .badge.admin{background:#f97316;color:white;}
+  .badge.it{background:#1d4ed8;color:white;}
+  .badge.viewer{background:#4b5563;color:white;}
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+  }
+</style>
 </head>
 <body>
 <div class="topbar">
-  <div>
-    <div class="topbar-title">Scan Device QR</div>
-    <div class="topbar-sub">Use camera to open device details</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span id="roleBadge" class="badge viewer">…</span>
+  <div><div class="topbar-title">Scan QR</div></div>
+  <div style="display:flex;align-items:center;font-size:.85rem;">
+    <span id="roleBadge" class="badge viewer">VIEWER</span>
     <span id="who" style="opacity:.85;">Loading…</span>
     <button id="logoutBtn" class="logout">Logout</button>
   </div>
@@ -22,47 +51,35 @@
 
 <div class="layout">
   <aside class="sidebar">
+    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a href="inventory-list.html">Inventory</a>
-      <a href="software-dashboard.html">Software</a>
-      <a href="admin-fields.html">Admin Fields</a>
-      <a href="admin-categories.html">Admin Categories</a>
-      <a href="admin-users.html">User Roles</a>
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
+      <a class="active" href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
+      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
     </nav>
   </aside>
 
   <main class="content">
     <div class="card">
-      <h3>Scan QR Code</h3>
-      <p class="muted">
-        Point the camera at a device QR code. The code should contain the Firestore
-        item ID or a URL like <code>https://.../item.html?id=ITEM_ID</code>.
-      </p>
-      <div class="spacer"></div>
-      <div id="reader" style="width:100%;max-width:420px;"></div>
-      <div class="spacer"></div>
-      <p class="muted" id="scanStatus">Waiting for camera…</p>
-
-      <div class="spacer"></div>
-      <label>Or type asset / item ID manually</label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <input id="manualId" placeholder="ITEM_ID or Asset ID…">
-        <button id="openBtn" class="btn small">Open</button>
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas" style="display:none;"></canvas>
+      <div class="muted">
+        Point the camera at an item QR code. When detected, you’ll automatically be redirected to that item page.
       </div>
+      <div class="muted" id="statusMsg" style="margin-top:6px;">Starting camera…</div>
     </div>
   </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
-  import {
-    getAuth, onAuthStateChanged, signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, collection, query, where, getDocs
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -74,104 +91,87 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
-  const auth=getAuth(app);
-  const db=getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  const ALLOWED_ROLES=["admin","it","viewer"];
+  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+
+  const who   = document.getElementById("who");
+  const badge = document.getElementById("roleBadge");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  const video = document.getElementById("video");
+  const canvas = document.getElementById("canvas");
+  const statusMsg = document.getElementById("statusMsg");
+  const ctx = canvas.getContext("2d");
+
+  let scanning = false;
 
   function setBadge(role){
-    const badge=document.getElementById("roleBadge");
-    if(!badge) return;
-    const r=(role||"viewer").toLowerCase();
-    badge.className="badge "+r;
-    badge.textContent=r.toUpperCase();
+    const r = (role||"viewer").toLowerCase();
+    badge.className = "badge "+r;
+    badge.textContent = r.toUpperCase();
   }
 
-  document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>location.href="login.html");
-  });
+  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
 
-  const scanStatus=document.getElementById("scanStatus");
-
-  function handleResult(text){
-    try{
-      // If it's a full URL with ?id=
-      if(text.includes("item.html?id=")){
-        location.href=text;
-        return;
-      }
-      // Otherwise assume it's an itemId
-      location.href=`item.html?id=${encodeURIComponent(text.trim())}`;
-    }catch(e){
-      scanStatus.textContent="Scan error: "+e.message;
-    }
-  }
-
-  function initScanner(){
-    if(!window.Html5Qrcode){scanStatus.textContent="QR library not loaded.";return;}
-    const html5QrCode = new Html5Qrcode("reader");
-    Html5Qrcode.getCameras().then(cameras=>{
-      if(!cameras || !cameras.length){
-        scanStatus.textContent="No camera found.";
-        return;
-      }
-      scanStatus.textContent="Scanning…";
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        decodedText=>{
-          scanStatus.textContent="Code detected: "+decodedText;
-          html5QrCode.stop().then(()=>handleResult(decodedText));
-        },
-        errorMessage=>{
-          // ignore continuous errors
-        }
-      );
-    }).catch(err=>{
-      scanStatus.textContent="Camera error: "+err;
-    });
-  }
-
-  onAuthStateChanged(auth, async (u)=>{
-    if(!u){location.href="login.html";return;}
-    const who=document.getElementById("who");
-    if(who) who.textContent=u.email||"";
-
-    const us=await getDoc(doc(db,"users",u.uid));
-    const role=us.exists()? (us.data().role||"viewer"):"viewer";
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
+    who.textContent = user.email;
     setBadge(role);
-
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied for role: "+role);
-      location.href="index.html";
-      return;
-    }
-
-    initScanner();
+    startCamera();
   });
 
-  // Manual open
-  document.getElementById("openBtn").addEventListener("click", async ()=>{
-    const val=document.getElementById("manualId").value.trim();
-    if(!val) return;
-    // Try as direct item id first
-    const snap=await getDoc(doc(db,"items",val));
-    if(snap.exists()){
-      location.href=`item.html?id=${encodeURIComponent(val)}`;
-      return;
+  async function startCamera(){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"}});
+      video.srcObject = stream;
+      video.setAttribute("playsinline",true);
+      scanning = true;
+      statusMsg.textContent = "Scanning for QR code…";
+      requestAnimationFrame(tick);
+    }catch(err){
+      statusMsg.textContent = "Unable to access camera: "+err.message;
     }
-    // Try match assetId
-    const q=query(collection(db,"items"),where("assetId","==",val));
-    const s=await getDocs(q);
-    if(!s.empty){
-      const id=s.docs[0].id;
-      location.href=`item.html?id=${encodeURIComponent(id)}`;
-      return;
+  }
+
+  function tick(){
+    if(!scanning) return;
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video,0,0,canvas.width,canvas.height);
+      const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = jsQR(imageData.data,canvas.width,canvas.height,{inversionAttempts:"dontInvert"});
+      if(code){
+        scanning = false;
+        statusMsg.textContent = "QR detected. Opening item…";
+        handleQR(code.data);
+        return;
+      }
     }
-    alert("No item found for: "+val);
-  });
+    requestAnimationFrame(tick);
+  }
+
+  function handleQR(text){
+    // If QR contains full URL, go there. Otherwise assume it's an item ID.
+    try{
+      if(text.startsWith("http://") || text.startsWith("https://")){
+        location.href = text;
+      }else{
+        const id = encodeURIComponent(text.trim());
+        location.href = `item.html?id=${id}`;
+      }
+    }catch(e){
+      statusMsg.textContent = "Invalid QR data.";
+      scanning = true;
+      requestAnimationFrame(tick);
+    }
+  }
 </script>
 </body>
 </html>
