@@ -3,17 +3,45 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Audit Logs • OCSI IT Inventory</title>
-<link rel="stylesheet" href="style.css">
+<title>Audit Logs – OCSI IT Inventory</title>
+<style>
+  :root{--bg:#0f172a;--bg2:#111827;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  .topbar{
+    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
+    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
+    box-shadow:0 2px 6px rgba(15,23,42,.6);
+  }
+  .topbar-title{font-weight:700;font-size:1.05rem;}
+  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
+  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .nav a{
+    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
+    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+  }
+  .nav a span.icon{width:18px;text-align:center;}
+  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
+  .content{padding:18px 20px;max-width:1100px;margin:0 auto;}
+  .card{background:white;border-radius:12px;padding:14px 16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.06);}
+  table{width:100%;border-collapse:collapse;margin-top:8px;}
+  th,td{padding:8px 9px;font-size:.84rem;border-bottom:1px solid #e5e7eb;text-align:left;}
+  th{background:#f1f5f9;}
+  .muted{font-size:.8rem;color:#6b7280;margin-bottom:6px;}
+  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
+  .badge.super_admin{background:#7c3aed;color:white;}
+  .badge.admin{background:#f97316;color:white;}
+  .badge.it{background:#1d4ed8;color:white;}
+  .badge.viewer{background:#4b5563;color:white;}
+  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+</style>
 </head>
 <body>
 <div class="topbar">
-  <div>
-    <div class="topbar-title">Audit Logs</div>
-    <div class="topbar-sub">Lifecycle changes, status updates, movements</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span id="roleBadge" class="badge viewer">…</span>
+  <div><div class="topbar-title">Audit Logs</div></div>
+  <div style="display:flex;align-items:center;font-size:.85rem;">
+    <span id="roleBadge" class="badge viewer">VIEWER</span>
     <span id="who" style="opacity:.85;">Loading…</span>
     <button id="logoutBtn" class="logout">Logout</button>
   </div>
@@ -21,38 +49,34 @@
 
 <div class="layout">
   <aside class="sidebar">
+    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a href="inventory-list.html">Inventory</a>
-      <a href="software-dashboard.html">Software</a>
-      <a href="admin-fields.html">Admin Fields</a>
-      <a href="admin-categories.html">Admin Categories</a>
-      <a href="export.html">Export</a>
-      <a class="active" href="audits.html">Audit Logs</a>
-      <a href="admin-users.html">User Roles</a>
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
+      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
+      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
+      <a class="active" href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
     </nav>
   </aside>
 
   <main class="content">
     <div class="card">
-      <h3>Lifecycle Logs</h3>
       <p class="muted">
-        Showing recent entries from <code>lifecycle_logs</code> collection (if you implement Cloud Functions).
+        This page shows the latest actions recorded in <code>audit_logs</code> (if your Cloud Functions or frontend write them).
       </p>
-      <div class="spacer"></div>
-
       <table>
         <thead>
           <tr>
-            <th>Item ID</th>
-            <th>Change</th>
-            <th>By</th>
-            <th>When</th>
+            <th>Time</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Target</th>
+            <th>Details</th>
           </tr>
         </thead>
-        <tbody id="tbody">
-          <tr><td colspan="4" class="muted">Loading…</td></tr>
-        </tbody>
+        <tbody id="logBody"></tbody>
       </table>
     </div>
   </main>
@@ -60,12 +84,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
-    getAuth, onAuthStateChanged, signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, collection, getDocs
+    getFirestore, collection, getDocs, doc, getDoc, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const firebaseConfig = {
@@ -78,77 +99,62 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
-  const auth=getAuth(app);
-  const db=getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
 
-  const ALLOWED_ROLES=["admin","it","viewer"];
+  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+
+  const who   = document.getElementById("who");
+  const badge = document.getElementById("roleBadge");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const logBody = document.getElementById("logBody");
 
   function setBadge(role){
-    const badge=document.getElementById("roleBadge");
-    if(!badge) return;
-    const r=(role||"viewer").toLowerCase();
-    badge.className="badge "+r;
-    badge.textContent=r.toUpperCase();
+    const r = (role||"viewer").toLowerCase();
+    badge.className = "badge "+r;
+    badge.textContent = r.toUpperCase();
   }
 
-  document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>location.href="login.html");
+  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
+
+  onAuthStateChanged(auth, async (user)=>{
+    if(!user){ location.href="login.html"; return; }
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
+    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
+    who.textContent = user.email;
+    setBadge(role);
+    await loadLogs();
   });
 
-  const tbody=document.getElementById("tbody");
-
-  function fmtDate(ts){
-    if(!ts) return "—";
-    try{
-      const d=ts.toDate ? ts.toDate() : new Date(ts);
-      return d.toISOString().replace("T"," ").slice(0,16);
-    }catch{return "—";}
-  }
+  function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
 
   async function loadLogs(){
     try{
-      const snap=await getDocs(collection(db,"lifecycle_logs"));
+      const qLogs = query(collection(db,"audit_logs"), orderBy("timestamp","desc"), limit(100));
+      const snap = await getDocs(qLogs);
       if(snap.empty){
-        tbody.innerHTML='<tr><td colspan="4" class="muted">No logs yet.</td></tr>';
+        logBody.innerHTML = `<tr><td colspan="5" style="text-align:center;font-size:.85rem;color:#6b7280;">No audit logs found. You can start writing to <code>audit_logs</code> from Cloud Functions.</td></tr>`;
         return;
       }
-      const logs=snap.docs.map(d=>({id:d.id,...d.data()}));
-      logs.sort((a,b)=>{
-        const ta=a.timestamp && a.timestamp.toDate ? a.timestamp.toDate().getTime():0;
-        const tb=b.timestamp && b.timestamp.toDate ? b.timestamp.toDate().getTime():0;
-        return tb-ta;
+      const rows = [];
+      snap.forEach(d=>{
+        const l = d.data();
+        const t = toDate(l.timestamp);
+        rows.push(`<tr>
+          <td>${t? t.toLocaleString():""}</td>
+          <td>${l.userEmail||""}</td>
+          <td>${l.action||""}</td>
+          <td>${l.target||""}</td>
+          <td>${l.details||""}</td>
+        </tr>`);
       });
-      tbody.innerHTML=logs.slice(0,200).map(l=>`
-        <tr>
-          <td>${l.itemId||"—"}</td>
-          <td>${l.change||l.message||"—"}</td>
-          <td>${l.performedBy||"—"}</td>
-          <td>${fmtDate(l.timestamp)}</td>
-        </tr>
-      `).join("");
-    }catch(err){
-      tbody.innerHTML='<tr><td colspan="4" class="muted">Error loading logs.</td></tr>';
+      logBody.innerHTML = rows.join("");
+    }catch(e){
+      logBody.innerHTML = `<tr><td colspan="5" style="text-align:center;font-size:.85rem;color:#b91c1c;">Error loading logs: ${e.message}</td></tr>`;
     }
   }
-
-  onAuthStateChanged(auth, async (u)=>{
-    if(!u){location.href="login.html";return;}
-    const who=document.getElementById("who");
-    if(who) who.textContent=u.email||"";
-
-    const us=await getDoc(doc(db,"users",u.uid));
-    const role=us.exists()? (us.data().role||"viewer"):"viewer";
-    setBadge(role);
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
-      location.href="index.html";
-      return;
-    }
-
-    await loadLogs();
-  });
 </script>
 </body>
 </html>
