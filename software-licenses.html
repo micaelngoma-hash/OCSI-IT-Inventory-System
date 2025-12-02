@@ -11,6 +11,7 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -233,8 +234,9 @@
               <li><span class="label">Loading…</span><span class="value">–</span></li>
             </ul>
             <p class="small">
-              Assignments come from the <code>software_assignment</code> collection (device &amp; user links).
-              You can extend this later with inline “Assign / Revoke” actions.
+              Assignments come from the <code>software_assignment</code> collection
+              (device &amp; user links). You can extend this later with inline
+              “Assign / Revoke” actions.
             </p>
           </div>
         </div>
@@ -244,29 +246,11 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
-    getFirestore, collection, getDocs, doc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
-  };
-
-  const app  = initializeApp(firebaseConfig);
-  const db   = getFirestore(app);
-  const auth = getAuth(app);
-
-  const ALLOWED_ROLES = ["admin","it","viewer"];
-  const EDIT_ROLES    = ["admin","it"];
+    db, collection, getDocs, doc, getDoc,
+    requireAuth, ALLOWED_ROLES, EDIT_ROLES,
+    toDate, escapeHtml
+  } from "./firebase.js";
 
   const whoEl   = document.getElementById("who");
   const tbody   = document.getElementById("tbody");
@@ -295,41 +279,21 @@
   let usersById = {};
   let selectedId = null;
 
-  onAuthStateChanged(auth, async user=>{
-    if(!user){
-      location.href="login.html";
-      return;
-    }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
+  // Auth + initial load
+  requireAuth(ALLOWED_ROLES, async ({ user, role, badgeHtml }) => {
     currentRole = role;
+    whoEl.innerHTML = `${user.email} ${badgeHtml}`;
 
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
-      location.href="login.html";
-      return;
-    }
-
-    const badge = role==="admin" ? "badge-admin"
-                 : role==="it" ? "badge-it" : "badge-viewer";
-    whoEl.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
-
-    if(!EDIT_ROLES.includes(role)){
-      newBtn.style.display="none";
-    }else{
-      // You can create a dedicated form page or later turn this into a modal
-      newBtn.onclick = ()=> location.href="software-license-form.html";
+    if (!EDIT_ROLES.includes(role)) {
+      newBtn.style.display = "none";
+    } else {
+      // adjust this path if you rename the license form page
+      newBtn.onclick = () => location.href = "software-license-form.html";
     }
 
     await loadAllData();
     renderTable();
   });
-
-  function toDate(val){
-    if(!val) return null;
-    if(val.toDate) return val.toDate();
-    return new Date(val);
-  }
 
   function classifyLicense(lic){
     const total = Number(lic.totalSeats || 0);
@@ -351,55 +315,51 @@
   }
 
   async function loadAllData(){
-    // products
+    // software_product
     const prodSnap = await getDocs(collection(db,"software_product"));
     productsById = {};
-    prodSnap.forEach(p=>{
+    prodSnap.forEach(p => {
       productsById[p.id] = p.data();
     });
 
-    // licenses
+    // software_license
     const licSnap = await getDocs(collection(db,"software_license"));
     licenses = [];
-    licSnap.forEach(l=>{
+    licSnap.forEach(l => {
       licenses.push({ id:l.id, ...l.data() });
     });
 
-    // assignments
+    // software_assignment
     const assSnap = await getDocs(collection(db,"software_assignment"));
     assignmentsByLicense = {};
-    const deviceIds = new Set();
-    const userIds   = new Set();
-
-    assSnap.forEach(a=>{
+    assSnap.forEach(a => {
       const d = a.data();
       const lid = d.softwareLicenseId;
       if(!lid) return;
       if(!assignmentsByLicense[lid]) assignmentsByLicense[lid] = [];
       assignmentsByLicense[lid].push({ id:a.id, ...d });
-      if(d.deviceId) deviceIds.add(d.deviceId);
-      if(d.userId)   userIds.add(d.userId);
     });
 
-    // items & users lookup (simple approach: load all)
+    // items (devices)
     const itemSnap = await getDocs(collection(db,"items"));
     itemsById = {};
-    itemSnap.forEach(i=>{ itemsById[i.id] = i.data(); });
+    itemSnap.forEach(i => { itemsById[i.id] = i.data(); });
 
+    // users
     const userSnap = await getDocs(collection(db,"users"));
     usersById = {};
-    userSnap.forEach(u=>{ usersById[u.id] = u.data(); });
+    userSnap.forEach(u => { usersById[u.id] = u.data(); });
   }
 
   function renderTable(){
     const term = (searchEl.value || "").toLowerCase();
     const filt = statusFilter.value;
 
-    const rows = licenses.filter(lic=>{
+    const rows = licenses.filter(lic => {
       const prod = productsById[lic.softwareProductId] || {};
       const { level } = classifyLicense(lic);
 
-      if(filt && level!==filt) return false;
+      if(filt && level !== filt) return false;
 
       if(term){
         const hay = [
@@ -417,7 +377,7 @@
       return;
     }
 
-    tbody.innerHTML = rows.map(lic=>{
+    tbody.innerHTML = rows.map(lic => {
       const prod = productsById[lic.softwareProductId] || {};
       const name = prod.softwareName || prod.name || "Unknown software";
 
@@ -429,7 +389,10 @@
       const expStr = exp ? exp.toISOString().slice(0,10) : "–";
 
       const { level, label } = classifyLicense(lic);
-      const pillClass = level==="good" ? "pill-good" : level==="warn" ? "pill-warn" : "pill-bad";
+      const pillClass =
+        level==="good" ? "pill-good" :
+        level==="warn" ? "pill-warn" :
+        level==="bad"  ? "pill-bad"  : "pill-neutral";
 
       const selectedClass = (lic.id === selectedId) ? "selected" : "";
 
@@ -445,10 +408,10 @@
         </tr>`;
     }).join("");
 
-    [...tbody.querySelectorAll("tr[data-id]")].forEach(tr=>{
-      tr.addEventListener("click", ()=>{
+    [...tbody.querySelectorAll("tr[data-id]")].forEach(tr => {
+      tr.addEventListener("click", () => {
         selectedId = tr.getAttribute("data-id");
-        renderTable();     // to refresh “selected” class
+        renderTable();     // refresh selected row class
         renderDetails();
       });
     });
@@ -460,7 +423,7 @@
       detailsIntro.style.display="block";
       return;
     }
-    const lic = licenses.find(l=>l.id===selectedId);
+    const lic = licenses.find(l => l.id === selectedId);
     if(!lic){
       detailsBody.style.display="none";
       detailsIntro.style.display="block";
@@ -501,14 +464,15 @@
     // assignments
     const list = assignmentsByLicense[selectedId] || [];
     if(!list.length){
-      assignList.innerHTML = `<li><span class="label">No assignments yet.</span><span class="value">0</span></li>`;
+      assignList.innerHTML =
+        `<li><span class="label">No assignments yet.</span><span class="value">0</span></li>`;
     }else{
-      assignList.innerHTML = list.slice(0,8).map(a=>{
+      assignList.innerHTML = list.slice(0,8).map(a => {
         let targetLabel = "";
         let type = "";
         if(a.deviceId && itemsById[a.deviceId]){
           const dev = itemsById[a.deviceId];
-          targetLabel = (dev.deviceName || dev.assetId || a.deviceId);
+          targetLabel = dev.deviceName || dev.assetId || a.deviceId;
           type = "Device";
         }else if(a.userId && usersById[a.userId]){
           const u = usersById[a.userId];
@@ -531,26 +495,26 @@
 
         return `
           <li>
-            <span class="label">${escapeHtml(targetLabel)} <span style="color:#9ca3af;">(${type})</span></span>
+            <span class="label">
+              ${escapeHtml(targetLabel)}
+              <span style="color:#9ca3af;">(${type})</span>
+            </span>
             <span class="value">${dateStr || ""}</span>
           </li>`;
       }).join("");
 
-      if(list.length>8){
-        const more = list.length-8;
-        assignList.innerHTML += `<li><span class="label">${more} more assignments…</span><span class="value"><a class="inline-link" href="software-compliance.html">View report</a></span></li>`;
+      if(list.length > 8){
+        const more = list.length - 8;
+        assignList.innerHTML += `
+          <li>
+            <span class="label">${more} more assignments…</span>
+            <span class="value"><a class="inline-link" href="software-licenses.html">View full report</a></span>
+          </li>`;
       }
     }
 
     detailsIntro.style.display="none";
     detailsBody.style.display="block";
-  }
-
-  function escapeHtml(s){
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g, c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    ));
   }
 
   searchEl.addEventListener("input", renderTable);
