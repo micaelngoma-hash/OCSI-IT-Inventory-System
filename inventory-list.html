@@ -3,126 +3,155 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Inventory – OCSI IT Inventory</title>
+<title>Inventory List</title>
 <style>
   :root{
-    --bg:#0f172a;--bg2:#111827;--brand:#1a73e8;
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
-    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:0 2px 6px rgba(15,23,42,.6);
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  .topbar-title{font-weight:700;font-size:1.05rem;}
-  .topbar-sub{font-size:.8rem;opacity:.75;}
-  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
-  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
-    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
   }
-  .nav a span.icon{width:18px;text-align:center;}
-  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
-  .content{padding:18px 20px;max-width:1300px;margin:0 auto;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1150px;margin:0 auto;width:100%;}
+  h1{margin:0 0 10px;font-size:1.4rem;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
   .toolbar{
-    display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px;
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;gap:10px;flex-wrap:wrap;
   }
-  .toolbar input,.toolbar select{
-    padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:.85rem;
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:white;border:1px solid var(--border);
+    border-radius:999px;padding:4px 10px;
+    max-width:280px;width:100%;
+  }
+  .search-box input{
+    border:none;outline:none;font-size:.88rem;width:100%;
+  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;}
+  select{
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);font-size:.85rem;background:white;
   }
   .btn{
-    padding:7px 12px;border-radius:8px;border:none;cursor:pointer;
-    background:var(--brand);color:white;font-size:.85rem;font-weight:500;
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
   }
-  .btn.secondary{background:white;color:#111827;border:1px solid #d1d5db;}
-  table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;}
-  th,td{padding:9px 10px;font-size:.85rem;border-bottom:1px solid #e5e7eb;text-align:left;}
-  th{background:#f1f5f9;font-weight:600;}
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
+  }
+  table{border-collapse:collapse;width:100%;min-width:850px;}
+  th,td{
+    padding:8px 10px;border-bottom:1px solid #f1f5f9;
+    font-size:.88rem;text-align:left;
+  }
+  th{background:#f8fafc;font-weight:600;color:#475569;position:sticky;top:0;z-index:5;}
   tr:hover td{background:#f9fafb;}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;}
-  .tag.active{background:#dcfce7;color:#166534;}
-  .tag.repair{background:#fef3c7;color:#92400e;}
-  .tag.retired{background:#fee2e2;color:#991b1b;}
-  .tag.unknown{background:#e5e7eb;color:#374151;}
-  .muted{font-size:.8rem;color:#6b7280;margin-bottom:8px;}
-  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
-  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
-  .badge.super_admin{background:#7c3aed;color:white;}
-  .badge.admin{background:#f97316;color:white;}
-  .badge.it{background:#1d4ed8;color:white;}
-  .badge.viewer{background:#4b5563;color:white;}
-  @media(max-width:900px){
-    .layout{grid-template-columns:1fr;}
-    .sidebar{display:none;}
+  .pill{
+    display:inline-flex;padding:2px 8px;border-radius:999px;
+    font-size:.75rem;
   }
+  .pill-green{background:#dcfce7;color:#166534;}
+  .pill-blue{background:#dbeafe;color:#1d4ed8;}
+  .pill-gray{background:#e5e7eb;color:#374151;}
+  .pill-red{background:#fee2e2;color:#b91c1c;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div>
-    <div class="topbar-title">Inventory</div>
-    <div class="topbar-sub">All hardware, network and school assets</div>
-  </div>
-  <div style="display:flex;align-items:center;font-size:.85rem;">
-    <span id="roleBadge" class="badge viewer">VIEWER</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
-    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
       <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a class="active" href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a class="active" href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
       <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
-      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <p class="muted">Search, filter and open individual items. Use “Add item” to register new hardware.</p>
+    <h1>Inventory</h1>
+
     <div class="toolbar">
-      <input id="searchBox" type="text" placeholder="Search by name, room, asset tag…">
-      <select id="statusFilter">
-        <option value="">All statuses</option>
-        <option value="Active">Active</option>
-        <option value="Repair">Repair</option>
-        <option value="Retired">Retired</option>
-      </select>
-      <select id="categoryFilter">
-        <option value="">All categories</option>
-      </select>
-      <button class="btn" id="addBtn">+ Add item</button>
+      <div class="search-box">
+        <span>🔍</span>
+        <input id="search" placeholder="Search by Asset ID, name, user, location…"/>
+      </div>
+      <div class="filters">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="in-use">In use</option>
+          <option value="in-storage">In storage</option>
+          <option value="loaned">Loaned</option>
+          <option value="retired">Retired</option>
+          <option value="repair">Under repair</option>
+        </select>
+        <button id="addBtn" class="btn btn-primary" type="button">
+          ➕ New Device
+        </button>
+      </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Category</th>
-          <th>Location</th>
-          <th>Status</th>
-          <th>Asset Tag</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="itemsBody"></tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asset ID</th>
+            <th>Device Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Location</th>
+            <th>IP</th>
+            <th style="width:90px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="8">Loading devices…</td></tr>
+        </tbody>
+      </table>
+    </div>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -134,108 +163,124 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app  = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
   const auth = getAuth(app);
-  const db   = getFirestore(app);
 
-  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+  const ALLOWED_ROLES = ["admin","it","viewer"];
+  const EDIT_ROLES = ["admin","it"];
 
-  const who   = document.getElementById("who");
-  const badge = document.getElementById("roleBadge");
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  const searchBox = document.getElementById("searchBox");
+  const whoEl = document.getElementById("who");
+  const tbody = document.getElementById("tbody");
+  const searchInput = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
-  const categoryFilter = document.getElementById("categoryFilter");
-  const tbody = document.getElementById("itemsBody");
   const addBtn = document.getElementById("addBtn");
 
+  let currentRole = "viewer";
   let allItems = [];
-  let canEdit = false;
 
-  function setBadge(role){
-    const r = (role||"viewer").toLowerCase();
-    badge.className = "badge "+r;
-    badge.textContent = r.toUpperCase();
-  }
-
-  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
-  addBtn.addEventListener("click",()=>location.href="item.html");
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      location.href="login.html";
+      return;
+    }
+    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
     const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
-    who.textContent = user.email;
-    setBadge(role);
-    canEdit = (role==="it" || role==="admin" || role==="super_admin");
-    await loadCategories();
+    const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
+    currentRole = role;
+
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+
+    const badgeClass = role==="admin" ? "badge-admin"
+                      : role==="it" ? "badge-it" : "badge-viewer";
+    whoEl.innerHTML = `${user.email} <span class="badge ${badgeClass}">${role}</span>`;
+
+    if(!EDIT_ROLES.includes(role)){
+      addBtn.style.display="none";
+    }
+
+    addBtn.onclick = ()=> location.href="item-form.html";
+
     await loadItems();
   });
-
-  async function loadCategories(){
-    const snap = await getDocs(collection(db,"categories"));
-    snap.forEach(d=>{
-      const c = d.data();
-      const opt = document.createElement("option");
-      opt.value = d.id;
-      opt.textContent = c.name || d.id;
-      categoryFilter.appendChild(opt);
-    });
-  }
 
   async function loadItems(){
     const snap = await getDocs(collection(db,"items"));
     allItems = [];
-    snap.forEach(d=>{
-      allItems.push({id:d.id,...d.data()});
+    snap.forEach(docSnap=>{
+      allItems.push({ id: docSnap.id, ...docSnap.data() });
     });
     render();
   }
 
-  function statusTag(status){
-    const st = (status||"Unknown");
-    const cls = st==="Active" ? "active" :
-                st==="Repair" ? "repair" :
-                st==="Retired" ? "retired" : "unknown";
-    return `<span class="tag ${cls}">${st}</span>`;
-  }
-
   function render(){
-    const q = searchBox.value.toLowerCase().trim();
-    const sFilter = statusFilter.value;
-    const cFilter = categoryFilter.value;
+    const term = (searchInput.value || "").toLowerCase();
+    const st   = statusFilter.value;
 
     const rows = allItems.filter(it=>{
-      if(sFilter && (it.status||"")!==sFilter) return false;
-      if(cFilter && (it.categoryId||"")!==cFilter) return false;
-      if(q){
-        const txt = `${it.name||""} ${it.location||""} ${it.assetTag||""}`.toLowerCase();
-        if(!txt.includes(q)) return false;
-      }
-      return true;
-    }).map(it=>{
-      const cat = it.categoryName || it.categoryId || "";
-      const loc = it.location || "";
-      const asset = it.assetTag || "";
-      const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
-      return `<tr>
-        <td>${it.name||"(no name)"}</td>
-        <td>${cat}</td>
-        <td>${loc}</td>
-        <td>${statusTag(it.status)}</td>
-        <td>${asset}</td>
-        <td><a href="${viewUrl}">${canEdit?"View / Edit":"View"}</a></td>
-      </tr>`;
+      if(st && (it.status||"")!==st) return false;
+      if(!term) return true;
+      const hay = [
+        it.assetId, it.deviceName, it.assetType,
+        it.assignedTo, it.location, it.department, it.ipAddress
+      ].join(" ").toLowerCase();
+      return hay.includes(term);
     });
 
-    tbody.innerHTML = rows.join("") || `<tr><td colspan="6" style="text-align:center;font-size:.85rem;color:#6b7280;">No items found.</td></tr>`;
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="8">No devices found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(it=>{
+      const status = (it.status || "unknown");
+      let pillClass = "pill-gray";
+      if(status==="in-use") pillClass="pill-green";
+      else if(status==="loaned") pillClass="pill-blue";
+      else if(status==="retired" || status==="repair") pillClass="pill-red";
+
+      const label = status.replace(/-/g," ");
+
+      const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
+      const editUrl = `item-form.html?id=${encodeURIComponent(it.id)}`;
+
+      const actions = EDIT_ROLES.includes(currentRole)
+        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
+              href="${editUrl}">Edit</a>`
+        : `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
+              href="${viewUrl}">View</a>`;
+
+      return `
+        <tr>
+          <td>${escapeHtml(it.assetId || "")}</td>
+          <td>${escapeHtml(it.deviceName || "")}</td>
+          <td>${escapeHtml(it.assetType || "")}</td>
+          <td><span class="pill ${pillClass}">${escapeHtml(label)}</span></td>
+          <td>${escapeHtml(it.assignedTo || "")}</td>
+          <td>${escapeHtml((it.location || "") + (it.buildingFloor ? " – "+it.buildingFloor:""))}</td>
+          <td>${escapeHtml(it.ipAddress || "")}</td>
+          <td>
+            <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;"
+               href="${viewUrl}">View</a>
+            ${actions}
+          </td>
+        </tr>`;
+    }).join("");
   }
 
-  searchBox.addEventListener("input",render);
-  statusFilter.addEventListener("change",render);
-  categoryFilter.addEventListener("change",render);
+  function escapeHtml(s){
+    return s ? s.replace(/[&<>"']/g, c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    )) : "";
+  }
+
+  searchInput.addEventListener("input", render);
+  statusFilter.addEventListener("change", render);
 </script>
+
 </body>
 </html>
