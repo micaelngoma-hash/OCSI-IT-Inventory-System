@@ -1,155 +1,215 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Item • OCSI IT Inventory</title>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Device Details</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#111827;--brand:#1a73e8;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
-    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:0 2px 6px rgba(15,23,42,.6);
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  .topbar-title{font-weight:700;font-size:1.05rem;}
-  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
-  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
-    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
   }
-  .nav a span.icon{width:18px;text-align:center;}
-  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
-  .content{padding:18px 20px;max-width:900px;margin:0 auto;}
-  .card{background:white;border-radius:12px;padding:16px 18px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.08);}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  label{font-size:.8rem;color:#4b5563;display:block;margin-bottom:3px;}
-  input,select,textarea{
-    width:100%;padding:7px 9px;border-radius:8px;border:1px solid #d1d5db;font-size:.85rem;
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
+  h1{margin:0 0 6px;font-size:1.4rem;}
+  .sub{color:#64748b;font-size:.9rem;margin-bottom:12px;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+  .status-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:3px 9px;border-radius:999px;font-size:.78rem;
+    background:#e5f3ff;color:#1d4ed8;
   }
-  textarea{min-height:70px;resize:vertical;}
-  .row{margin-bottom:10px;}
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;padding:14px 16px;margin-bottom:12px;
+  }
+  .card h2{margin:0 0 8px;font-size:1.05rem;}
+  .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 16px;}
+  .field-label{font-size:.78rem;color:#94a3b8;}
+  .field-value{font-size:.92rem;color:#0f172a;}
+  .notes{white-space:pre-wrap;font-size:.92rem;color:#0f172a;margin-top:4px;}
+  .toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;}
   .btn{
-    padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:500;
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    text-decoration:none;display:inline-flex;align-items:center;gap:4px;
   }
-  .btn.primary{background:var(--brand);color:white;}
-  .btn.secondary{background:white;color:#111827;border:1px solid #d1d5db;margin-right:8px;}
-  .muted{font-size:.8rem;color:#6b7280;margin-bottom:10px;}
-  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
-  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
-  .badge.super_admin{background:#7c3aed;color:white;}
-  .badge.admin{background:#f97316;color:white;}
-  .badge.it{background:#1d4ed8;color:white;}
-  .badge.viewer{background:#4b5563;color:white;}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;background:#e5e7eb;color:#111827;}
-  @media(max-width:900px){
-    .layout{grid-template-columns:1fr;}
-    .sidebar{display:none;}
-    .grid-2{grid-template-columns:1fr;}
-  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;color:#0f172a;border:1px solid #cbd5e1;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div>
-    <div class="topbar-title" id="pageTitle">Item</div>
-  </div>
-  <div style="display:flex;align-items:center;font-size:.85rem;">
-    <span id="roleBadge" class="badge viewer">VIEWER</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Device Details</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
-    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
       <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a class="active" href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
       <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
-      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="card">
-      <p class="muted" id="infoText">Create or edit an inventory item. Fields may differ per category.</p>
+    <h1 id="title">Device</h1>
+    <div class="sub" id="subtitle">Loading device…</div>
 
-      <div class="grid-2">
-        <div class="row">
-          <label for="name">Item name</label>
-          <input id="name" placeholder="e.g., Dell Latitude 5420">
-        </div>
-        <div class="row">
-          <label for="category">Category</label>
-          <select id="category"></select>
-        </div>
-
-        <div class="row">
-          <label for="type">Type / Model</label>
-          <input id="type" placeholder="e.g., Laptop, Switch, Projector">
-        </div>
-        <div class="row">
-          <label for="location">Location / Room</label>
-          <input id="location" placeholder="e.g., HS Lab, Office 2F">
-        </div>
-
-        <div class="row">
-          <label for="owner">Assigned to / Owner</label>
-          <input id="owner" placeholder="Teacher / Office / Student ID">
-        </div>
-        <div class="row">
-          <label for="status">Status</label>
-          <select id="status">
-            <option value="Active">Active</option>
-            <option value="Repair">Repair</option>
-            <option value="Retired">Retired</option>
-          </select>
-        </div>
-
-        <div class="row">
-          <label for="assetTag">Asset Tag</label>
-          <input id="assetTag" placeholder="OCSI-IT-XXXX">
-        </div>
-        <div class="row">
-          <label for="serialNumber">Serial Number</label>
-          <input id="serialNumber">
-        </div>
-      </div>
-
-      <div class="row">
-        <label for="notes">Notes</label>
-        <textarea id="notes" placeholder="Maintenance history, special instructions, etc."></textarea>
-      </div>
-
-      <div class="row" id="readonlyHint" style="display:none;">
-        <span class="pill">Read-only</span>
-        <span class="muted">You have viewer access; changes cannot be saved.</span>
-      </div>
-
-      <div class="row" style="margin-top:12px;">
-        <button class="btn secondary" id="backBtn">← Back to list</button>
-        <button class="btn primary" id="saveBtn">Save item</button>
-      </div>
-
-      <div class="muted" id="message" style="margin-top:8px;"></div>
+    <div class="toolbar">
+      <a id="editLink" class="btn btn-primary" href="#"><span>✏️</span><span>Edit</span></a>
+      <button type="button" class="btn btn-ghost" onclick="history.back()">Back</button>
     </div>
+
+    <!-- Identification -->
+    <section class="card">
+      <h2>Identification</h2>
+      <div class="grid-2">
+        <div>
+          <div class="field-label">Asset ID</div>
+          <div class="field-value" id="f_assetId">–</div>
+        </div>
+        <div>
+          <div class="field-label">Device Name</div>
+          <div class="field-value" id="f_deviceName">–</div>
+        </div>
+        <div>
+          <div class="field-label">Asset Type / Device Type</div>
+          <div class="field-value" id="f_assetType">–</div>
+        </div>
+        <div>
+          <div class="field-label">Manufacturer &amp; Model</div>
+          <div class="field-value" id="f_manufacturer">–</div>
+        </div>
+        <div>
+          <div class="field-label">Serial Number</div>
+          <div class="field-value" id="f_serialNumber">–</div>
+        </div>
+        <div>
+          <div class="field-label">Status</div>
+          <div class="field-value"><span id="f_status" class="status-pill">–</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Location & Assignment -->
+    <section class="card">
+      <h2>Location &amp; Assignment</h2>
+      <div class="grid-2">
+        <div>
+          <div class="field-label">Assigned To</div>
+          <div class="field-value" id="f_assignedTo">–</div>
+        </div>
+        <div>
+          <div class="field-label">Department</div>
+          <div class="field-value" id="f_department">–</div>
+        </div>
+        <div>
+          <div class="field-label">Location</div>
+          <div class="field-value" id="f_location">–</div>
+        </div>
+        <div>
+          <div class="field-label">Building / Floor</div>
+          <div class="field-value" id="f_buildingFloor">–</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Network & System -->
+    <section class="card">
+      <h2>Network &amp; System Info</h2>
+      <div class="grid-2">
+        <div>
+          <div class="field-label">IP Address</div>
+          <div class="field-value" id="f_ipAddress">–</div>
+        </div>
+        <div>
+          <div class="field-label">MAC Address</div>
+          <div class="field-value" id="f_macAddress">–</div>
+        </div>
+        <div>
+          <div class="field-label">Operating System / Version</div>
+          <div class="field-value" id="f_osVersion">–</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Procurement & Lifecycle -->
+    <section class="card">
+      <h2>Procurement &amp; Lifecycle</h2>
+      <div class="grid-2">
+        <div>
+          <div class="field-label">Purchase Date</div>
+          <div class="field-value" id="f_purchaseDate">–</div>
+        </div>
+        <div>
+          <div class="field-label">Date of Installation</div>
+          <div class="field-value" id="f_installationDate">–</div>
+        </div>
+        <div>
+          <div class="field-label">Vendor / Supplier</div>
+          <div class="field-value" id="f_vendor">–</div>
+        </div>
+        <div>
+          <div class="field-label">Warranty End Date</div>
+          <div class="field-value" id="f_warrantyEndDate">–</div>
+        </div>
+        <div>
+          <div class="field-label">Estimated Replacement Date</div>
+          <div class="field-value" id="f_replacementDate">–</div>
+        </div>
+        <div>
+          <div class="field-label">Replacement Alert</div>
+          <div class="field-value" id="f_replacementAlert">–</div>
+        </div>
+        <div>
+          <div class="field-label">Removed Date</div>
+          <div class="field-value" id="f_removedDate">–</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Notes -->
+    <section class="card">
+      <h2>Notes &amp; Misc</h2>
+      <div class="notes" id="f_notes">No notes recorded.</div>
+    </section>
+
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, setDoc, collection, getDocs, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, doc, getDoc }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -161,117 +221,96 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app  = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
   const auth = getAuth(app);
-  const db   = getFirestore(app);
 
-  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+  const ALLOWED_ROLES = ["admin","it","viewer"];
 
-  const who   = document.getElementById("who");
-  const badge = document.getElementById("roleBadge");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const backBtn = document.getElementById("backBtn");
-  const saveBtn = document.getElementById("saveBtn");
-  const msg    = document.getElementById("message");
-  const readonlyHint = document.getElementById("readonlyHint");
-  const pageTitle   = document.getElementById("pageTitle");
-
-  const inputs = {
-    name:document.getElementById("name"),
-    category:document.getElementById("category"),
-    type:document.getElementById("type"),
-    location:document.getElementById("location"),
-    owner:document.getElementById("owner"),
-    status:document.getElementById("status"),
-    assetTag:document.getElementById("assetTag"),
-    serialNumber:document.getElementById("serialNumber"),
-    notes:document.getElementById("notes"),
-  };
-
-  let canEdit = false;
+  const who = document.getElementById("who");
   const params = new URLSearchParams(location.search);
   const itemId = params.get("id");
+  const editLink = document.getElementById("editLink");
 
-  function setBadge(role){
-    const r = (role||"viewer").toLowerCase();
-    badge.className = "badge "+r;
-    badge.textContent = r.toUpperCase();
-  }
+  const field = id => document.getElementById(id);
 
-  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
-  backBtn.addEventListener("click",()=>history.back());
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
-    who.textContent = user.email;
-    setBadge(role);
-    canEdit = (role==="it" || role==="admin" || role==="super_admin");
-    if(!canEdit){
-      saveBtn.disabled = true;
-      readonlyHint.style.display = "block";
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      location.href="login.html";
+      return;
     }
-    await loadCategories();
-    if(itemId) await loadItem();
-    else pageTitle.textContent = "New Item";
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role  = uSnap.exists()? (uSnap.data().role||"viewer") : "viewer";
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+    const badge = role==="admin" ? "badge-admin"
+                 : role==="it" ? "badge-it" : "badge-viewer";
+    who.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
+
+    if(itemId){
+      editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
+      if(role==="viewer"){
+        editLink.style.display="none";
+      }
+      await loadItem();
+    }else{
+      document.getElementById("subtitle").textContent = "No device ID provided.";
+      editLink.style.display="none";
+    }
   });
 
-  async function loadCategories(){
-    const catSel = inputs.category;
-    const snap = await getDocs(collection(db,"categories"));
-    snap.forEach(d=>{
-      const c = d.data();
-      const opt = document.createElement("option");
-      opt.value = d.id;
-      opt.textContent = c.name || d.id;
-      catSel.appendChild(opt);
-    });
-  }
+  function show(v){ return v || "–"; }
+  function showDate(v){ return v ? v.substring(0,10) : "–"; }
 
   async function loadItem(){
-    const ref = doc(db,"items",itemId);
-    const s = await getDoc(ref);
-    if(!s.exists()){ msg.textContent="Item not found."; return; }
-    const it = s.data();
-    pageTitle.textContent = it.name || "Item";
-    inputs.name.value = it.name || "";
-    inputs.category.value = it.categoryId || "";
-    inputs.type.value = it.type || "";
-    inputs.location.value = it.location || "";
-    inputs.owner.value = it.owner || "";
-    inputs.status.value = it.status || "Active";
-    inputs.assetTag.value = it.assetTag || "";
-    inputs.serialNumber.value = it.serialNumber || "";
-    inputs.notes.value = it.notes || "";
-  }
-
-  saveBtn.addEventListener("click", async ()=>{
-    if(!canEdit){ return; }
-    msg.textContent = "Saving…";
-    const payload = {
-      name:inputs.name.value.trim(),
-      categoryId:inputs.category.value || null,
-      type:inputs.type.value.trim(),
-      location:inputs.location.value.trim(),
-      owner:inputs.owner.value.trim(),
-      status:inputs.status.value,
-      assetTag:inputs.assetTag.value.trim(),
-      serialNumber:inputs.serialNumber.value.trim(),
-      notes:inputs.notes.value.trim(),
-      updatedAt:serverTimestamp()
-    };
-    if(!itemId) payload.createdAt = serverTimestamp();
-
-    const id = itemId || crypto.randomUUID();
-    await setDoc(doc(db,"items",id),payload,{merge:true});
-    msg.textContent = "Saved.";
-    if(!itemId){
-      // redirect to edit URL
-      location.replace(`item.html?id=${encodeURIComponent(id)}`);
+    const snap = await getDoc(doc(db,"items",itemId));
+    if(!snap.exists()){
+      document.getElementById("subtitle").textContent = "Device not found.";
+      return;
     }
-  });
+    const d = snap.data();
+
+    document.getElementById("title").textContent = d.deviceName || d.assetId || "Device";
+    document.getElementById("subtitle").textContent = (d.assetType||"") + (d.location? " • "+d.location:"");
+
+    field("f_assetId").textContent = show(d.assetId);
+    field("f_deviceName").textContent = show(d.deviceName);
+    field("f_assetType").textContent = show(d.assetType);
+    field("f_manufacturer").textContent = show(d.manufacturer);
+    field("f_serialNumber").textContent = show(d.serialNumber);
+
+    const st = d.status || "unknown";
+    const stLabel = st.replace(/-/g," ");
+    const stElt = field("f_status");
+    stElt.textContent = stLabel;
+    if(st==="retired" || st==="repair"){
+      stElt.style.background="#fee2e2";
+      stElt.style.color="#b91c1c";
+    }
+
+    field("f_assignedTo").textContent = show(d.assignedTo);
+    field("f_department").textContent = show(d.department);
+    field("f_location").textContent = show(d.location);
+    field("f_buildingFloor").textContent = show(d.buildingFloor);
+
+    field("f_ipAddress").textContent = show(d.ipAddress);
+    field("f_macAddress").textContent = show(d.macAddress);
+    field("f_osVersion").textContent = show(d.osVersion);
+
+    field("f_purchaseDate").textContent = showDate(d.purchaseDate);
+    field("f_installationDate").textContent = showDate(d.installationDate);
+    field("f_vendor").textContent = show(d.vendor);
+    field("f_warrantyEndDate").textContent = showDate(d.warrantyEndDate);
+    field("f_replacementDate").textContent = showDate(d.replacementDate);
+    field("f_replacementAlert").textContent = d.replacementAlert ? "Yes" : "No";
+    field("f_removedDate").textContent = showDate(d.removedDate);
+
+    field("f_notes").textContent = d.notes ? d.notes : "No notes recorded.";
+  }
 </script>
+
 </body>
 </html>
