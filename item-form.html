@@ -1,82 +1,231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Add / Edit Item</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Device – Add / Edit</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
   .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
   .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:block;padding:10px 12px;border-radius:9px;color:#dbe4ff;text-decoration:none;margin-bottom:6px;}
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
   .nav a:hover,.nav a.active{background:#111a33;}
-  .content{padding:18px;max-width:900px;margin:0 auto;width:100%;}
-  .box{background:white;border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px;}
-  label{display:block;margin-top:8px;font-size:.9rem;}
-  input,select,textarea{width:100%;padding:8px;border:1px solid #cbd5e1;border-radius:7px;}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  button{background:var(--brand);color:white;border:none;padding:9px 12px;border-radius:8px;cursor:pointer;margin-top:12px;}
-  .muted{color:#64748b;font-size:.85rem;margin-top:6px;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
+  h1{margin:0 0 14px;font-size:1.4rem;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;padding:16px 18px;margin-bottom:14px;
+  }
+  .card h2{margin:0 0 10px;font-size:1.05rem;}
+  .grid-2{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 16px;
+  }
+  label{display:block;font-size:0.82rem;color:#475569;margin-bottom:3px;}
+  input,select,textarea{
+    width:100%;
+    padding:7px 8px;
+    border-radius:8px;
+    border:1px solid #cbd5e1;
+    font-size:0.9rem;
+  }
+  textarea{min-height:80px;resize:vertical;}
+  .row{display:flex;gap:10px;align-items:center;margin-top:4px;}
+  .hint{font-size:.75rem;color:#94a3b8;margin-top:2px;}
+  .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
+  .btn{
+    border:none;cursor:pointer;
+    padding:8px 14px;border-radius:999px;
+    font-size:.9rem;font-weight:500;
+  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;color:#0f172a;}
+  .danger{color:#b91c1c;font-size:.8rem;margin-left:auto;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div style="font-weight:700;" id="title">Add Item</div>
-  <div id="who" style="opacity:.8;">Loading…</div>
+  <div>
+    <strong>OCSI IT Inventory</strong> – Device Form
+  </div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
     <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a class="active" href="inventory-list.html">Inventory</a>
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="box">
-      <label>Category *</label>
-      <select id="catSel"></select>
+    <h1 id="formTitle">New Device</h1>
 
-      <div class="row">
-        <div>
-          <label>Asset ID</label>
-          <input id="assetInp" placeholder="e.g., SW-01"/>
+    <form id="deviceForm">
+      <!-- Identification -->
+      <section class="card">
+        <h2>Identification</h2>
+        <div class="grid-2">
+          <div>
+            <label for="assetId">Asset ID</label>
+            <input id="assetId" name="assetId" required />
+          </div>
+          <div>
+            <label for="deviceName">Device Name</label>
+            <input id="deviceName" name="deviceName" required />
+          </div>
+          <div>
+            <label for="assetType">Asset Type / Device Type</label>
+            <input id="assetType" name="assetType" placeholder="Laptop, Switch, AP…" />
+          </div>
+          <div>
+            <label for="manufacturer">Manufacturer &amp; Model</label>
+            <input id="manufacturer" name="manufacturer" placeholder="Apple MacBook Pro 14&quot;" />
+          </div>
+          <div>
+            <label for="serialNumber">Serial Number</label>
+            <input id="serialNumber" name="serialNumber" />
+          </div>
+          <div>
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="in-use">In use</option>
+              <option value="in-storage">In storage</option>
+              <option value="loaned">Loaned</option>
+              <option value="retired">Retired</option>
+              <option value="repair">Under repair</option>
+            </select>
+          </div>
         </div>
-        <div>
-          <label>Device Name</label>
-          <input id="nameInp" placeholder="e.g., UniFi Switch 48 PoE"/>
+      </section>
+
+      <!-- Location & Assignment -->
+      <section class="card">
+        <h2>Location &amp; Assignment</h2>
+        <div class="grid-2">
+          <div>
+            <label for="assignedTo">Assigned To</label>
+            <input id="assignedTo" name="assignedTo" placeholder="User / Room / Class" />
+          </div>
+          <div>
+            <label for="department">Department</label>
+            <input id="department" name="department" placeholder="IT, Music, Office…" />
+          </div>
+          <div>
+            <label for="location">Location</label>
+            <input id="location" name="location" placeholder="Campus / Building" />
+          </div>
+          <div>
+            <label for="buildingFloor">Building / Floor</label>
+            <input id="buildingFloor" name="buildingFloor" placeholder="Bldg A – 2F" />
+          </div>
         </div>
+      </section>
+
+      <!-- Network & System Info -->
+      <section class="card">
+        <h2>Network &amp; System Info</h2>
+        <div class="grid-2">
+          <div>
+            <label for="ipAddress">IP Address</label>
+            <input id="ipAddress" name="ipAddress" placeholder="192.168.10.25" />
+          </div>
+          <div>
+            <label for="macAddress">MAC Address</label>
+            <input id="macAddress" name="macAddress" placeholder="AA:BB:CC:DD:EE:FF" />
+          </div>
+          <div>
+            <label for="osVersion">Operating System / Version</label>
+            <input id="osVersion" name="osVersion" placeholder="Windows 11, macOS 15…" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Procurement & Lifecycle -->
+      <section class="card">
+        <h2>Procurement &amp; Lifecycle</h2>
+        <div class="grid-2">
+          <div>
+            <label for="purchaseDate">Purchase Date</label>
+            <input type="date" id="purchaseDate" name="purchaseDate" />
+          </div>
+          <div>
+            <label for="installationDate">Date of Installation</label>
+            <input type="date" id="installationDate" name="installationDate" />
+          </div>
+          <div>
+            <label for="vendor">Vendor / Supplier</label>
+            <input id="vendor" name="vendor" />
+          </div>
+          <div>
+            <label for="warrantyEndDate">Warranty End Date</label>
+            <input type="date" id="warrantyEndDate" name="warrantyEndDate" />
+          </div>
+          <div>
+            <label for="replacementDate">Estimated Replacement Date</label>
+            <input type="date" id="replacementDate" name="replacementDate" />
+          </div>
+          <div>
+            <label>Replacement Alert</label>
+            <div class="row">
+              <input type="checkbox" id="replacementAlert" name="replacementAlert" />
+              <span class="hint">Send alert when near end of lifecycle</span>
+            </div>
+          </div>
+          <div>
+            <label for="removedDate">Removed Date</label>
+            <input type="date" id="removedDate" name="removedDate" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Notes -->
+      <section class="card">
+        <h2>Notes &amp; Misc</h2>
+        <textarea id="notes" name="notes" placeholder="Condition notes, repair history, custom comments…"></textarea>
+      </section>
+
+      <div class="actions">
+        <span class="danger" id="editWarning"></span>
+        <button type="button" class="btn btn-ghost" onclick="history.back()">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save Device</button>
       </div>
-
-      <label>Location</label>
-      <input id="locInp" placeholder="e.g., Server Room, HS Lab"/>
-
-      <label>Lifecycle Status</label>
-      <select id="lifeInp">
-        <option>Active</option>
-        <option>Repair</option>
-        <option>Stored</option>
-        <option>Retired</option>
-      </select>
-
-      <hr/>
-      <h3>Category Fields</h3>
-      <div id="dynFields"></div>
-
-      <button id="saveBtn">Save Item</button>
-      <div id="msg" class="muted"></div>
-    </div>
+    </form>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, getDoc, serverTimestamp }
+  import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
+  import { getAuth, onAuthStateChanged, signOut }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
@@ -88,119 +237,129 @@
     appId: "1:941219752022:web:f3214e808d36a4a53833f7",
     measurementId: "G-CM3P9CRX1K"
   };
-  const app=initializeApp(firebaseConfig);
-  const db=getFirestore(app);
-  const auth=getAuth(app);
 
-  const ALLOWED_ROLES=["admin","it"]; // REQUIRED
-  const who=document.getElementById("who");
-  const title=document.getElementById("title");
-  const msg=document.getElementById("msg");
-  const catSel=document.getElementById("catSel");
-  const dynFields=document.getElementById("dynFields");
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const auth = getAuth(app);
 
-  const id=new URLSearchParams(location.search).get("id");
-  let editMode=!!id, categories={}, currentCat=null;
+  const EDIT_ROLES = ["admin","it"];
+  const who   = document.getElementById("who");
+  const form  = document.getElementById("deviceForm");
+  const formTitle = document.getElementById("formTitle");
+  const editWarning = document.getElementById("editWarning");
 
-  onAuthStateChanged(auth, async user=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap=await getDoc(doc(db,"users",user.uid));
-    const role=uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Admin/IT only."); location.href="inventory-list.html"; return; }
-    who.textContent=user.email+" ("+role+")";
+  const params = new URLSearchParams(location.search);
+  const itemId = params.get("id");
 
-    await loadCategories();
-    if(editMode){ title.textContent="Edit Item"; await loadItem(); }
-    renderDynamicFields();
+  let currentRole = "viewer";
+
+  onAuthStateChanged(auth, async user => {
+    if(!user){
+      location.href="login.html";
+      return;
+    }
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const data  = uSnap.exists()? uSnap.data() : {};
+    currentRole = data.role || "viewer";
+
+    const badge = currentRole==="admin" ? "badge-admin"
+                 : currentRole==="it" ? "badge-it" : "badge-viewer";
+
+    who.innerHTML = `${user.email} <span class="badge ${badge}">${currentRole}</span>`;
+
+    if(!EDIT_ROLES.includes(currentRole)){
+      editWarning.textContent = "Read-only: viewers cannot save changes.";
+      form.querySelector("button[type='submit']").disabled = true;
+      // but still load data if id present
+    }
+
+    if(itemId){
+      formTitle.textContent = "Edit Device";
+      await loadItem(itemId);
+    } else {
+      formTitle.textContent = "New Device";
+    }
   });
 
-  async function loadCategories(){
-    const snap=await getDocs(collection(db,"categories"));
-    catSel.innerHTML="";
-    snap.forEach(d=>{
-      categories[d.id]=d.data();
-      const o=document.createElement("option");
-      o.value=d.id; o.textContent=d.data().name||d.id;
-      catSel.appendChild(o);
-    });
-    currentCat=catSel.value;
-  }
-
-  catSel.addEventListener("change", ()=>{
-    currentCat=catSel.value;
-    renderDynamicFields();
-  });
-
-  function fieldInput(f, val=""){
-    const id="f_"+f.key;
-    if(f.type==="longtext"){
-      return `<label>${f.name}</label><textarea id="${id}">${val||""}</textarea>`;
-    }
-    if(f.type==="date"){
-      const v=val? new Date(val).toISOString().slice(0,10):"";
-      return `<label>${f.name}</label><input id="${id}" type="date" value="${v}"/>`;
-    }
-    if(f.type==="number"){
-      return `<label>${f.name}</label><input id="${id}" type="number" value="${val||""}"/>`;
-    }
-    return `<label>${f.name}</label><input id="${id}" type="text" value="${val||""}"/>`;
-  }
-
-  function renderDynamicFields(prefill={}){
-    dynFields.innerHTML="";
-    const cat=categories[currentCat]||{};
-    const fields=[...(cat.defaultFields||[]), ...(cat.extraFields||[])];
-
-    fields.forEach(f=>{
-      const wrap=document.createElement("div");
-      wrap.innerHTML=fieldInput(f, prefill[f.key]);
-      dynFields.appendChild(wrap);
-    });
-  }
-
-  async function loadItem(){
-    const snap=await getDoc(doc(db,"items",id));
+  async function loadItem(id){
+    const snap = await getDoc(doc(db,"items",id));
     if(!snap.exists()) return;
-    const it=snap.data();
-    catSel.value=it.categoryId||catSel.value;
-    currentCat=catSel.value;
-    document.getElementById("assetInp").value=it.assetId||"";
-    document.getElementById("nameInp").value=it.deviceName||it.name||"";
-    document.getElementById("locInp").value=it.location||"";
-    document.getElementById("lifeInp").value=it.lifecycleStatus||"Active";
-    renderDynamicFields(it);
-  }
-
-  document.getElementById("saveBtn").addEventListener("click", async ()=>{
-    msg.textContent="";
-    const catId=catSel.value;
-    const cat=categories[catId]||{};
-    const fields=[...(cat.defaultFields||[]), ...(cat.extraFields||[])];
-
-    const payload={
-      categoryId: catId,
-      assetId: document.getElementById("assetInp").value.trim(),
-      deviceName: document.getElementById("nameInp").value.trim(),
-      location: document.getElementById("locInp").value.trim(),
-      lifecycleStatus: document.getElementById("lifeInp").value,
-      updatedAt: serverTimestamp()
+    const d = snap.data();
+    const setVal = (id, v) => { const el=document.getElementById(id); if(!el) return;
+      if(el.type==="checkbox") el.checked = !!v;
+      else if(el.type==="date" && v) el.value = v.substring(0,10);
+      else el.value = v || "";
     };
 
-    fields.forEach(f=>{
-      const el=document.getElementById("f_"+f.key);
-      if(!el) return;
-      payload[f.key]=el.value;
+    setVal("assetId", d.assetId);
+    setVal("deviceName", d.deviceName);
+    setVal("assetType", d.assetType);
+    setVal("manufacturer", d.manufacturer);
+    setVal("serialNumber", d.serialNumber);
+    setVal("status", d.status);
+
+    setVal("assignedTo", d.assignedTo);
+    setVal("department", d.department);
+    setVal("location", d.location);
+    setVal("buildingFloor", d.buildingFloor);
+
+    setVal("ipAddress", d.ipAddress);
+    setVal("macAddress", d.macAddress);
+    setVal("osVersion", d.osVersion);
+
+    setVal("purchaseDate", d.purchaseDate);
+    setVal("installationDate", d.installationDate);
+    setVal("vendor", d.vendor);
+    setVal("warrantyEndDate", d.warrantyEndDate);
+    setVal("replacementDate", d.replacementDate);
+    setVal("replacementAlert", d.replacementAlert);
+    setVal("removedDate", d.removedDate);
+
+    setVal("notes", d.notes);
+  }
+
+  form.addEventListener("submit", async (e)=>{
+    e.preventDefault();
+    if(!EDIT_ROLES.includes(currentRole)){
+      alert("You do not have permission to save devices.");
+      return;
+    }
+    const fd = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
+
+    // checkbox
+    data.replacementAlert = form.replacementAlert.checked;
+
+    // normalise dates as ISO yyyy-mm-dd strings
+    const dateFields = [
+      "purchaseDate","installationDate","warrantyEndDate",
+      "replacementDate","removedDate"
+    ];
+    dateFields.forEach(f=>{
+      if(!data[f]) data[f] = "";
     });
 
-    if(editMode){
-      await updateDoc(doc(db,"items",id), payload);
-      location.href="item.html?id="+id;
-    } else {
-      payload.createdAt=serverTimestamp();
-      const ref=await addDoc(collection(db,"items"), payload);
-      location.href="item.html?id="+ref.id;
+    data.updatedAt = serverTimestamp();
+    if(!itemId){
+      data.createdAt = serverTimestamp();
+    }
+
+    try{
+      if(itemId){
+        await setDoc(doc(db,"items",itemId), data, { merge:true });
+      }else{
+        await addDoc(collection(db,"items"), data);
+      }
+      alert("Device saved.");
+      location.href="inventory-list.html";
+    }catch(err){
+      console.error(err);
+      alert("Error saving device: "+err.message);
     }
   });
+
+  // simple logout hook if you later wire it to a button
+  window.doLogout = () => signOut(auth);
 </script>
 
 </body>
