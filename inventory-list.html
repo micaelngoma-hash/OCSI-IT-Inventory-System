@@ -59,6 +59,27 @@
   }
   .btn-primary{background:var(--brand);color:white;}
   .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  /* Small row buttons */
+  .btn-row{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    background:white;
+    font-size:.8rem;
+    text-decoration:none;
+    color:#0f172a;
+  }
+  .btn-row + .btn-row{margin-left:4px;}
+  .btn-row-primary{
+    border-color:var(--brand);
+    color:white;
+    background:var(--brand);
+  }
+
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -135,7 +156,7 @@
             <th>Assigned To</th>
             <th>Location</th>
             <th>IP</th>
-            <th style="width:90px;">Actions</th>
+            <th style="width:120px;">Actions</th>
           </tr>
         </thead>
         <tbody id="tbody">
@@ -148,8 +169,9 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import {
+    getFirestore, collection, getDocs, getDoc, doc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
   import { getAuth, onAuthStateChanged }
     from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
@@ -184,7 +206,7 @@
       location.href="login.html";
       return;
     }
-    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
     const uSnap = await getDoc(doc(db,"users",user.uid));
     const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
     currentRole = role;
@@ -201,9 +223,9 @@
 
     if(!EDIT_ROLES.includes(role)){
       addBtn.style.display="none";
+    } else {
+      addBtn.onclick = ()=> location.href="item-form.html";
     }
-
-    addBtn.onclick = ()=> location.href="item-form.html";
 
     await loadItems();
   });
@@ -248,11 +270,9 @@
       const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
       const editUrl = `item-form.html?id=${encodeURIComponent(it.id)}`;
 
-      const actions = EDIT_ROLES.includes(currentRole)
-        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
-              href="${editUrl}">Edit</a>`
-        : `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
-              href="${viewUrl}">View</a>`;
+      const editButton = EDIT_ROLES.includes(currentRole)
+        ? `<a class="btn-row btn-row-primary" href="${editUrl}">Edit</a>`
+        : "";
 
       return `
         <tr>
@@ -264,9 +284,8 @@
           <td>${escapeHtml((it.location || "") + (it.buildingFloor ? " – "+it.buildingFloor:""))}</td>
           <td>${escapeHtml(it.ipAddress || "")}</td>
           <td>
-            <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;"
-               href="${viewUrl}">View</a>
-            ${actions}
+            <a class="btn-row" href="${viewUrl}">View</a>
+            ${editButton}
           </td>
         </tr>`;
     }).join("");
@@ -274,7 +293,7 @@
 
   function escapeHtml(s){
     return s ? s.replace(/[&<>"']/g, c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+      { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c] || c
     )) : "";
   }
 
