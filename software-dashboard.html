@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Software Dashboard</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .layout{
+    display:grid;grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1200px;margin:0 auto;width:100%;}
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid-main{
+    display:grid;
+    grid-template-columns:2.2fr 1.1fr;
+    gap:14px;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+    .grid-main{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:14px;padding:14px 16px;margin-bottom:12px;
+  }
+  .card h2{
+    margin:0 0 8px;font-size:1.05rem;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .card h2 span.right-link{
+    font-size:.8rem;font-weight:400;
+  }
+  .card h2 span.right-link a{
+    color:var(--brand);text-decoration:none;
+  }
+  .card h2 span.right-link a:hover{text-decoration:underline;}
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+
+  .tiles{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:10px;
+  }
+  .tile{
+    border-radius:12px;padding:10px 12px;
+    border:1px solid #e5e7eb;
+    background:#f9fafb;
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .tile-header{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:.82rem;color:#6b7280;
+  }
+  .tile-icon{font-size:1rem;}
+  .tile-label{font-weight:500;}
+  .tile-value{font-size:1.6rem;font-weight:700;}
+  .tile-sub{font-size:.78rem;color:#9ca3af;}
+
+  .btn{
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
+  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .pill{
+    padding:2px 9px;border-radius:999px;font-size:.75rem;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  .pill-good{background:#dcfce7;color:#166534;}
+  .pill-warn{background:#ffedd5;color:#c2410c;}
+  .pill-bad{background:#fee2e2;color:#b91c1c;}
+  .pill-neutral{background:#e5e7eb;color:#374151;}
+
+  .list{margin:4px 0 0;padding:0;list-style:none;font-size:.86rem;}
+  .list li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:4px 0;border-bottom:1px dashed #e5e7eb;
+  }
+  .list li:last-child{border-bottom:none;}
+  .list span.label{color:#475569;}
+  .list span.value{color:#0f172a;font-weight:500;font-size:.85rem;}
+  .inline-link{color:var(--brand);text-decoration:none;font-size:.83rem;}
+  .inline-link:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><strong>OCSI IT Inventory</strong> – Software Dashboard</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a class="active" href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software_licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <h1>Software & Licensing Overview</h1>
+    <p class="subtitle">
+      Snapshot of all tracked software titles, license pools and compliance status.
+    </p>
+
+    <div class="grid-main">
+      <!-- LEFT: main tiles -->
+      <section class="card">
+        <h2>
+          Software & Licenses
+          <span class="right-link">
+            <a href="software_licenses.html">Open licenses →</a>
+          </span>
+        </h2>
+        <p class="muted">High-level view of software catalog and license usage.</p>
+
+        <div class="tiles">
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Software Titles</span>
+              <span class="tile-icon">📦</span>
+            </div>
+            <div class="tile-value" id="prodCount">--</div>
+            <div class="tile-sub">Entries in <code>software_product</code>.</div>
+          </div>
+
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">License Pools</span>
+              <span class="tile-icon">🔐</span>
+            </div>
+            <div class="tile-value" id="licCount">--</div>
+            <div class="tile-sub">Rows in <code>software_license</code>.</div>
+          </div>
+
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Seats Used</span>
+              <span class="tile-icon">🧑‍💻</span>
+            </div>
+            <div class="tile-value" id="usedSeats">--</div>
+            <div class="tile-sub"><span id="usedPct">--%</span> of all licensed seats.</div>
+          </div>
+
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Seats Available</span>
+              <span class="tile-icon">📊</span>
+            </div>
+            <div class="tile-value" id="availSeats">--</div>
+            <div class="tile-sub">Remaining before hitting capacity.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <a class="btn btn-primary" href="software_licenses.html">
+            Manage Licenses
+          </a>
+          <a class="btn btn-ghost" href="software_licenses.html">
+            View Assignments
+          </a>
+        </div>
+      </section>
+
+      <!-- RIGHT: alert summary -->
+      <section class="card">
+        <h2>
+          Compliance Alerts
+          <span class="right-link">
+            <a href="software_licenses.html">Detailed view →</a>
+          </span>
+        </h2>
+        <p class="muted">Licenses that require attention (expiring soon or over capacity).</p>
+
+        <ul class="list" id="alertList">
+          <li><span class="label">Loading alerts…</span><span class="value">–</span></li>
+        </ul>
+
+        <p class="muted" style="margin-top:10px;font-size:.78rem;">
+          Alerts are calculated from <strong>totalSeats</strong>, <strong>assignedSeats</strong> and
+          <strong>expiryDate</strong> in <code>software_license</code>.  
+          Overused or expiring within 30 days are flagged.
+        </p>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
+    measurementId: "G-CM3P9CRX1K"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
+  const auth = getAuth(app);
+
+  const ALLOWED_ROLES = ["admin","it","viewer"];
+  const whoEl    = document.getElementById("who");
+  const prodEl   = document.getElementById("prodCount");
+  const licEl    = document.getElementById("licCount");
+  const usedEl   = document.getElementById("usedSeats");
+  const usedPct  = document.getElementById("usedPct");
+  const availEl  = document.getElementById("availSeats");
+  const alertList = document.getElementById("alertList");
+
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      location.href = "login.html";
+      return;
+    }
+    const userDoc = await getDocs(collection(db,"users"));
+    // quick lookup of current user role
+    let role = "viewer";
+    userDoc.forEach(d=>{
+      if(d.id === user.uid){
+        role = d.data().role || "viewer";
+      }
+    });
+
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="login.html";
+      return;
+    }
+
+    const badge = role==="admin" ? "badge-admin"
+                 : role==="it" ? "badge-it" : "badge-viewer";
+    whoEl.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
+
+    await loadStats();
+  });
+
+  function toDate(v){
+    if(!v) return null;
+    if(v.toDate) return v.toDate();
+    return new Date(v);
+  }
+
+  async function loadStats(){
+    const prodSnap = await getDocs(collection(db,"software_product"));
+    prodEl.textContent = prodSnap.size;
+
+    const licSnap = await getDocs(collection(db,"software_license"));
+    licEl.textContent = licSnap.size;
+
+    let totalSeats = 0;
+    let usedSeats  = 0;
+    let alerts = [];
+
+    const now  = new Date();
+    const soon = new Date(now.getTime() + 30*24*60*60*1000);
+
+    licSnap.forEach(docSnap=>{
+      const lic = docSnap.data();
+      const name = lic.softwareName || lic.name || "License";
+      const total = Number(lic.totalSeats || 0);
+      const used  = Number(lic.assignedSeats || 0);
+      const exp   = toDate(lic.expiryDate);
+
+      totalSeats += total;
+      usedSeats  += used;
+
+      let status = null;
+      if(total && used > total){
+        status = { type:"bad", msg:`Overused by ${used-total} seats` };
+      }else if(exp && exp < now){
+        status = { type:"bad", msg:`Expired` };
+      }else if(exp && exp <= soon){
+        const days = Math.ceil((exp - now)/(1000*60*60*24));
+        status = { type:"warn", msg:`Expires in ${days} days` };
+      }
+
+      if(status){
+        alerts.push({
+          name,
+          msg: status.msg,
+          type: status.type
+        });
+      }
+    });
+
+    usedEl.textContent  = usedSeats;
+    const free = Math.max(0,totalSeats - usedSeats);
+    availEl.textContent = free;
+    const pct = totalSeats ? Math.round((usedSeats/totalSeats)*100) : 0;
+    usedPct.textContent = pct + "%";
+
+    if(alerts.length === 0){
+      alertList.innerHTML = `
+        <li>
+          <span class="label">No license alerts.</span>
+          <span class="value"><span class="pill pill-good">OK</span></span>
+        </li>`;
+    }else{
+      alertList.innerHTML = alerts.slice(0,6).map(a=>{
+        const cls = a.type==="bad" ? "pill-bad" : "pill-warn";
+        return `
+          <li>
+            <span class="label">${escapeHtml(a.name)}</span>
+            <span class="value"><span class="pill ${cls}">${escapeHtml(a.msg)}</span></span>
+          </li>`;
+      }).join("");
+
+      if(alerts.length>6){
+        const more = alerts.length-6;
+        alertList.innerHTML += `
+          <li>
+            <span class="label">${more} more licenses…</span>
+            <span class="value"><a class="inline-link" href="software_licenses.html">View all</a></span>
+          </li>`;
+      }
+    }
+  }
+
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g, c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
+  }
+</script>
+
+</body>
+</html>
