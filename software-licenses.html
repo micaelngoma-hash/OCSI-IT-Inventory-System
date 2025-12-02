@@ -3,266 +3,253 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Software Licenses – OCSI IT Inventory</title>
+<title>Software Licenses & Compliance</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#111827;--brand:#1a73e8;--danger:#ef4444;--warn:#f59e0b;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
-    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:0 2px 6px rgba(15,23,42,.6);
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  .topbar-title{font-weight:700;font-size:1.05rem;}
-  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
-  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
-    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
   }
-  .nav a span.icon{width:18px;text-align:center;}
-  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
-  .content{padding:18px 20px;max-width:1200px;margin:0 auto;}
-  .tabs{display:flex;gap:8px;border-bottom:1px solid #e5e7eb;margin-bottom:12px;}
-  .tab-btn{
-    border:none;background:none;padding:7px 10px;font-size:.9rem;cursor:pointer;
-    border-radius:8px 8px 0 0;
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1250px;margin:0 auto;width:100%;}
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid-main{
+    display:grid;
+    grid-template-columns:1.65fr 1.1fr;
+    gap:14px;
   }
-  .tab-btn.active{background:white;border:1px solid #e5e7eb;border-bottom-color:white;}
-  section.tab{display:none;}
-  section.tab.active{display:block;}
-  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;}
-  .toolbar input,.toolbar select{
-    padding:6px 8px;border-radius:8px;border:1px solid #d1d5db;font-size:.85rem;
+  @media(max-width:1040px){
+    .layout{grid-template-columns:1fr;}
+    .grid-main{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  }
+  .card h2{
+    margin:0 0 8px;font-size:1.05rem;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .card h2 span.right-link{
+    font-size:.8rem;font-weight:400;
+  }
+  .card h2 span.right-link a{
+    color:var(--brand);text-decoration:none;
+  }
+  .card h2 span.right-link a:hover{text-decoration:underline;}
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:6px;}
+
+  .toolbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:8px;gap:10px;flex-wrap:wrap;
+  }
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:white;border:1px solid var(--border);
+    border-radius:999px;padding:4px 10px;
+    max-width:280px;width:100%;
+  }
+  .search-box input{
+    border:none;outline:none;font-size:.88rem;width:100%;
+  }
+  select{
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);font-size:.85rem;background:white;
   }
   .btn{
-    padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:500;
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
   }
-  .btn.primary{background:var(--brand);color:white;}
-  .btn.secondary{background:white;color:#111827;border:1px solid #d1d5db;}
-  table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;}
-  th,td{padding:8px 9px;font-size:.84rem;border-bottom:1px solid #e5e7eb;text-align:left;}
-  th{background:#f1f5f9;}
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
+  }
+  table{border-collapse:collapse;width:100%;min-width:830px;}
+  th,td{
+    padding:7px 9px;border-bottom:1px solid #f1f5f9;
+    font-size:.86rem;text-align:left;
+  }
+  th{background:#f8fafc;font-weight:600;color:#475569;position:sticky;top:0;z-index:5;}
   tr:hover td{background:#f9fafb;}
-  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;}
-  .tag.over{background:#fee2e2;color:#991b1b;}
-  .tag.expiring{background:#fef3c7;color:#92400e;}
-  .tag.ok{background:#dcfce7;color:#166534;}
-  .panel{
-    margin-top:12px;background:white;border-radius:12px;padding:12px 14px;
-    border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.06);
+  tr.selected td{background:#e0f2fe !important;}
+
+  .pill{
+    padding:2px 9px;border-radius:999px;font-size:.75rem;
+    display:inline-flex;align-items:center;gap:4px;
   }
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  label{font-size:.8rem;color:#4b5563;display:block;margin-bottom:3px;}
-  input,select,textarea{
-    width:100%;padding:7px 9px;border-radius:8px;border:1px solid #d1d5db;font-size:.85rem;
+  .pill-good{background:#dcfce7;color:#166534;}
+  .pill-warn{background:#ffedd5;color:#c2410c;}
+  .pill-bad{background:#fee2e2;color:#b91c1c;}
+  .pill-neutral{background:#e5e7eb;color:#374151;}
+
+  .stat-block{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px;font-size:.84rem;}
+  .stat-chip{
+    background:#f9fafb;border-radius:999px;border:1px solid #e5e7eb;
+    padding:4px 9px;
   }
-  textarea{min-height:70px;resize:vertical;}
-  .muted{font-size:.8rem;color:#6b7280;margin-bottom:6px;}
-  .msg{font-size:.8rem;margin-left:8px;}
-  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
-  .badge.super_admin{background:#7c3aed;color:white;}
-  .badge.admin{background:#f97316;color:white;}
-  .badge.it{background:#1d4ed8;color:white;}
-  .badge.viewer{background:#4b5563;color:white;}
-  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
-  @media(max-width:900px){
-    .layout{grid-template-columns:1fr;}
-    .sidebar{display:none;}
-    .grid-2{grid-template-columns:1fr;}
+
+  .list{margin:4px 0 0;padding:0;list-style:none;font-size:.86rem;}
+  .list li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:4px 0;border-bottom:1px dashed #e5e7eb;
   }
+  .list li:last-child{border-bottom:none;}
+  .list span.label{color:#475569;}
+  .list span.value{color:#0f172a;font-weight:500;font-size:.85rem;}
+  .inline-link{color:var(--brand);text-decoration:none;font-size:.83rem;}
+  .inline-link:hover{text-decoration:underline;}
+
+  .small{font-size:.78rem;color:#9ca3af;margin-top:6px;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div><div class="topbar-title">Software Licenses & Compliance</div></div>
-  <div style="display:flex;align-items:center;font-size:.85rem;">
-    <span id="roleBadge" class="badge viewer">VIEWER</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Software Licenses & Compliance</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
-    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
-      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a class="active" href="software-licenses.html"><span class="icon">🎟</span><span>Licenses</span></a>
-      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
-      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="pools">License Pools</button>
-      <button class="tab-btn" data-tab="assignments">Assignments</button>
-      <button class="tab-btn" data-tab="compliance">Compliance</button>
+    <h1>Software Licenses</h1>
+    <p class="subtitle">
+      Overview of all license pools, usage and compliance. Click a license to see its assignments.
+    </p>
+
+    <div class="grid-main">
+      <!-- LEFT: licenses table -->
+      <section>
+        <div class="card">
+          <div class="toolbar">
+            <div class="search-box">
+              <span>🔍</span>
+              <input id="search" placeholder="Search by software, vendor, key…"/>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select id="statusFilter">
+                <option value="">All statuses</option>
+                <option value="good">OK</option>
+                <option value="warn">Expiring soon</option>
+                <option value="bad">Overused / expired</option>
+              </select>
+              <button id="newBtn" class="btn btn-primary" type="button">
+                ➕ New License
+              </button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Software</th>
+                  <th>Vendor</th>
+                  <th>Seats</th>
+                  <th>Used</th>
+                  <th>Free</th>
+                  <th>Expiry</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tbody">
+                <tr><td colspan="7">Loading licenses…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT: details & assignments -->
+      <section>
+        <div class="card" id="detailsCard">
+          <h2>
+            License Details
+            <span class="right-link" id="detailsLink" style="display:none;">
+              <a href="#" id="openProductLink">Open product</a>
+            </span>
+          </h2>
+          <p class="muted" id="detailsIntro">
+            Select a license on the left to see usage and assignments.
+          </p>
+
+          <div id="detailsBody" style="display:none;">
+            <div style="font-size:.92rem;margin-bottom:4px;">
+              <strong id="d_softName"></strong>
+              <span id="d_vendor" style="color:#64748b;margin-left:4px;"></span>
+            </div>
+            <div class="stat-block">
+              <span class="stat-chip"><strong id="d_total">0</strong> seats</span>
+              <span class="stat-chip"><strong id="d_used">0</strong> used</span>
+              <span class="stat-chip"><strong id="d_free">0</strong> free</span>
+              <span class="stat-chip">Expiry: <span id="d_expiry">–</span></span>
+              <span class="stat-chip">Status: <span id="d_statusPill" class="pill pill-neutral">–</span></span>
+            </div>
+
+            <h3 style="margin:10px 0 4px;font-size:.95rem;">Assignments</h3>
+            <p class="muted">Where this license is currently used.</p>
+            <ul class="list" id="assignList">
+              <li><span class="label">Loading…</span><span class="value">–</span></li>
+            </ul>
+            <p class="small">
+              Assignments come from the <code>software_assignment</code> collection (device &amp; user links).
+              You can extend this later with inline “Assign / Revoke” actions.
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
-
-    <!-- LICENSE POOLS TAB -->
-    <section id="tab-pools" class="tab active">
-      <p class="muted">Manage license contracts / subscriptions. Each pool tracks total seats and expiry.</p>
-      <div class="toolbar">
-        <input id="poolSearch" placeholder="Search by software, vendor…">
-        <button id="newPoolBtn" class="btn primary">+ New license</button>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Software</th>
-            <th>Vendor</th>
-            <th>Total</th>
-            <th>Used</th>
-            <th>Expiry</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="poolBody"></tbody>
-      </table>
-
-      <div class="panel" id="poolFormPanel" style="display:none;">
-        <div class="muted" id="poolFormTitle">New license pool</div>
-        <div class="grid-2">
-          <div>
-            <label for="pSoftName">Software Name</label>
-            <input id="pSoftName">
-          </div>
-          <div>
-            <label for="pVendor">Vendor</label>
-            <input id="pVendor">
-          </div>
-          <div>
-            <label for="pTotalSeats">Total Seats</label>
-            <input id="pTotalSeats" type="number" min="0">
-          </div>
-          <div>
-            <label for="pAssignedSeats">Assigned Seats</label>
-            <input id="pAssignedSeats" type="number" min="0" value="0">
-          </div>
-          <div>
-            <label for="pPurchaseDate">Purchase Date</label>
-            <input id="pPurchaseDate" type="date">
-          </div>
-          <div>
-            <label for="pExpiryDate">Expiry Date</label>
-            <input id="pExpiryDate" type="date">
-          </div>
-          <div>
-            <label for="pCost">Cost (optional)</label>
-            <input id="pCost" type="number" step="0.01">
-          </div>
-        </div>
-        <div style="margin-top:10px;">
-          <label for="pNotes">Notes</label>
-          <textarea id="pNotes"></textarea>
-        </div>
-        <div style="margin-top:10px;">
-          <button class="btn secondary" id="poolCancelBtn">Cancel</button>
-          <button class="btn primary" id="poolSaveBtn">Save license</button>
-          <span class="msg" id="poolMsg"></span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ASSIGNMENTS TAB -->
-    <section id="tab-assignments" class="tab">
-      <p class="muted">Assign license seats to devices or users. Creating an assignment automatically increments seats.</p>
-      <div class="panel">
-        <div class="grid-2">
-          <div>
-            <label for="aLicense">License</label>
-            <select id="aLicense"></select>
-          </div>
-          <div>
-            <label for="aTargetType">Assign to</label>
-            <select id="aTargetType">
-              <option value="device">Device</option>
-              <option value="user">User</option>
-            </select>
-          </div>
-          <div>
-            <label for="aDevice">Device (items)</label>
-            <select id="aDevice"></select>
-          </div>
-          <div>
-            <label for="aUser">User (inventory users)</label>
-            <select id="aUser"></select>
-          </div>
-        </div>
-        <div style="margin-top:10px;">
-          <button class="btn primary" id="assignBtn">Assign seat</button>
-          <span class="msg" id="assignMsg"></span>
-        </div>
-      </div>
-
-      <div class="toolbar" style="margin-top:12px;">
-        <input id="assignSearch" placeholder="Filter by license, device, user…">
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>License</th>
-            <th>Assigned To</th>
-            <th>Type</th>
-            <th>Date</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="assignBody"></tbody>
-      </table>
-    </section>
-
-    <!-- COMPLIANCE TAB -->
-    <section id="tab-compliance" class="tab">
-      <p class="muted">Overview of over-assigned pools and licenses expiring within 30 days.</p>
-      <div class="panel">
-        <h4 style="margin:4px 0;">Over-assigned licenses</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Software</th>
-              <th>Total</th>
-              <th>Used</th>
-              <th>Over by</th>
-            </tr>
-          </thead>
-          <tbody id="overBody"></tbody>
-        </table>
-      </div>
-
-      <div class="panel" style="margin-top:14px;">
-        <h4 style="margin:4px 0;">Expiring within 30 days</h4>
-        <table>
-          <thead>
-            <tr>
-              <th>Software</th>
-              <th>Vendor</th>
-              <th>Expiry</th>
-              <th>Days left</th>
-            </tr>
-          </thead>
-          <tbody id="expBody"></tbody>
-        </table>
-      </div>
-    </section>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
   import {
-    getFirestore, collection, getDocs, doc, getDoc, setDoc, deleteDoc, addDoc,
-    serverTimestamp, query, where
+    getFirestore, collection, getDocs, doc, getDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -275,403 +262,300 @@
   };
 
   const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
   const db   = getFirestore(app);
+  const auth = getAuth(app);
 
-  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+  const ALLOWED_ROLES = ["admin","it","viewer"];
+  const EDIT_ROLES    = ["admin","it"];
 
-  const who   = document.getElementById("who");
-  const badge = document.getElementById("roleBadge");
-  const logoutBtn = document.getElementById("logoutBtn");
+  const whoEl   = document.getElementById("who");
+  const tbody   = document.getElementById("tbody");
+  const searchEl = document.getElementById("search");
+  const statusFilter = document.getElementById("statusFilter");
+  const newBtn  = document.getElementById("newBtn");
 
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const poolBody = document.getElementById("poolBody");
-  const poolSearch = document.getElementById("poolSearch");
-  const newPoolBtn = document.getElementById("newPoolBtn");
-  const poolFormPanel = document.getElementById("poolFormPanel");
-  const poolFormTitle = document.getElementById("poolFormTitle");
-  const poolMsg = document.getElementById("poolMsg");
-  const poolCancelBtn = document.getElementById("poolCancelBtn");
-  const poolSaveBtn = document.getElementById("poolSaveBtn");
+  const detailsBody  = document.getElementById("detailsBody");
+  const detailsIntro = document.getElementById("detailsIntro");
+  const openProductLink = document.getElementById("openProductLink");
+  const detailsLink = document.getElementById("detailsLink");
+  const assignList = document.getElementById("assignList");
+  const d_softName = document.getElementById("d_softName");
+  const d_vendor   = document.getElementById("d_vendor");
+  const d_total    = document.getElementById("d_total");
+  const d_used     = document.getElementById("d_used");
+  const d_free     = document.getElementById("d_free");
+  const d_expiry   = document.getElementById("d_expiry");
+  const d_statusPill = document.getElementById("d_statusPill");
 
-  const pSoftName = document.getElementById("pSoftName");
-  const pVendor = document.getElementById("pVendor");
-  const pTotalSeats = document.getElementById("pTotalSeats");
-  const pAssignedSeats = document.getElementById("pAssignedSeats");
-  const pPurchaseDate = document.getElementById("pPurchaseDate");
-  const pExpiryDate = document.getElementById("pExpiryDate");
-  const pCost = document.getElementById("pCost");
-  const pNotes = document.getElementById("pNotes");
+  let currentRole = "viewer";
+  let licenses = [];
+  let productsById = {};
+  let assignmentsByLicense = {};
+  let itemsById = {};
+  let usersById = {};
+  let selectedId = null;
 
-  const aLicense = document.getElementById("aLicense");
-  const aTargetType = document.getElementById("aTargetType");
-  const aDevice = document.getElementById("aDevice");
-  const aUser = document.getElementById("aUser");
-  const assignBtn = document.getElementById("assignBtn");
-  const assignMsg = document.getElementById("assignMsg");
-  const assignBody = document.getElementById("assignBody");
-  const assignSearch = document.getElementById("assignSearch");
-
-  const overBody = document.getElementById("overBody");
-  const expBody = document.getElementById("expBody");
-
-  let allPools = [];
-  let allAssignments = [];
-  let deviceMap = {};
-  let userMap = {};
-  let canEdit = false;
-
-  let currentPoolId = null;
-
-  function setBadge(role){
-    const r = (role||"viewer").toLowerCase();
-    badge.className = "badge "+r;
-    badge.textContent = r.toUpperCase();
-  }
-
-  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
-
-  // Tab switching
-  tabButtons.forEach(btn=>{
-    btn.addEventListener("click",()=>{
-      tabButtons.forEach(b=>b.classList.remove("active"));
-      btn.classList.add("active");
-      const tab = btn.dataset.tab;
-      document.querySelectorAll("section.tab").forEach(s=>{
-        s.classList.toggle("active", s.id === "tab-"+tab);
-      });
-      if(tab==="compliance"){ buildCompliance(); }
-      if(tab==="assignments"){ fillAssignmentDropdowns(); }
-      if(tab==="pools"){ /* nothing special */ }
-    });
-  });
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
-    who.textContent = user.email;
-    setBadge(role);
-    canEdit = (role==="it" || role==="admin" || role==="super_admin");
-    if(!canEdit){
-      newPoolBtn.disabled = true;
-      newPoolBtn.textContent = "Read-only";
-      assignBtn.disabled = true;
-    }
-    await loadBaseData();
-  });
-
-  function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
-  function formatDate(d){ return d ? d.toLocaleDateString() : ""; }
-
-  async function loadBaseData(){
-    // Pools
-    const poolSnap = await getDocs(collection(db,"software_license"));
-    allPools = [];
-    poolSnap.forEach(d=>allPools.push({id:d.id,...d.data()}));
-    renderPools();
-
-    // Devices
-    const itemSnap = await getDocs(collection(db,"items"));
-    deviceMap = {};
-    itemSnap.forEach(d=>deviceMap[d.id]={id:d.id,...d.data()});
-
-    // Users
-    const userSnap = await getDocs(collection(db,"users"));
-    userMap = {};
-    userSnap.forEach(d=>userMap[d.id]={id:d.id,...d.data()});
-
-    // Assignments
-    const assSnap = await getDocs(collection(db,"software_assignment"));
-    allAssignments = [];
-    assSnap.forEach(d=>allAssignments.push({id:d.id,...d.data()}));
-    renderAssignments();
-  }
-
-  // ---------- LICENSE POOLS ----------
-  function poolStatusTag(p){
-    const t = Number(p.totalSeats||0);
-    const a = Number(p.assignedSeats||0);
-    const exp = toDate(p.expiryDate);
-    const now = new Date();
-    const lim30 = new Date(now.getTime()+30*24*60*60*1000);
-    let badges = [];
-    if(t>0 && a>t) badges.push(`<span class="tag over">Over-assigned</span>`);
-    if(exp && exp<=lim30) badges.push(`<span class="tag expiring">Expiring soon</span>`);
-    if(badges.length===0) badges.push(`<span class="tag ok">OK</span>`);
-    return badges.join(" ");
-  }
-
-  function renderPools(){
-    const q = poolSearch.value.toLowerCase().trim();
-    const rows = allPools.filter(p=>{
-      if(!q) return true;
-      const txt = `${p.softwareName||""} ${p.vendor||""}`.toLowerCase();
-      return txt.includes(q);
-    }).map(p=>{
-      const t = Number(p.totalSeats||0);
-      const a = Number(p.assignedSeats||0);
-      const exp = formatDate(toDate(p.expiryDate));
-      const actions = [];
-      if(canEdit){
-        actions.push(`<a href="#" data-id="${p.id}" data-act="edit">Edit</a>`);
-        actions.push(`<a href="#" data-id="${p.id}" data-act="delete" style="color:${getComputedStyle(document.body).getPropertyValue('--danger')||'#b91c1c'};">Delete</a>`);
-      }
-      actions.push(`<a href="#" data-id="${p.id}" data-act="filterAssign">Assignments</a>`);
-      return `<tr>
-        <td>${p.softwareName||"(no name)"}</td>
-        <td>${p.vendor||""}</td>
-        <td>${t}</td>
-        <td>${a}</td>
-        <td>${exp}</td>
-        <td>${poolStatusTag(p)}</td>
-        <td>${actions.join(" | ")}</td>
-      </tr>`;
-    });
-    poolBody.innerHTML = rows.join("") || `<tr><td colspan="7" style="text-align:center;font-size:.85rem;color:#6b7280;">No license pools found.</td></tr>`;
-  }
-
-  poolSearch.addEventListener("input",renderPools);
-
-  newPoolBtn.addEventListener("click",()=>{
-    if(!canEdit) return;
-    currentPoolId = null;
-    poolFormTitle.textContent = "New license pool";
-    pSoftName.value = "";
-    pVendor.value = "";
-    pTotalSeats.value = "";
-    pAssignedSeats.value = "0";
-    pPurchaseDate.value = "";
-    pExpiryDate.value = "";
-    pCost.value = "";
-    pNotes.value = "";
-    poolFormPanel.style.display = "block";
-    poolMsg.textContent = "";
-  });
-
-  poolCancelBtn.addEventListener("click",()=>{
-    poolFormPanel.style.display = "none";
-    currentPoolId = null;
-  });
-
-  poolSaveBtn.addEventListener("click",async ()=>{
-    if(!canEdit) return;
-    poolMsg.textContent = "Saving…";
-    const payload = {
-      softwareName: pSoftName.value.trim(),
-      vendor: pVendor.value.trim(),
-      totalSeats: Number(pTotalSeats.value||0),
-      assignedSeats: Number(pAssignedSeats.value||0),
-      purchaseDate: pPurchaseDate.value || null,
-      expiryDate: pExpiryDate.value || null,
-      cost: Number(pCost.value||0),
-      notes: pNotes.value.trim(),
-      updatedAt: serverTimestamp()
-    };
-    if(!payload.softwareName){
-      poolMsg.textContent = "Software name is required.";
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      location.href="login.html";
       return;
     }
-    const id = currentPoolId || crypto.randomUUID();
-    if(!currentPoolId) payload.createdAt = serverTimestamp();
-    await setDoc(doc(db,"software_license",id),payload,{merge:true});
-    poolMsg.textContent = "Saved.";
-    poolFormPanel.style.display = "none";
-    currentPoolId = null;
-    await loadBaseData();
+    const uSnap = await getDoc(doc(db,"users",user.uid));
+    const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
+    currentRole = role;
+
+    if(!ALLOWED_ROLES.includes(role)){
+      alert("Access denied.");
+      location.href="login.html";
+      return;
+    }
+
+    const badge = role==="admin" ? "badge-admin"
+                 : role==="it" ? "badge-it" : "badge-viewer";
+    whoEl.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
+
+    if(!EDIT_ROLES.includes(role)){
+      newBtn.style.display="none";
+    }else{
+      // You can create a dedicated form page or later turn this into a modal
+      newBtn.onclick = ()=> location.href="software-license-form.html";
+    }
+
+    await loadAllData();
+    renderTable();
   });
 
-  poolBody.addEventListener("click",async e=>{
-    const a = e.target.closest("a[data-act]");
-    if(!a) return;
-    e.preventDefault();
-    const id = a.getAttribute("data-id");
-    const act = a.getAttribute("data-act");
-    const pool = allPools.find(p=>p.id===id);
-    if(!pool) return;
-    if(act==="edit"){
-      if(!canEdit) return;
-      currentPoolId = id;
-      poolFormTitle.textContent = "Edit license pool";
-      pSoftName.value = pool.softwareName||"";
-      pVendor.value = pool.vendor||"";
-      pTotalSeats.value = pool.totalSeats||"";
-      pAssignedSeats.value = pool.assignedSeats||"0";
-      if(pool.purchaseDate) pPurchaseDate.value = pool.purchaseDate.substring(0,10);
-      if(pool.expiryDate) pExpiryDate.value = pool.expiryDate.substring(0,10);
-      pCost.value = pool.cost||"";
-      pNotes.value = pool.notes||"";
-      poolFormPanel.style.display = "block";
-      poolMsg.textContent = "";
-    }else if(act==="delete"){
-      if(!canEdit) return;
-      // Check assignments
-      const qAss = query(collection(db,"software_assignment"), where("softwareLicenseId","==",id));
-      const snap = await getDocs(qAss);
-      if(!snap.empty){
-        alert("Cannot delete: there are existing assignments for this license.");
-        return;
+  function toDate(val){
+    if(!val) return null;
+    if(val.toDate) return val.toDate();
+    return new Date(val);
+  }
+
+  function classifyLicense(lic){
+    const total = Number(lic.totalSeats || 0);
+    const used  = Number(lic.assignedSeats || 0);
+    const exp   = toDate(lic.expiryDate);
+    const now   = new Date();
+    const soon  = new Date(now.getTime() + 30*24*60*60*1000);
+    let level="good", label="OK";
+
+    if(total && used > total){
+      level="bad"; label="Overused";
+    }else if(exp && exp < now){
+      level="bad"; label="Expired";
+    }else if(exp && exp <= soon){
+      level="warn"; label="Expiring soon";
+    }
+
+    return { level, label };
+  }
+
+  async function loadAllData(){
+    // products
+    const prodSnap = await getDocs(collection(db,"software_product"));
+    productsById = {};
+    prodSnap.forEach(p=>{
+      productsById[p.id] = p.data();
+    });
+
+    // licenses
+    const licSnap = await getDocs(collection(db,"software_license"));
+    licenses = [];
+    licSnap.forEach(l=>{
+      licenses.push({ id:l.id, ...l.data() });
+    });
+
+    // assignments
+    const assSnap = await getDocs(collection(db,"software_assignment"));
+    assignmentsByLicense = {};
+    const deviceIds = new Set();
+    const userIds   = new Set();
+
+    assSnap.forEach(a=>{
+      const d = a.data();
+      const lid = d.softwareLicenseId;
+      if(!lid) return;
+      if(!assignmentsByLicense[lid]) assignmentsByLicense[lid] = [];
+      assignmentsByLicense[lid].push({ id:a.id, ...d });
+      if(d.deviceId) deviceIds.add(d.deviceId);
+      if(d.userId)   userIds.add(d.userId);
+    });
+
+    // items & users lookup (simple approach: load all)
+    const itemSnap = await getDocs(collection(db,"items"));
+    itemsById = {};
+    itemSnap.forEach(i=>{ itemsById[i.id] = i.data(); });
+
+    const userSnap = await getDocs(collection(db,"users"));
+    usersById = {};
+    userSnap.forEach(u=>{ usersById[u.id] = u.data(); });
+  }
+
+  function renderTable(){
+    const term = (searchEl.value || "").toLowerCase();
+    const filt = statusFilter.value;
+
+    const rows = licenses.filter(lic=>{
+      const prod = productsById[lic.softwareProductId] || {};
+      const { level } = classifyLicense(lic);
+
+      if(filt && level!==filt) return false;
+
+      if(term){
+        const hay = [
+          prod.softwareName || prod.name || "",
+          lic.vendor || "",
+          lic.licenseKey || "",
+        ].join(" ").toLowerCase();
+        if(!hay.includes(term)) return false;
       }
-      if(!confirm("Delete this license pool?")) return;
-      await deleteDoc(doc(db,"software_license",id));
-      await loadBaseData();
-    }else if(act==="filterAssign"){
-      // Switch to assignments tab filtered by this license
-      tabButtons.forEach(b=>b.classList.remove("active"));
-      document.querySelector('.tab-btn[data-tab="assignments"]').classList.add("active");
-      document.querySelectorAll("section.tab").forEach(s=>s.classList.remove("active"));
-      document.getElementById("tab-assignments").classList.add("active");
-      aLicense.value = id;
-      renderAssignments();
-    }
-  });
+      return true;
+    });
 
-  // ---------- ASSIGNMENTS ----------
-  function fillAssignmentDropdowns(){
-    // Licenses
-    aLicense.innerHTML = "";
-    allPools.forEach(p=>{
-      const opt=document.createElement("option");
-      opt.value=p.id;
-      opt.textContent=p.softwareName||p.id;
-      aLicense.appendChild(opt);
-    });
-    // Devices
-    aDevice.innerHTML = "";
-    Object.values(deviceMap).forEach(d=>{
-      const opt=document.createElement("option");
-      opt.value=d.id;
-      opt.textContent=(d.name||d.id)+" – "+(d.location||"");
-      aDevice.appendChild(opt);
-    });
-    // Users
-    aUser.innerHTML = "";
-    Object.values(userMap).forEach(u=>{
-      const opt=document.createElement("option");
-      opt.value=u.id;
-      opt.textContent=(u.name||u.email||u.id);
-      aUser.appendChild(opt);
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="7">No licenses found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(lic=>{
+      const prod = productsById[lic.softwareProductId] || {};
+      const name = prod.softwareName || prod.name || "Unknown software";
+
+      const total = Number(lic.totalSeats || 0);
+      const used  = Number(lic.assignedSeats || 0);
+      const free  = total ? Math.max(0,total-used) : "∞";
+
+      const exp   = toDate(lic.expiryDate);
+      const expStr = exp ? exp.toISOString().slice(0,10) : "–";
+
+      const { level, label } = classifyLicense(lic);
+      const pillClass = level==="good" ? "pill-good" : level==="warn" ? "pill-warn" : "pill-bad";
+
+      const selectedClass = (lic.id === selectedId) ? "selected" : "";
+
+      return `
+        <tr class="${selectedClass}" data-id="${lic.id}">
+          <td>${escapeHtml(name)}</td>
+          <td>${escapeHtml(lic.vendor || "")}</td>
+          <td>${total || "∞"}</td>
+          <td>${used}</td>
+          <td>${free}</td>
+          <td>${expStr}</td>
+          <td><span class="pill ${pillClass}">${label}</span></td>
+        </tr>`;
+    }).join("");
+
+    [...tbody.querySelectorAll("tr[data-id]")].forEach(tr=>{
+      tr.addEventListener("click", ()=>{
+        selectedId = tr.getAttribute("data-id");
+        renderTable();     // to refresh “selected” class
+        renderDetails();
+      });
     });
   }
 
-  assignBtn.addEventListener("click",async ()=>{
-    if(!canEdit) return;
-    assignMsg.textContent = "Assigning…";
-    const licenseId = aLicense.value;
-    const type = aTargetType.value;
-    const deviceId = type==="device" ? aDevice.value : null;
-    const userId = type==="user" ? aUser.value : null;
-    if(!licenseId){ assignMsg.textContent="Select a license."; return; }
-    if(type==="device" && !deviceId){ assignMsg.textContent="Select a device.";return;}
-    if(type==="user" && !userId){ assignMsg.textContent="Select a user.";return;}
-
-    const payload = {
-      softwareLicenseId: licenseId,
-      deviceId: deviceId || null,
-      userId: userId || null,
-      assignmentDate: serverTimestamp()
-    };
-    await addDoc(collection(db,"software_assignment"),payload);
-    // increment seat count
-    const licRef = doc(db,"software_license",licenseId);
-    const licSnap = await getDoc(licRef);
-    if(licSnap.exists()){
-      const l = licSnap.data();
-      const assigned = Number(l.assignedSeats||0)+1;
-      await setDoc(licRef,{assignedSeats:assigned},{merge:true});
+  function renderDetails(){
+    if(!selectedId){
+      detailsBody.style.display="none";
+      detailsIntro.style.display="block";
+      return;
     }
-    assignMsg.textContent = "Assigned.";
-    await loadBaseData();
-  });
+    const lic = licenses.find(l=>l.id===selectedId);
+    if(!lic){
+      detailsBody.style.display="none";
+      detailsIntro.style.display="block";
+      return;
+    }
 
-  function renderAssignments(){
-    const q = assignSearch.value.toLowerCase().trim();
-    const rows = allAssignments.filter(a=>{
-      const lic = allPools.find(p=>p.id===a.softwareLicenseId);
-      const dev = a.deviceId ? deviceMap[a.deviceId] : null;
-      const usr = a.userId ? userMap[a.userId] : null;
-      const text = `${lic?.softwareName||""} ${dev?.name||""} ${usr?.email||usr?.name||""}`.toLowerCase();
-      return !q || text.includes(q);
-    }).map(a=>{
-      const lic = allPools.find(p=>p.id===a.softwareLicenseId);
-      const dev = a.deviceId ? deviceMap[a.deviceId] : null;
-      const usr = a.userId ? userMap[a.userId] : null;
-      const label = dev ? (dev.name||dev.id) : (usr ? (usr.name||usr.email||usr.id) : "–");
-      const type = dev ? "Device" : (usr ? "User" : "–");
-      const d = toDate(a.assignmentDate);
-      const date = d? d.toLocaleDateString():"";
-      const actions = canEdit ? `<a href="#" data-id="${a.id}" data-act="revoke" style="color:${getComputedStyle(document.body).getPropertyValue('--danger')||'#b91c1c'};">Revoke</a>` : "";
-      return `<tr>
-        <td>${lic?.softwareName||"(deleted license)"}</td>
-        <td>${label}</td>
-        <td>${type}</td>
-        <td>${date}</td>
-        <td>${actions}</td>
-      </tr>`;
-    });
-    assignBody.innerHTML = rows.join("") || `<tr><td colspan="5" style="text-align:center;font-size:.85rem;color:#6b7280;">No assignments.</td></tr>`;
+    const prod = productsById[lic.softwareProductId] || {};
+    const softName = prod.softwareName || prod.name || "Unknown software";
+    d_softName.textContent = softName;
+    d_vendor.textContent   = lic.vendor ? `• ${lic.vendor}` : "";
+
+    const total = Number(lic.totalSeats || 0);
+    const used  = Number(lic.assignedSeats || 0);
+    const free  = total ? Math.max(0,total-used) : "∞";
+
+    d_total.textContent = total || "∞";
+    d_used.textContent  = used;
+    d_free.textContent  = free;
+
+    const exp   = toDate(lic.expiryDate);
+    d_expiry.textContent = exp ? exp.toISOString().slice(0,10) : "–";
+
+    const { level, label } = classifyLicense(lic);
+    d_statusPill.textContent = label;
+    d_statusPill.className = "pill " + (
+      level==="good" ? "pill-good" :
+      level==="warn" ? "pill-warn" :
+      level==="bad"  ? "pill-bad"  : "pill-neutral"
+    );
+
+    if(lic.softwareProductId){
+      detailsLink.style.display="inline";
+      openProductLink.href = `software-products.html?id=${encodeURIComponent(lic.softwareProductId)}`;
+    }else{
+      detailsLink.style.display="none";
+    }
+
+    // assignments
+    const list = assignmentsByLicense[selectedId] || [];
+    if(!list.length){
+      assignList.innerHTML = `<li><span class="label">No assignments yet.</span><span class="value">0</span></li>`;
+    }else{
+      assignList.innerHTML = list.slice(0,8).map(a=>{
+        let targetLabel = "";
+        let type = "";
+        if(a.deviceId && itemsById[a.deviceId]){
+          const dev = itemsById[a.deviceId];
+          targetLabel = (dev.deviceName || dev.assetId || a.deviceId);
+          type = "Device";
+        }else if(a.userId && usersById[a.userId]){
+          const u = usersById[a.userId];
+          targetLabel = u.name || u.email || a.userId;
+          type = "User";
+        }else if(a.deviceId){
+          targetLabel = a.deviceId;
+          type = "Device";
+        }else if(a.userId){
+          targetLabel = a.userId;
+          type = "User";
+        }else{
+          targetLabel = "(Unknown target)";
+          type = "Unknown";
+        }
+
+        const dateStr = a.assignmentDate
+          ? (toDate(a.assignmentDate)?.toISOString().slice(0,10) || "")
+          : "";
+
+        return `
+          <li>
+            <span class="label">${escapeHtml(targetLabel)} <span style="color:#9ca3af;">(${type})</span></span>
+            <span class="value">${dateStr || ""}</span>
+          </li>`;
+      }).join("");
+
+      if(list.length>8){
+        const more = list.length-8;
+        assignList.innerHTML += `<li><span class="label">${more} more assignments…</span><span class="value"><a class="inline-link" href="software-compliance.html">View report</a></span></li>`;
+      }
+    }
+
+    detailsIntro.style.display="none";
+    detailsBody.style.display="block";
   }
 
-  assignSearch.addEventListener("input",renderAssignments);
-
-  assignBody.addEventListener("click",async e=>{
-    const a = e.target.closest("a[data-act='revoke']");
-    if(!a) return;
-    e.preventDefault();
-    if(!canEdit) return;
-    const id = a.getAttribute("data-id");
-    const ass = allAssignments.find(x=>x.id===id);
-    if(!ass) return;
-    if(!confirm("Revoke this assignment?")) return;
-    // Decrement license seat
-    const licRef = doc(db,"software_license",ass.softwareLicenseId);
-    const licSnap = await getDoc(licRef);
-    if(licSnap.exists()){
-      const l = licSnap.data();
-      const assigned = Math.max(0, Number(l.assignedSeats||0)-1);
-      await setDoc(licRef,{assignedSeats:assigned},{merge:true});
-    }
-    await deleteDoc(doc(db,"software_assignment",id));
-    await loadBaseData();
-  });
-
-  // ---------- COMPLIANCE ----------
-  function buildCompliance(){
-    // Over-assigned
-    const overRows = allPools.filter(p=>{
-      const t=Number(p.totalSeats||0);
-      const a=Number(p.assignedSeats||0);
-      return t>0 && a>t;
-    }).map(p=>{
-      const t=Number(p.totalSeats||0);
-      const a=Number(p.assignedSeats||0);
-      const d=a-t;
-      return `<tr>
-        <td>${p.softwareName||"(no name)"}</td>
-        <td>${t}</td>
-        <td>${a}</td>
-        <td>${d}</td>
-      </tr>`;
-    });
-    overBody.innerHTML = overRows.join("") || `<tr><td colspan="4" style="text-align:center;font-size:.85rem;color:#6b7280;">No over-assigned pools.</td></tr>`;
-
-    // Expiring
-    const now = new Date();
-    const lim30 = new Date(now.getTime()+30*24*60*60*1000);
-    const expRows = allPools.map(p=>{
-      const exp = toDate(p.expiryDate);
-      if(!exp || exp>lim30) return null;
-      const days = Math.round((exp-now)/(1000*60*60*24));
-      return `<tr>
-        <td>${p.softwareName||"(no name)"}</td>
-        <td>${p.vendor||""}</td>
-        <td>${exp.toLocaleDateString()}</td>
-        <td>${days}</td>
-      </tr>`;
-    }).filter(Boolean);
-    expBody.innerHTML = expRows.join("") || `<tr><td colspan="4" style="text-align:center;font-size:.85rem;color:#6b7280;">No licenses expiring within 30 days.</td></tr>`;
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g, c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
   }
+
+  searchEl.addEventListener("input", renderTable);
+  statusFilter.addEventListener("change", renderTable);
 </script>
+
 </body>
 </html>
