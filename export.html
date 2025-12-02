@@ -3,82 +3,104 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Export Data – OCSI IT Inventory</title>
+<title>Export Data</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#111827;--brand:#1a73e8;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
-    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:0 2px 6px rgba(15,23,42,.6);
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  .topbar-title{font-weight:700;font-size:1.05rem;}
-  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
-  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+  .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
-    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
   }
-  .nav a span.icon{width:18px;text-align:center;}
-  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
-  .content{padding:18px 20px;max-width:900px;margin:0 auto;}
-  .card{background:white;border-radius:12px;padding:14px 16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.06);margin-bottom:14px;}
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:900px;margin:0 auto;width:100%;}
+  h1{margin:0 0 8px;font-size:1.4rem;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;padding:16px 18px;margin-bottom:14px;
+  }
+  .card h2{margin:0 0 8px;font-size:1.08rem;}
+  p{margin:4px 0 10px;font-size:.9rem;color:#475569;}
+  ul{margin:0 0 10px 18px;font-size:.88rem;color:#6b7280;}
   .btn{
-    padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:.85rem;font-weight:500;
+    border:none;cursor:pointer;
+    padding:8px 14px;border-radius:999px;
+    font-size:.9rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;
   }
-  .btn.primary{background:var(--brand);color:white;}
-  .muted{font-size:.8rem;color:#6b7280;margin-bottom:6px;}
-  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
-  .badge.super_admin{background:#7c3aed;color:white;}
-  .badge.admin{background:#f97316;color:white;}
-  .badge.it{background:#1d4ed8;color:white;}
-  .badge.viewer{background:#4b5563;color:white;}
-  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+  .btn-primary{background:var(--brand);color:white;}
+  .note{font-size:.8rem;color:#9ca3af;margin-top:6px;}
+  .warn{color:#b91c1c;font-size:.85rem;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div><div class="topbar-title">Export Data</div></div>
-  <div style="display:flex;align-items:center;font-size:.85rem;">
-    <span id="roleBadge" class="badge viewer">VIEWER</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Export</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
   <aside class="sidebar">
-    <div class="logo">OCSI IT Inventory</div>
     <nav class="nav">
       <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
       <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
-      <a class="active" href="export.html"><span class="icon">📤</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a class="active" href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
 
   <main class="content">
-    <div class="card">
-      <p class="muted">Download the entire <strong>items</strong> collection as a JSON file.</p>
-      <button class="btn primary" id="exportItemsBtn">Export Items (JSON)</button>
-    </div>
+    <h1>Export Data</h1>
 
-    <div class="card">
-      <p class="muted">Download <strong>software_license</strong> and <strong>software_assignment</strong> as JSON.</p>
-      <button class="btn primary" id="exportLicensesBtn">Export Licenses (JSON)</button>
-    </div>
+    <section class="card">
+      <h2>Devices (Hardware Inventory)</h2>
+      <p>Download all devices from the <code>items</code> collection into a CSV file for Excel / Google Sheets.</p>
+      <ul>
+        <li>Identification – Asset ID, Device Name, Type, Manufacturer, Serial, Status</li>
+        <li>Location &amp; Assignment – Assigned To, Department, Location, Building/Floor</li>
+        <li>Network &amp; System – IP, MAC, OS / Version</li>
+        <li>Procurement &amp; Lifecycle – Purchase, Installation, Vendor, Warranty, Replacement, Removed Date</li>
+        <li>Notes / Comments</li>
+      </ul>
+      <button id="exportDevicesBtn" class="btn btn-primary" type="button">
+        ⬇️ Download Devices CSV
+      </button>
+      <div id="exportStatus" class="note"></div>
+      <div class="warn" id="roleWarn" style="display:none;">
+        Only Admin / IT can export data.
+      </div>
+    </section>
   </main>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getFirestore, collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
@@ -90,66 +112,119 @@
     measurementId: "G-CM3P9CRX1K"
   };
 
-  const app  = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
   const auth = getAuth(app);
-  const db   = getFirestore(app);
 
-  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+  const ALLOWED_EXPORT_ROLES = ["admin","it"];
 
-  const who   = document.getElementById("who");
-  const badge = document.getElementById("roleBadge");
-  const logoutBtn = document.getElementById("logoutBtn");
+  const whoEl = document.getElementById("who");
+  const exportBtn = document.getElementById("exportDevicesBtn");
+  const exportStatus = document.getElementById("exportStatus");
+  const roleWarn = document.getElementById("roleWarn");
 
-  const exportItemsBtn = document.getElementById("exportItemsBtn");
-  const exportLicensesBtn = document.getElementById("exportLicensesBtn");
+  let currentRole = "viewer";
 
-  function setBadge(role){
-    const r = (role||"viewer").toLowerCase();
-    badge.className = "badge "+r;
-    badge.textContent = r.toUpperCase();
-  }
-
-  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
+  onAuthStateChanged(auth, async user=>{
+    if(!user){
+      location.href="login.html";
+      return;
+    }
+    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
     const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
-    who.textContent = user.email;
-    setBadge(role);
+    const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
+    currentRole = role;
+
+    const badgeClass = role==="admin" ? "badge-admin"
+                      : role==="it" ? "badge-it" : "badge-viewer";
+    whoEl.innerHTML = `${user.email} <span class="badge ${badgeClass}">${role}</span>`;
+
+    if(!ALLOWED_EXPORT_ROLES.includes(role)){
+      exportBtn.disabled = true;
+      roleWarn.style.display = "block";
+    }else{
+      exportBtn.addEventListener("click", exportDevicesCsv);
+    }
   });
 
-  function downloadJSON(data, filename){
-    const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href=url;
-    a.download=filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
+  function csvEscape(val){
+    if(val == null) val = "";
+    val = String(val);
+    if(/[";, \n]/.test(val)){
+      val = '"' + val.replace(/"/g,'""') + '"';
+    }
+    return val;
   }
 
-  exportItemsBtn.addEventListener("click",async ()=>{
-    const snap = await getDocs(collection(db,"items"));
-    const arr=[];
-    snap.forEach(d=>arr.push({id:d.id,...d.data()}));
-    downloadJSON(arr,"ocsi_items.json");
-  });
+  function todayStamp(){
+    const d = new Date();
+    const pad = n => String(n).padStart(2,"0");
+    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+  }
 
-  exportLicensesBtn.addEventListener("click",async ()=>{
-    const licSnap = await getDocs(collection(db,"software_license"));
-    const assSnap = await getDocs(collection(db,"software_assignment"));
-    const data = {
-      software_license:[],
-      software_assignment:[]
-    };
-    licSnap.forEach(d=>data.software_license.push({id:d.id,...d.data()}));
-    assSnap.forEach(d=>data.software_assignment.push({id:d.id,...d.data()}));
-    downloadJSON(data,"ocsi_software_licensing.json");
-  });
+  async function exportDevicesCsv(){
+    exportStatus.textContent = "Preparing export…";
+    try{
+      const snap = await getDocs(collection(db,"items"));
+      const rows = [];
+
+      const header = [
+        "assetId","deviceName","assetType","manufacturer","serialNumber","status",
+        "assignedTo","department","location","buildingFloor",
+        "ipAddress","macAddress","osVersion",
+        "purchaseDate","installationDate","vendor","warrantyEndDate",
+        "replacementDate","replacementAlert","removedDate",
+        "notes"
+      ];
+      rows.push(header.map(csvEscape).join(","));
+
+      snap.forEach(docSnap=>{
+        const d = docSnap.data();
+        const row = [
+          d.assetId || "",
+          d.deviceName || "",
+          d.assetType || "",
+          d.manufacturer || "",
+          d.serialNumber || "",
+          d.status || "",
+          d.assignedTo || "",
+          d.department || "",
+          d.location || "",
+          d.buildingFloor || "",
+          d.ipAddress || "",
+          d.macAddress || "",
+          d.osVersion || "",
+          d.purchaseDate || "",
+          d.installationDate || "",
+          d.vendor || "",
+          d.warrantyEndDate || "",
+          d.replacementDate || "",
+          d.replacementAlert ? "Yes" : "No",
+          d.removedDate || "",
+          (d.notes || "").replace(/\r?\n/g," / ")
+        ];
+        rows.push(row.map(csvEscape).join(","));
+      });
+
+      const csv = rows.join("\n");
+      const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ocsi_devices_${todayStamp()}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      exportStatus.textContent = `Exported ${snap.size} devices.`;
+    }catch(err){
+      console.error(err);
+      exportStatus.textContent = "Error during export: " + err.message;
+    }
+  }
 </script>
+
 </body>
 </html>
