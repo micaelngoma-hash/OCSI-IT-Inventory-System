@@ -1,29 +1,35 @@
-<!-- sidebar.js -->
-<script>
-(async function(){
+// sidebar.js
+(function () {
   const root = document.getElementById("sidebar-root");
-  if(!root) return;
+  if (!root) return;
 
-  try{
-    const resp = await fetch("sidebar.html", {cache:"no-cache"});
-    if(!resp.ok){
-      root.innerHTML = "<div style='color:#fecaca;font-size:.85rem;'>Sidebar failed to load.</div>";
-      return;
-    }
-    const html = await resp.text();
-    root.innerHTML = html;
+  const links = [
+    { href: "index.html",               icon: "📊", label: "Main Dashboard" },
+    { href: "software-dashboard.html",  icon: "💻", label: "Software Dashboard" },
+    { href: "software-licenses.html",   icon: "🔑", label: "Licenses & Compliance" },
+    { href: "inventory-list.html",      icon: "📋", label: "Inventory List" },
+    { href: "scan.html",                icon: "📱", label: "QR Scan Device" },
+    { href: "admin-console.html",       icon: "⚙️", label: "Admin Console" },
+    { href: "export.html",              icon: "⬇️", label: "Export" },
+    { href: "audits.html",              icon: "🕒", label: "Audits" },
+    { href: "login.html",               icon: "🚪", label: "Logout" }
+  ];
 
-    const path = location.pathname.split("/").pop() || "index.html";
-    const links = root.querySelectorAll("a[href]");
-    links.forEach(a=>{
-      const href = a.getAttribute("href");
-      if(href === path){
-        a.classList.add("active");
-      }
-    });
-  }catch(err){
-    console.error("Sidebar error", err);
-    root.innerHTML = "<div style='color:#fecaca;font-size:.85rem;'>Sidebar error.</div>";
-  }
+  // Current file name, e.g. "software-dashboard.html"
+  const current = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+
+  const navHtml = `
+    <nav class="nav">
+      ${links.map(link => {
+        const isActive = current === link.href.toLowerCase();
+        return `
+          <a href="${link.href}" class="${isActive ? "active" : ""}">
+            <span class="icon">${link.icon}</span>
+            <span>${link.label}</span>
+          </a>`;
+      }).join("")}
+    </nav>
+  `;
+
+  root.innerHTML = navHtml;
 })();
-</script>
