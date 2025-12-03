@@ -5,45 +5,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Inventory List</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{position:sticky;top:0;z-index:20;background:var(--bg);color:white;
-    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;font-size:0.92rem;}
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .layout{
+    display:grid;grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
   .nav a:hover,.nav a.active{background:#111a33;}
   .nav .icon{width:18px;text-align:center;opacity:.8;}
-
-  .content{padding:18px;max-width:1150px;margin:0 auto;width:100%;}
+  .content{
+    padding:18px;max-width:1150px;margin:0 auto;width:100%;
+  }
   h1{margin:0 0 10px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
   .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
   .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
   .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
   .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
 
-  .toolbar{display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:10px;gap:10px;flex-wrap:wrap;}
-  .search-box{display:flex;align-items:center;gap:6px;background:white;border:1px solid var(--border);
-    border-radius:999px;padding:4px 10px;max-width:280px;width:100%;}
-  .search-box input{border:none;outline:none;font-size:.88rem;width:100%;}
+  .toolbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;gap:10px;flex-wrap:wrap;
+  }
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:white;border:1px solid var(--border);
+    border-radius:999px;padding:4px 10px;
+    max-width:280px;width:100%;
+  }
+  .search-box input{
+    border:none;outline:none;font-size:.88rem;width:100%;
+  }
   .filters{display:flex;gap:8px;flex-wrap:wrap;}
-  select{padding:6px 8px;border-radius:999px;border:1px solid var(--border);
-    font-size:.85rem;background:white;}
-  .btn{border:none;cursor:pointer;padding:6px 12px;border-radius:999px;font-size:.85rem;
-    font-weight:500;display:inline-flex;align-items:center;gap:5px;text-decoration:none;}
+  select{
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);font-size:.85rem;background:white;
+  }
+  .btn{
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
+  }
   .btn-primary{background:var(--brand);color:white;}
   .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
 
-  .table-wrap{background:white;border:1px solid var(--border);border-radius:12px;overflow:auto;}
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
+  }
   table{border-collapse:collapse;width:100%;min-width:850px;}
-  th,td{padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:.88rem;text-align:left;}
-  th{background:#f8fafc;font-weight:600;color:#475569;position:sticky;top:0;z-index:5;}
+  th,td{
+    padding:8px 10px;border-bottom:1px solid #f1f5f9;
+    font-size:.88rem;text-align:left;
+  }
+  th{
+    background:#f8fafc;font-weight:600;color:#475569;
+    position:sticky;top:0;z-index:5;
+  }
   tr:hover td{background:#f9fafb;}
 
-  .pill{display:inline-flex;padding:2px 8px;border-radius:999px;font-size:.75rem;}
+  .pill{
+    display:inline-flex;padding:2px 8px;border-radius:999px;
+    font-size:.75rem;
+  }
   .pill-green{background:#dcfce7;color:#166534;}
   .pill-blue{background:#dbeafe;color:#1d4ed8;}
   .pill-gray{background:#e5e7eb;color:#374151;}
@@ -74,6 +118,7 @@
 
   <main class="content">
     <h1>Inventory</h1>
+    <p class="subtitle">Browse, search, and manage all registered devices.</p>
 
     <div class="toolbar">
       <div class="search-box">
@@ -89,7 +134,9 @@
           <option value="retired">Retired</option>
           <option value="repair">Under repair</option>
         </select>
-        <button id="addBtn" class="btn btn-primary" type="button">➕ New Device</button>
+        <button id="addBtn" class="btn btn-primary" type="button">
+          ➕ New Device
+        </button>
       </div>
     </div>
 
@@ -104,7 +151,7 @@
             <th>Assigned To</th>
             <th>Location</th>
             <th>IP</th>
-            <th style="width:110px;">Actions</th>
+            <th style="width:120px;">Actions</th>
           </tr>
         </thead>
         <tbody id="tbody">
@@ -125,19 +172,24 @@
   const statusFilter = document.getElementById("statusFilter");
   const addBtn       = document.getElementById("addBtn");
 
-  const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
   let allItems    = [];
 
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
-    onRole: role=>{
-      currentRole = role;
-      if(!EDIT_ROLES.includes(role)) addBtn.style.display="none";
-      else addBtn.onclick = ()=> location.href="item-form.html";
-    },
-    onReady: loadItems
+    onReady: async ({ role } = {})=>{
+      currentRole = role || "viewer";
+
+      // viewers cannot create devices
+      if(currentRole !== "admin" && currentRole !== "it"){
+        addBtn.style.display = "none";
+      }else{
+        addBtn.onclick = ()=> location.href = "item-form.html";
+      }
+
+      await loadItems();
+    }
   });
 
   async function loadItems(){
@@ -154,12 +206,14 @@
     const st   = statusFilter.value;
 
     const rows = allItems.filter(it=>{
-      if(st && (it.status||"")!==st) return false;
+      if(st && (it.status || "") !== st) return false;
       if(!term) return true;
+
       const hay = [
         it.assetId, it.deviceName, it.assetType,
         it.assignedTo, it.location, it.department, it.ipAddress
       ].join(" ").toLowerCase();
+
       return hay.includes(term);
     });
 
@@ -169,18 +223,20 @@
     }
 
     tbody.innerHTML = rows.map(it=>{
-      const status = (it.status || "unknown");
+      const status = it.status || "unknown";
       let pillClass = "pill-gray";
-      if(status==="in-use") pillClass="pill-green";
-      else if(status==="loaned") pillClass="pill-blue";
-      else if(status==="retired" || status==="repair") pillClass="pill-red";
+      if(status === "in-use") pillClass = "pill-green";
+      else if(status === "loaned") pillClass = "pill-blue";
+      else if(status === "retired" || status === "repair") pillClass = "pill-red";
 
       const label = status.replace(/-/g," ");
+
       const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
       const editUrl = `item-form.html?id=${encodeURIComponent(it.id)}`;
 
-      const editButton = EDIT_ROLES.includes(currentRole)
-        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${editUrl}">Edit</a>`
+      const editButton = (currentRole === "admin" || currentRole === "it")
+        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
+             href="${editUrl}">Edit</a>`
         : "";
 
       return `
@@ -190,10 +246,11 @@
           <td>${escapeHtml(it.assetType || "")}</td>
           <td><span class="pill ${pillClass}">${escapeHtml(label)}</span></td>
           <td>${escapeHtml(it.assignedTo || "")}</td>
-          <td>${escapeHtml((it.location || "") + (it.buildingFloor ? " – "+it.buildingFloor:""))}</td>
+          <td>${escapeHtml((it.location || "") + (it.buildingFloor ? " – "+it.buildingFloor : ""))}</td>
           <td>${escapeHtml(it.ipAddress || "")}</td>
           <td>
-            <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;" href="${viewUrl}">View</a>
+            <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;"
+               href="${viewUrl}">View</a>
             ${editButton}
           </td>
         </tr>`;
@@ -201,9 +258,10 @@
   }
 
   function escapeHtml(s){
-    return s ? s.replace(/[&<>"']/g,c=>(
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g, c => (
       { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    )) : "";
+    ));
   }
 
   searchInput.addEventListener("input", render);
