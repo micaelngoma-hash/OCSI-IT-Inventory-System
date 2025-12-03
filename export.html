@@ -11,219 +11,172 @@
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
-    padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
-  .content{padding:18px;max-width:900px;margin:0 auto;width:100%;}
-  h1{margin:0 0 8px;font-size:1.4rem;}
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .content{padding:22px;max-width:900px;margin:0 auto;}
+
+  h1{margin:0 0 6px;font-size:1.4rem;}
+  .subtitle{color:#64748b;font-size:.9rem;margin-bottom:16px;}
+
   .card{
-    background:white;border:1px solid var(--border);
-    border-radius:12px;padding:16px 18px;margin-bottom:14px;
+    background:white;border-radius:12px;
+    padding:16px;border:1px solid var(--border);
+    margin-bottom:18px;
   }
-  .card h2{margin:0 0 8px;font-size:1.08rem;}
-  p{margin:4px 0 10px;font-size:.9rem;color:#475569;}
-  ul{margin:0 0 10px 18px;font-size:.88rem;color:#6b7280;}
+  .section-title{font-weight:600;margin-bottom:6px;}
+  label{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:.9rem;}
+
   .btn{
     border:none;cursor:pointer;
-    padding:8px 14px;border-radius:999px;
-    font-size:.9rem;font-weight:500;
+    padding:7px 13px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
     display:inline-flex;align-items:center;gap:6px;
+    background:var(--brand);color:white;margin-top:10px;
   }
-  .btn-primary{background:var(--brand);color:white;}
-  .note{font-size:.8rem;color:#9ca3af;margin-top:6px;}
-  .warn{color:#b91c1c;font-size:.85rem;}
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+
+  .log{font-family:monospace;font-size:.78rem;background:#0b1020;color:#e5e7eb;
+       padding:8px;border-radius:8px;max-height:220px;overflow:auto;margin-top:10px;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Export</div>
+  <div><strong>OCSI IT Inventory</strong> – Export Data</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a class="active" href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
-  </aside>
+  <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
-    <h1>Export Data</h1>
+    <h1>Export Firestore Data</h1>
+    <p class="subtitle">
+      Download selected collections as CSV files for backup or analysis.
+    </p>
 
     <section class="card">
-      <h2>Devices (Hardware Inventory)</h2>
-      <p>Download all devices from the <code>items</code> collection into a CSV file for Excel / Google Sheets.</p>
-      <ul>
-        <li>Identification – Asset ID, Device Name, Type, Manufacturer, Serial, Status</li>
-        <li>Location &amp; Assignment – Assigned To, Department, Location, Building/Floor</li>
-        <li>Network &amp; System – IP, MAC, OS / Version</li>
-        <li>Procurement &amp; Lifecycle – Purchase, Installation, Vendor, Warranty, Replacement, Removed Date</li>
-        <li>Notes / Comments</li>
-      </ul>
-      <button id="exportDevicesBtn" class="btn btn-primary" type="button">
-        ⬇️ Download Devices CSV
-      </button>
-      <div id="exportStatus" class="note"></div>
-      <div class="warn" id="roleWarn" style="display:none;">
-        Only Admin / IT can export data.
-      </div>
+      <div class="section-title">Choose what to export</div>
+      <label><input type="checkbox" id="expDevices" checked/> Devices (items)</label>
+      <label><input type="checkbox" id="expLicenses" checked/> Software Licenses (software_license)</label>
+      <button id="exportBtn" class="btn" type="button">⬇️ Download CSV Files</button>
     </section>
+
+    <section class="card">
+      <div class="section-title">Export Log</div>
+      <div id="log" class="log">Waiting…</div>
+    </section>
+
   </main>
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, collection, getDocs }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { db, watchAuth } from "./firebase.js";
+import {
+  getDocs, collection
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
-  };
+const whoEl      = document.getElementById("who");
+const expDevices = document.getElementById("expDevices");
+const expLicenses= document.getElementById("expLicenses");
+const exportBtn  = document.getElementById("exportBtn");
+const logEl      = document.getElementById("log");
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth = getAuth(app);
+watchAuth({
+  allowedRoles:["admin","it"],
+  whoEl,
+  onReady: ()=>{}
+});
 
-  const ALLOWED_EXPORT_ROLES = ["admin","it"];
+function log(msg){
+  const t = new Date().toISOString().slice(11,19);
+  logEl.textContent += `\n[${t}] ${msg}`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
 
-  const whoEl = document.getElementById("who");
-  const exportBtn = document.getElementById("exportDevicesBtn");
-  const exportStatus = document.getElementById("exportStatus");
-  const roleWarn = document.getElementById("roleWarn");
+exportBtn.onclick = async ()=>{
+  if(!expDevices.checked && !expLicenses.checked){
+    alert("Please select at least one collection to export.");
+    return;
+  }
+  exportBtn.disabled = true;
+  log("Starting export…");
 
-  let currentRole = "viewer";
-
-  onAuthStateChanged(auth, async user=>{
-    if(!user){
-      location.href="login.html";
-      return;
+  try{
+    if(expDevices.checked){
+      await exportCollection("items","devices");
     }
-    const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role  = uSnap.exists()? (uSnap.data().role || "viewer") : "viewer";
-    currentRole = role;
-
-    const badgeClass = role==="admin" ? "badge-admin"
-                      : role==="it" ? "badge-it" : "badge-viewer";
-    whoEl.innerHTML = `${user.email} <span class="badge ${badgeClass}">${role}</span>`;
-
-    if(!ALLOWED_EXPORT_ROLES.includes(role)){
-      exportBtn.disabled = true;
-      roleWarn.style.display = "block";
-    }else{
-      exportBtn.addEventListener("click", exportDevicesCsv);
+    if(expLicenses.checked){
+      await exportCollection("software_license","software_licenses");
     }
+    log("Export complete.");
+  }catch(e){
+    log("Error: "+(e.message||e));
+  }finally{
+    exportBtn.disabled = false;
+  }
+};
+
+async function exportCollection(collName, filePrefix){
+  log(`Exporting collection: ${collName}…`);
+  const snap = await getDocs(collection(db, collName));
+  const docs = [];
+  snap.forEach(d=>{
+    docs.push({ id: d.id, ...d.data() });
   });
-
-  function csvEscape(val){
-    if(val == null) val = "";
-    val = String(val);
-    if(/[";, \n]/.test(val)){
-      val = '"' + val.replace(/"/g,'""') + '"';
-    }
-    return val;
+  if(!docs.length){
+    log(`No documents found in ${collName}.`);
+    return;
   }
+  const csv = toCsv(docs);
+  triggerDownload(csv, `${filePrefix}-${new Date().toISOString().slice(0,10)}.csv`);
+  log(`Exported ${docs.length} documents from ${collName}.`);
+}
 
-  function todayStamp(){
-    const d = new Date();
-    const pad = n => String(n).padStart(2,"0");
-    return d.getFullYear() + pad(d.getMonth()+1) + pad(d.getDate());
+function toCsv(rows){
+  // Collect all keys
+  const keys = Array.from(
+    rows.reduce((set,row)=>{
+      Object.keys(row).forEach(k=>set.add(k));
+      return set;
+    }, new Set())
+  );
+  const header = keys.join(",");
+  const lines = rows.map(row=>{
+    return keys.map(k => csvEscape(valueToString(row[k]))).join(",");
+  });
+  return [header, ...lines].join("\r\n");
+}
+
+function valueToString(v){
+  if(v == null) return "";
+  if(v.toDate) return v.toDate().toISOString();
+  if(typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+function csvEscape(s){
+  if(s.includes(",") || s.includes("\"") || s.includes("\n")){
+    return `"${s.replace(/"/g,'""')}"`;
   }
+  return s;
+}
 
-  async function exportDevicesCsv(){
-    exportStatus.textContent = "Preparing export…";
-    try{
-      const snap = await getDocs(collection(db,"items"));
-      const rows = [];
-
-      const header = [
-        "assetId","deviceName","assetType","manufacturer","serialNumber","status",
-        "assignedTo","department","location","buildingFloor",
-        "ipAddress","macAddress","osVersion",
-        "purchaseDate","installationDate","vendor","warrantyEndDate",
-        "replacementDate","replacementAlert","removedDate",
-        "notes"
-      ];
-      rows.push(header.map(csvEscape).join(","));
-
-      snap.forEach(docSnap=>{
-        const d = docSnap.data();
-        const row = [
-          d.assetId || "",
-          d.deviceName || "",
-          d.assetType || "",
-          d.manufacturer || "",
-          d.serialNumber || "",
-          d.status || "",
-          d.assignedTo || "",
-          d.department || "",
-          d.location || "",
-          d.buildingFloor || "",
-          d.ipAddress || "",
-          d.macAddress || "",
-          d.osVersion || "",
-          d.purchaseDate || "",
-          d.installationDate || "",
-          d.vendor || "",
-          d.warrantyEndDate || "",
-          d.replacementDate || "",
-          d.replacementAlert ? "Yes" : "No",
-          d.removedDate || "",
-          (d.notes || "").replace(/\r?\n/g," / ")
-        ];
-        rows.push(row.map(csvEscape).join(","));
-      });
-
-      const csv = rows.join("\n");
-      const blob = new Blob([csv], { type:"text/csv;charset=utf-8;" });
-      const url  = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `ocsi_devices_${todayStamp()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      exportStatus.textContent = `Exported ${snap.size} devices.`;
-    }catch(err){
-      console.error(err);
-      exportStatus.textContent = "Error during export: " + err.message;
-    }
-  }
+function triggerDownload(text, filename){
+  const blob = new Blob([text], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 </script>
 
 </body>
