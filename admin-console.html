@@ -4,669 +4,227 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Admin Console</title>
+
 <style>
   :root{
     --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
   }
-  *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
   .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--bg);color:white;
-    padding:12px 16px;
+    background:var(--bg);color:white;padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px;}
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .content{padding:26px;max-width:1100px;margin:0 auto;}
 
-  .content{padding:18px;max-width:1200px;margin:0 auto;width:100%;}
-  h1{margin:0 0 4px;font-size:1.4rem;}
-  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
-  .badge-super{background:rgba(234,179,8,.16);color:#b45309;}
-
-  .tabs{
-    display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;
-    border-bottom:1px solid #e5e7eb;padding-bottom:4px;
-  }
-  .tab-btn{
-    border:none;background:transparent;
-    padding:6px 12px;border-radius:999px;
-    font-size:.86rem;cursor:pointer;
-    color:#64748b;
-  }
-  .tab-btn.active{
-    background:#e0f2fe;color:#0f172a;
-  }
-
-  .tab-panel{display:none;}
-  .tab-panel.active{display:block;}
+  h1{margin-bottom:14px;}
+  h2{margin-top:34px;margin-bottom:10px;}
 
   .card{
-    background:white;border:1px solid var(--border);
-    border-radius:14px;padding:14px 16px;margin-bottom:14px;
+    background:white;border-radius:12px;
+    padding:18px;border:1px solid var(--border);
+    margin-bottom:20px;
   }
-  .card h2{
-    margin:0 0 8px;font-size:1.05rem;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:8px;}
 
-  .btn{
-    border:none;cursor:pointer;
-    padding:6px 12px;border-radius:999px;
-    font-size:.85rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:5px;
-    text-decoration:none;
-  }
-  .btn-primary{background:var(--brand);color:white;}
-  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:10px;border-bottom:1px solid #f1f5f9;text-align:left;}
+  th{background:#f8fafc;}
 
-  .table-wrap{
-    background:white;border:1px solid var(--border);
-    border-radius:12px;overflow:auto;
-  }
-  table{border-collapse:collapse;width:100%;min-width:700px;}
-  th,td{
-    padding:7px 9px;border-bottom:1px solid #f1f5f9;
-    font-size:.86rem;text-align:left;
-  }
-  th{background:#f8fafc;font-weight:600;color:#475569;position:sticky;top:0;z-index:5;}
-  tr:hover td{background:#f9fafb;}
+  .btn{padding:6px 12px;background:var(--brand);color:white;border-radius:8px;text-decoration:none;border:none;cursor:pointer;}
+  .btn-small{padding:4px 8px;font-size:.75rem;}
 
-  input[type="text"],input[type="email"],select,textarea{
-    width:100%;font-size:.88rem;
-    padding:6px 8px;border-radius:8px;
-    border:1px solid #cbd5e1;outline:none;
+  select,input{
+    padding:6px;border-radius:6px;border:1px solid var(--border);font-size:.85rem;
   }
-  textarea{min-height:160px;font-family:monospace;resize:vertical;}
-
-  .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
-
-  .pill-role{
-    padding:2px 8px;border-radius:999px;font-size:.75rem;
-    background:#e5e7eb;color:#374151;
-  }
-  .pill-role.admin{background:#dcfce7;color:#166534;}
-  .pill-role.it{background:#dbeafe;color:#1d4ed8;}
-  .pill-role.viewer{background:#e5e7eb;color:#374151;}
-  .pill-role["super-admin"], .pill-role.super-admin{background:#fef9c3;color:#854d0e;}
-
-  .small{font-size:.78rem;color:#9ca3af;margin-top:6px;}
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Admin Console</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+  <div id="who" style="opacity:.85;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
-      <a class="active" href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
-      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
-  </aside>
+  <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
-    <h1>Admin Console</h1>
-    <p class="subtitle">
-      Manage users, categories, custom fields and bulk imports for the OCSI IT Inventory system.
-    </p>
 
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="users">Users &amp; Roles</button>
-      <button class="tab-btn" data-tab="categories">Categories</button>
-      <button class="tab-btn" data-tab="fields">Category Fields JSON</button>
-      <button class="tab-btn" data-tab="import">Bulk Import</button>
+    <h1>Admin Console</h1>
+
+    <!-- USERS -->
+    <h2>User Management</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Promote/Demote</th>
+          </tr>
+        </thead>
+        <tbody id="users-body">
+          <tr><td colspan="3">Loading users…</td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- USERS TAB -->
-    <section id="tab-users" class="tab-panel active">
-      <div class="card">
-        <h2>Users &amp; Roles</h2>
-        <p class="muted" id="usersNote">
-          Only the Super Admin can change roles. Admin and IT staff can view the list.
-        </p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Email</th>
-                <th>Name</th>
-                <th>Role</th>
-                <th style="width:160px;">Change Role</th>
-              </tr>
-            </thead>
-            <tbody id="usersBody">
-              <tr><td colspan="4">Loading users…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="small">
-          Roles: <strong>viewer</strong> (read-only), <strong>it</strong> (IT staff), <strong>admin</strong> (full admin).
-          The Super Admin can also assign or change these roles.
-        </p>
+    <!-- CATEGORIES -->
+    <h2>Device/Software Categories</h2>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Category Name</th>
+            <th>Code</th>
+            <th>Default Fields</th>
+          </tr>
+        </thead>
+        <tbody id="cat-body">
+          <tr><td colspan="3">Loading categories…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CUSTOM FIELDS -->
+    <h2>Custom Fields</h2>
+    <div class="card">
+      <p>You may add additional fields at any time.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input id="cf-name" placeholder="Field Name"/>
+        <input id="cf-key" placeholder="Field key (machine)"/>
+        <select id="cf-type">
+          <option value="text">Text</option>
+          <option value="number">Number</option>
+          <option value="date">Date</option>
+          <option value="select">Dropdown</option>
+        </select>
+        <button id="addField" class="btn">Add Field</button>
       </div>
-    </section>
 
-    <!-- CATEGORIES TAB -->
-    <section id="tab-categories" class="tab-panel">
-      <div class="card">
-        <h2>Item &amp; Software Categories</h2>
-        <p class="muted">
-          High-level categories used to group items and software (for example: <code>device</code>, <code>software_product</code>, <code>software_license</code>).
-        </p>
+      <table style="margin-top:14px;">
+        <thead>
+          <tr>
+            <th>Name</th><th>Key</th><th>Type</th>
+          </tr>
+        </thead>
+        <tbody id="fields-body">
+          <tr><td colspan="3">Loading fields…</td></tr>
+        </tbody>
+      </table>
+    </div>
 
-        <div class="grid-2">
-          <div>
-            <h3 style="margin:0 0 6px;font-size:.95rem;">Existing Categories</h3>
-            <div class="table-wrap" style="max-height:260px;">
-              <table>
-                <thead>
-                  <tr><th>Code</th><th>Name</th><th>Type</th></tr>
-                </thead>
-                <tbody id="catBody">
-                  <tr><td colspan="3">Loading…</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <p class="small">Click a row to load it into the editor on the right.</p>
-          </div>
+    <!-- IMPORT -->
+    <h2>Bulk Import</h2>
+    <div class="card">
+      <p>Import many items from Excel or CSV.</p>
+      <a href="import-excel.html" class="btn">Go to Import Tool</a>
+    </div>
 
-          <div>
-            <h3 style="margin:0 0 6px;font-size:.95rem;">Add / Edit Category</h3>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <label>
-                <span style="font-size:.82rem;color:#6b7280;">Document ID (optional, usually same as code)</span>
-                <input type="text" id="catId" placeholder="eg. device, software_product"/>
-              </label>
-              <label>
-                <span style="font-size:.82rem;color:#6b7280;">Code</span>
-                <input type="text" id="catCode" placeholder="Unique code (eg. device)"/>
-              </label>
-              <label>
-                <span style="font-size:.82rem;color:#6b7280;">Display Name</span>
-                <input type="text" id="catName" placeholder="eg. Device, Software Product"/>
-              </label>
-              <label>
-                <span style="font-size:.82rem;color:#6b7280;">Category Type</span>
-                <select id="catType">
-                  <option value="hardware">Hardware / Device</option>
-                  <option value="software">Software</option>
-                  <option value="other">Other</option>
-                </select>
-              </label>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
-                <button class="btn btn-primary" type="button" id="catSaveBtn">💾 Save Category</button>
-                <button class="btn btn-ghost" type="button" id="catClearBtn">Clear</button>
-              </div>
-              <p class="small">
-                Categories are stored in the <code>categories</code> collection.  
-                Field configuration (like <code>defaultFields</code>, <code>extraFields</code>, lifecycles) is edited in the next tab.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FIELDS JSON TAB -->
-    <section id="tab-fields" class="tab-panel">
-      <div class="card">
-        <h2>Category Fields JSON</h2>
-        <p class="muted">
-          Advanced: edit the raw JSON config for a selected category
-          (<code>defaultFields</code>, <code>extraFields</code>, <code>defaultLifecycle</code>, etc.).
-        </p>
-        <div class="grid-2">
-          <div>
-            <label>
-              <span style="font-size:.82rem;color:#6b7280;">Select Category</span>
-              <select id="fieldsCatSelect">
-                <option value="">-- choose category --</option>
-              </select>
-            </label>
-            <p class="small">
-              Choose a category to load its full document from Firestore.  
-              You can then edit the JSON and save.
-            </p>
-          </div>
-        </div>
-
-        <div style="margin-top:10px;">
-          <label>
-            <span style="font-size:.82rem;color:#6b7280;">Category Document JSON</span>
-            <textarea id="fieldsJson" placeholder='{"code":"device","name":"Device","defaultFields":[...]}'></textarea>
-          </label>
-          <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-            <button class="btn btn-primary" type="button" id="fieldsSaveBtn">💾 Save JSON</button>
-            <button class="btn btn-ghost" type="button" id="fieldsReloadBtn">⟳ Reload</button>
-          </div>
-          <p class="small">
-            Be careful: incorrect JSON will break your dynamic forms.  
-            Always keep backups (eg. copy JSON into a text file) before making big changes.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- IMPORT TAB -->
-    <section id="tab-import" class="tab-panel">
-      <div class="card">
-        <h2>Bulk Import from JSON</h2>
-        <p class="muted">
-          Paste a JSON array of objects to import into a collection (for example: <code>items</code>, <code>software_product</code>, <code>software_license</code>).
-        </p>
-
-        <div class="grid-2">
-          <div>
-            <label>
-              <span style="font-size:.82rem;color:#6b7280;">Target Collection</span>
-              <select id="importCollection">
-                <option value="items">items (devices)</option>
-                <option value="software_product">software_product (titles)</option>
-                <option value="software_license">software_license (license pools)</option>
-              </select>
-            </label>
-            <p class="small">
-              Make sure your field names match the schema you expect in the app.
-            </p>
-          </div>
-          <div>
-            <label>
-              <span style="font-size:.82rem;color:#6b7280;">Optional Prefix (for assetId / softwareName, etc.)</span>
-              <input type="text" id="importPrefix" placeholder="eg. OCSI-DEVICE-, OCSI-SW-"/>
-            </label>
-          </div>
-        </div>
-
-        <label style="margin-top:10px;display:block;">
-          <span style="font-size:.82rem;color:#6b7280;">JSON Array</span>
-          <textarea id="importJson" placeholder='[{"assetId":"ABC123","deviceName":"Laptop 1",...}, {...}]'></textarea>
-        </label>
-
-        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary" type="button" id="importRunBtn">⬆️ Run Import</button>
-        </div>
-        <p class="small" id="importStatus">No import started yet.</p>
-      </div>
-    </section>
   </main>
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import {
-    db, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc,
-    serverTimestamp, requireAuth, escapeHtml, SUPER_ADMIN_EMAIL
-  } from "./firebase.js";
+import { auth, db, watchAuth } from "./firebase.js";
+import {
+  getDocs, collection, updateDoc, doc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl = document.getElementById("who");
+const who = document.getElementById("who");
+const usersBody = document.getElementById("users-body");
+const catBody   = document.getElementById("cat-body");
+const fieldsBody= document.getElementById("fields-body");
 
-  // Tabs
-  const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabPanels  = document.querySelectorAll(".tab-panel");
-  tabButtons.forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const tab = btn.dataset.tab;
-      tabButtons.forEach(b=>b.classList.toggle("active", b===btn));
-      tabPanels.forEach(p=>p.classList.toggle("active", p.id === "tab-"+tab));
-    });
+const addFieldBtn = document.getElementById("addField");
+const cfName = document.getElementById("cf-name");
+const cfKey  = document.getElementById("cf-key");
+const cfType = document.getElementById("cf-type");
+
+watchAuth({
+  allowedRoles:["admin"], 
+  whoEl: who,
+  onReady: loadAll
+});
+
+async function loadAll(){
+  loadUsers();
+  loadCategories();
+  loadFields();
+}
+
+async function loadUsers(){
+  const snap = await getDocs(collection(db,"users"));
+  usersBody.innerHTML = "";
+
+  snap.forEach(u=>{
+    const d = u.data();
+    const role = d.role || "viewer";
+
+    usersBody.innerHTML += `
+      <tr>
+        <td>${d.email}</td>
+        <td>${role}</td>
+        <td>
+          <button class="btn-small" onclick="setRole('${u.id}','viewer')">Viewer</button>
+          <button class="btn-small" onclick="setRole('${u.id}','it')">IT</button>
+          <button class="btn-small" onclick="setRole('${u.id}','admin')">Admin</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.setRole = async function(uid, role){
+  await updateDoc(doc(db,"users",uid),{ role });
+  loadUsers();
+};
+
+async function loadCategories(){
+  const snap = await getDocs(collection(db,"categories"));
+  catBody.innerHTML = "";
+  snap.forEach(c=>{
+    const d = c.data();
+    catBody.innerHTML += `
+      <tr>
+        <td>${d.name}</td>
+        <td>${d.code}</td>
+        <td>${(d.defaultFields||[]).length} fields</td>
+      </tr>`;
+  });
+}
+
+async function loadFields(){
+  const snap = await getDocs(collection(db,"custom_fields"));
+  fieldsBody.innerHTML = "";
+  snap.forEach(f=>{
+    const d = f.data();
+    fieldsBody.innerHTML += `
+      <tr>
+        <td>${d.name}</td>
+        <td>${d.key}</td>
+        <td>${d.type}</td>
+      </tr>`;
+  });
+}
+
+addFieldBtn.onclick = async ()=>{
+  const name = cfName.value.trim();
+  const key  = cfKey.value.trim();
+  const type = cfType.value;
+  if(!name || !key) return alert("All fields required.");
+
+  await updateDoc(doc(db,"custom_fields", key),{
+    name, key, type
   });
 
-  // USERS
-  const usersBody = document.getElementById("usersBody");
-  const usersNote = document.getElementById("usersNote");
-
-  // CATEGORIES
-  const catBody     = document.getElementById("catBody");
-  const catIdInput  = document.getElementById("catId");
-  const catCode     = document.getElementById("catCode");
-  const catName     = document.getElementById("catName");
-  const catType     = document.getElementById("catType");
-  const catSaveBtn  = document.getElementById("catSaveBtn");
-  const catClearBtn = document.getElementById("catClearBtn");
-
-  // FIELDS JSON
-  const fieldsCatSelect  = document.getElementById("fieldsCatSelect");
-  const fieldsJson       = document.getElementById("fieldsJson");
-  const fieldsSaveBtn    = document.getElementById("fieldsSaveBtn");
-  const fieldsReloadBtn  = document.getElementById("fieldsReloadBtn");
-
-  // IMPORT
-  const importCollection = document.getElementById("importCollection");
-  const importPrefix     = document.getElementById("importPrefix");
-  const importJson       = document.getElementById("importJson");
-  const importRunBtn     = document.getElementById("importRunBtn");
-  const importStatus     = document.getElementById("importStatus");
-
-  // State
-  let isSuperAdmin = false;
-  let currentRole  = "viewer";
-  let usersCache   = [];
-  let categoriesCache = [];
-
-  // Restrict page to admin / it / super-admin
-  const ADMIN_ROLES = ["admin","it","super-admin"];
-
-  requireAuth(ADMIN_ROLES, async ({ user, role, badgeHtml, isSuperAdmin: isSA })=>{
-    currentRole  = role;
-    isSuperAdmin = isSA;
-    const superBadge = isSuperAdmin ? ' <span class="badge badge-super">super-admin</span>' : '';
-    whoEl.innerHTML = `${user.email} ${badgeHtml}${superBadge}`;
-
-    if(!isSuperAdmin){
-      usersNote.textContent = "You can view users. Only the Super Admin can change roles.";
-    }else{
-      usersNote.textContent = "You are Super Admin – you can change user roles.";
-    }
-
-    await Promise.all([
-      loadUsers(),
-      loadCategories()
-    ]);
-    populateFieldsCategorySelect();
-  });
-
-  /* ---------- USERS & ROLES ---------- */
-  async function loadUsers(){
-    const snap = await getDocs(collection(db,"users"));
-    usersCache = [];
-    snap.forEach(ds=>{
-      usersCache.push({ id: ds.id, ...ds.data() });
-    });
-    renderUsers();
-  }
-
-  function renderUsers(){
-    if(!usersCache.length){
-      usersBody.innerHTML = `<tr><td colspan="4">No users found yet. Logins will auto-create user entries.</td></tr>`;
-      return;
-    }
-
-    usersBody.innerHTML = usersCache
-      .sort((a,b)=> (a.email||"").localeCompare(b.email||""))
-      .map(u=>{
-        const role = u.role || "viewer";
-        const email = u.email || "";
-        const name  = u.name || "";
-
-        const pillClass =
-          role==="admin" ? "pill-role admin" :
-          role==="it"    ? "pill-role it"    :
-          role==="viewer"? "pill-role viewer":"pill-role super-admin";
-
-        const disabled = (!isSuperAdmin || email === SUPER_ADMIN_EMAIL) ? "disabled" : "";
-        const title = (!isSuperAdmin)
-          ? "Only Super Admin can change roles"
-          : (email === SUPER_ADMIN_EMAIL ? "Cannot change Super Admin role" : "");
-
-        return `
-          <tr data-id="${u.id}">
-            <td>${escapeHtml(email)}</td>
-            <td>${escapeHtml(name)}</td>
-            <td><span class="${pillClass}">${escapeHtml(role)}</span></td>
-            <td>
-              <select class="roleSelect" ${disabled} title="${escapeHtml(title)}">
-                <option value="viewer" ${role==="viewer"?"selected":""}>viewer</option>
-                <option value="it" ${role==="it"?"selected":""}>it</option>
-                <option value="admin" ${role==="admin"?"selected":""}>admin</option>
-              </select>
-            </td>
-          </tr>`;
-      }).join("");
-
-    document.querySelectorAll(".roleSelect").forEach(sel=>{
-      sel.addEventListener("change", async ev=>{
-        const tr   = ev.target.closest("tr");
-        const id   = tr.dataset.id;
-        const role = ev.target.value;
-        try{
-          await updateDoc(doc(db,"users",id), { role, updatedAt: serverTimestamp() });
-          const u = usersCache.find(x=>x.id===id);
-          if(u){ u.role = role; }
-          renderUsers();
-        }catch(err){
-          console.error(err);
-          alert("Failed to update role: " + err.message);
-        }
-      });
-    });
-  }
-
-  /* ---------- CATEGORIES ---------- */
-  async function loadCategories(){
-    const snap = await getDocs(collection(db,"categories"));
-    categoriesCache = [];
-    snap.forEach(ds=>{
-      categoriesCache.push({ id: ds.id, ...ds.data() });
-    });
-    renderCategoriesTable();
-  }
-
-  function renderCategoriesTable(){
-    if(!categoriesCache.length){
-      catBody.innerHTML = `<tr><td colspan="3">No categories yet.</td></tr>`;
-      return;
-    }
-    catBody.innerHTML = categoriesCache
-      .sort((a,b)=>(a.code||a.id||"").localeCompare(b.code||b.id||""))
-      .map(c=>{
-        const code = c.code || c.id || "";
-        const name = c.name || "";
-        const type = c.type || "";
-        return `
-          <tr data-id="${c.id}">
-            <td>${escapeHtml(code)}</td>
-            <td>${escapeHtml(name)}</td>
-            <td>${escapeHtml(type)}</td>
-          </tr>`;
-      }).join("");
-
-    [...catBody.querySelectorAll("tr[data-id]")].forEach(tr=>{
-      tr.addEventListener("click", ()=>{
-        const id = tr.dataset.id;
-        const cat = categoriesCache.find(c=>c.id===id);
-        if(!cat) return;
-        catIdInput.value = cat.id;
-        catCode.value    = cat.code || cat.id || "";
-        catName.value    = cat.name || "";
-        catType.value    = cat.type || "other";
-
-        // Also update the Fields tab select
-        populateFieldsCategorySelect();
-        fieldsCatSelect.value = cat.id;
-        loadCategoryJson(cat.id);
-      });
-    });
-  }
-
-  catSaveBtn.addEventListener("click", async ()=>{
-    if(currentRole==="viewer"){
-      alert("You need admin or IT role to edit categories.");
-      return;
-    }
-    const id    = (catIdInput.value || catCode.value || "").trim();
-    const code  = catCode.value.trim();
-    const name  = catName.value.trim();
-    const type  = catType.value;
-
-    if(!id || !code || !name){
-      alert("Please fill in ID, Code and Display Name.");
-      return;
-    }
-
-    const ref = doc(db,"categories",id);
-    const payload = {
-      code, name, type,
-      updatedAt: serverTimestamp()
-    };
-    try{
-      await setDoc(ref,payload,{ merge:true });
-      alert("Category saved.");
-      await loadCategories();
-      populateFieldsCategorySelect();
-    }catch(err){
-      console.error(err);
-      alert("Failed to save category: " + err.message);
-    }
-  });
-
-  catClearBtn.addEventListener("click", ()=>{
-    catIdInput.value = "";
-    catCode.value    = "";
-    catName.value    = "";
-    catType.value    = "hardware";
-  });
-
-  function populateFieldsCategorySelect(){
-    const prev = fieldsCatSelect.value;
-    fieldsCatSelect.innerHTML = `<option value="">-- choose category --</option>`;
-    categoriesCache.forEach(c=>{
-      const id   = c.id;
-      const code = c.code || id;
-      const name = c.name || "";
-      const label = code + (name ? ` – ${name}` : "");
-      const opt = document.createElement("option");
-      opt.value = id;
-      opt.textContent = label;
-      fieldsCatSelect.appendChild(opt);
-    });
-    if(prev) fieldsCatSelect.value = prev;
-  }
-
-  fieldsCatSelect.addEventListener("change", ()=>{
-    const id = fieldsCatSelect.value;
-    if(id) loadCategoryJson(id);
-    else fieldsJson.value = "";
-  });
-
-  async function loadCategoryJson(id){
-    try{
-      const snap = await getDoc(doc(db,"categories",id));
-      if(!snap.exists()){
-        fieldsJson.value = "// Category document not found.";
-        return;
-      }
-      const data = snap.data();
-      fieldsJson.value = JSON.stringify(data,null,2);
-    }catch(err){
-      console.error(err);
-      fieldsJson.value = "// Error loading category: " + err.message;
-    }
-  }
-
-  fieldsReloadBtn.addEventListener("click", ()=>{
-    const id = fieldsCatSelect.value;
-    if(id) loadCategoryJson(id);
-  });
-
-  fieldsSaveBtn.addEventListener("click", async ()=>{
-    if(currentRole==="viewer"){
-      alert("You need admin or IT role to edit category JSON.");
-      return;
-    }
-    const id = fieldsCatSelect.value;
-    if(!id){
-      alert("Choose a category first.");
-      return;
-    }
-    let obj;
-    try{
-      obj = JSON.parse(fieldsJson.value);
-    }catch(err){
-      alert("Invalid JSON: " + err.message);
-      return;
-    }
-    obj.updatedAt = serverTimestamp();
-    try{
-      await setDoc(doc(db,"categories",id), obj, { merge:false });
-      alert("Category JSON saved.");
-      await loadCategories();
-      populateFieldsCategorySelect();
-    }catch(err){
-      console.error(err);
-      alert("Failed to save JSON: " + err.message);
-    }
-  });
-
-  /* ---------- BULK IMPORT ---------- */
-  importRunBtn.addEventListener("click", async ()=>{
-    if(currentRole==="viewer"){
-      alert("You need admin or IT role to run imports.");
-      return;
-    }
-    const col  = importCollection.value;
-    const pref = importPrefix.value.trim();
-    const text = importJson.value.trim();
-    if(!text){
-      alert("Paste a JSON array to import.");
-      return;
-    }
-
-    let arr;
-    try{
-      arr = JSON.parse(text);
-    }catch(err){
-      alert("Invalid JSON: " + err.message);
-      return;
-    }
-    if(!Array.isArray(arr)){
-      alert("JSON must be an array of objects.");
-      return;
-    }
-    if(!arr.length){
-      alert("Array is empty.");
-      return;
-    }
-
-    importStatus.textContent = `Importing ${arr.length} records into "${col}"…`;
-    let ok=0, fail=0;
-    for(const raw of arr){
-      try{
-        const obj = { ...raw };
-        // Optional prefix help
-        if(pref){
-          if(col==="items" && obj.assetId){
-            obj.assetId = pref + obj.assetId;
-          }
-          if((col==="software_product" || col==="software_license") && obj.softwareName){
-            obj.softwareName = pref + obj.softwareName;
-          }
-        }
-        obj.importedAt = serverTimestamp();
-        await setDoc(doc(collection(db,col)), obj);
-        ok++;
-      }catch(err){
-        console.error("Import error:", err);
-        fail++;
-      }
-    }
-    importStatus.textContent = `Import complete. Success: ${ok}, Failed: ${fail}.`;
-    alert(`Import complete.\nSuccess: ${ok}\nFailed: ${fail}`);
-  });
+  cfName.value = "";
+  cfKey.value = "";
+  loadFields();
+};
 </script>
 
 </body>
