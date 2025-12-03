@@ -3,206 +3,158 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Assign License • OCSI IT Inventory</title>
-<link rel="stylesheet" href="style.css">
+<title>Assign License Seats</title>
+
+<style>
+  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    background:var(--bg);color:white;padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .sidebar{background:var(--bg2);padding:14px;color:white;}
+
+  .content{padding:26px;max-width:900px;margin:0 auto;width:100%;}
+
+  table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
+  th,td{padding:10px;border-bottom:1px solid #f1f5f9;font-size:.88rem;}
+  th{background:#f8fafc;text-align:left;}
+  .btn{padding:6px 12px;background:var(--brand);color:white;border-radius:8px;text-decoration:none;cursor:pointer;font-size:.85rem;}
+  .btn-red{background:#dc2626;}
+</style>
+
 </head>
 <body>
+
 <div class="topbar">
-  <div>
-    <div class="topbar-title">Assign License</div>
-    <div class="topbar-sub">Assign a license seat to a device or user</div>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <span id="roleBadge" class="badge viewer">…</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Assign License</div>
+  <div id="who" style="opacity:.8;font-size:.85rem;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html">Dashboard</a>
-      <a href="inventory-list.html">Inventory</a>
-      <a class="active" href="software-dashboard.html">Software</a>
-      <a href="admin-fields.html">Admin Fields</a>
-      <a href="admin-categories.html">Admin Categories</a>
-      <a href="admin-users.html">User Roles</a>
-    </nav>
-  </aside>
+  <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
-    <div class="card">
-      <h3>Assign License Seat</h3>
-      <p class="muted">
-        Select a license pool, then assign it to either a device or a user (or both).
-        Assigned seats will increase automatically.
-      </p>
+    <h1 id="title">Assign License</h1>
+    <p id="subtitle">Loading…</p>
 
-      <form id="form">
-        <label>License</label>
-        <select id="licenseSelect">
-          <option value="">Loading licenses…</option>
-        </select>
+    <h2>Assigned Devices</h2>
 
-        <label>Assign To Device (optional)</label>
-        <select id="deviceSelect">
-          <option value="">No device</option>
-        </select>
+    <table>
+      <thead>
+        <tr>
+          <th>Device</th>
+          <th>Serial</th>
+          <th>Location</th>
+          <th>Revoke</th>
+        </tr>
+      </thead>
+      <tbody id="assigned-body">
+        <tr><td colspan="4">Loading…</td></tr>
+      </tbody>
+    </table>
 
-        <label>Assign To User (email, optional)</label>
-        <input id="userEmail" placeholder="user@ocsi.org">
+    <h2 style="margin-top:30px;">Assign New Device</h2>
 
-        <div class="spacer"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="submit" class="btn" id="saveBtn">Assign</button>
-          <a href="software-licenses.html" class="btn secondary">Back to Licenses</a>
-          <span id="status" class="muted"></span>
-        </div>
-      </form>
-    </div>
+    <button id="assignBtn" class="btn">Assign to Device</button>
+
   </main>
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+  import { db, watchAuth } from "./firebase.js";
   import {
-    getAuth, onAuthStateChanged, signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, doc, getDoc, collection, getDocs,
-    addDoc, updateDoc, serverTimestamp
+    doc, getDoc, updateDoc, collection, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
+  const who       = document.getElementById("who");
+  const title     = document.getElementById("title");
+  const subtitle  = document.getElementById("subtitle");
+  const assignedBody = document.getElementById("assigned-body");
+  const assignBtn = document.getElementById("assignBtn");
+
+  const params = new URLSearchParams(location.search);
+  const licenseId = params.get("license");
+
+  let licenseData = null;
+
+  watchAuth({
+    allowedRoles:["admin","it"],
+    whoEl: who,
+    onReady: loadLicense
+  });
+
+  async function loadLicense(){
+    if(!licenseId){
+      subtitle.textContent = "Missing license ID.";
+      return;
+    }
+
+    const snap = await getDoc(doc(db,"software_license",licenseId));
+    if(!snap.exists()){
+      subtitle.textContent = "License not found.";
+      return;
+    }
+
+    licenseData = snap.data();
+
+    title.textContent = "Assign License — " + (licenseData.licenseKey || "No Key");
+    subtitle.textContent = `Seats: ${licenseData.assignedSeats}/${licenseData.totalSeats}`;
+
+    renderAssigned();
+  }
+
+  async function renderAssigned(){
+    const devices = await getDocs(collection(db,"items"));
+
+    const assigned = (licenseData.assignedTo || []);
+
+    if(assigned.length === 0){
+      assignedBody.innerHTML = `<tr><td colspan="4">No devices assigned.</td></tr>`;
+      return;
+    }
+
+    assignedBody.innerHTML = "";
+
+    for(const devId of assigned){
+      const dSnap = await getDoc(doc(db,"items",devId));
+      if(!dSnap.exists()) continue;
+      const d = dSnap.data();
+
+      assignedBody.innerHTML += `
+        <tr>
+          <td>${d.deviceName||"(no name)"}</td>
+          <td>${d.serialNumber||"—"}</td>
+          <td>${d.location||"—"}</td>
+          <td><button class="btn-red" onclick="revoke('${devId}')">Revoke</button></td>
+        </tr>`;
+    }
+  }
+
+  window.revoke = async function(id){
+    const arr = (licenseData.assignedTo || []).filter(x=>x!==id);
+
+    await updateDoc(doc(db,"software_license",licenseId),{
+      assignedTo: arr,
+      assignedSeats: arr.length
+    });
+
+    licenseData.assignedTo = arr;
+    licenseData.assignedSeats = arr.length;
+
+    subtitle.textContent = `Seats: ${arr.length}/${licenseData.totalSeats}`;
+    renderAssigned();
   };
 
-  const app=initializeApp(firebaseConfig);
-  try{getAnalytics(app);}catch(e){}
-  const auth=getAuth(app);
-  const db=getFirestore(app);
+  assignBtn.onclick = ()=>{
+    location.href = `assign-device-select.html?license=${licenseId}`;
+  };
 
-  const ALLOWED_ROLES=["admin","it"];
-
-  function setBadge(role){
-    const badge=document.getElementById("roleBadge");
-    if(!badge) return;
-    const r=(role||"viewer").toLowerCase();
-    badge.className="badge "+r;
-    badge.textContent=r.toUpperCase();
-  }
-
-  document.getElementById("logoutBtn").addEventListener("click",()=>{
-    signOut(auth).then(()=>location.href="login.html");
-  });
-
-  const licenseSelect=document.getElementById("licenseSelect");
-  const deviceSelect=document.getElementById("deviceSelect");
-  const userEmail=document.getElementById("userEmail");
-  const form=document.getElementById("form");
-  const saveBtn=document.getElementById("saveBtn");
-  const statusEl=document.getElementById("status");
-
-  let licenses=[], devices=[];
-
-  async function loadLicenses(){
-    const snap=await getDocs(collection(db,"software_license"));
-    if(snap.empty){
-      licenseSelect.innerHTML='<option value="">No licenses available</option>';
-      return;
-    }
-    licenses=snap.docs.map(d=>({id:d.id,...d.data()}));
-    licenseSelect.innerHTML='<option value="">Select license…</option>' +
-      licenses.map(l=>`<option value="${l.id}">
-        ${l.softwareName||"Software"} • seats ${l.assignedSeats||0}/${l.totalSeats||0}
-      </option>`).join("");
-  }
-
-  async function loadDevices(){
-    const snap=await getDocs(collection(db,"items"));
-    devices=snap.docs.map(d=>({id:d.id,...d.data()}));
-    deviceSelect.innerHTML='<option value="">No device</option>'+
-      devices.map(it=>{
-        const label=`${it.assetId||it.deviceName||it.id}`;
-        return `<option value="${it.id}">${label}</option>`;
-      }).join("");
-  }
-
-  onAuthStateChanged(auth, async (u)=>{
-    if(!u){location.href="login.html";return;}
-    const who=document.getElementById("who");
-    if(who) who.textContent=u.email||"";
-
-    const us=await getDoc(doc(db,"users",u.uid));
-    const role=us.exists()? (us.data().role||"viewer"):"viewer";
-    setBadge(role);
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Only Admin or IT may assign licenses.");
-      location.href="software-licenses.html";
-      return;
-    }
-
-    await loadLicenses();
-    await loadDevices();
-  });
-
-  form.addEventListener("submit", async (e)=>{
-    e.preventDefault();
-    statusEl.textContent="";
-    saveBtn.disabled=true;
-    saveBtn.textContent="Assigning…";
-
-    try{
-      const licenseId=licenseSelect.value;
-      const deviceId =deviceSelect.value || null;
-      const email    =userEmail.value.trim() || null;
-
-      if(!licenseId){
-        statusEl.textContent="License is required.";
-        saveBtn.disabled=false;
-        saveBtn.textContent="Assign";
-        return;
-      }
-      if(!deviceId && !email){
-        statusEl.textContent="Provide either a device or user (or both).";
-        saveBtn.disabled=false;
-        saveBtn.textContent="Assign";
-        return;
-      }
-
-      await addDoc(collection(db,"software_assignment"),{
-        softwareLicenseId: licenseId,
-        deviceId,
-        userId: email,  // store email for readability
-        assignmentDate: serverTimestamp()
-      });
-
-      // increment assignedSeats (best-effort, no concurrency handling)
-      const licRef=doc(db,"software_license",licenseId);
-      const licSnap=await getDoc(licRef);
-      if(licSnap.exists()){
-        const data=licSnap.data();
-        const current= data.assignedSeats || 0;
-        await updateDoc(licRef,{assignedSeats: current+1});
-      }
-
-      statusEl.textContent="License assigned.";
-      setTimeout(()=>location.href="software-licenses.html",900);
-    }catch(err){
-      statusEl.textContent="Error: "+err.message;
-    }finally{
-      saveBtn.disabled=false;
-      saveBtn.textContent="Assign";
-    }
-  });
 </script>
+
 </body>
 </html>
