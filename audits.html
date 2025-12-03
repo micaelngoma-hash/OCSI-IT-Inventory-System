@@ -3,158 +3,194 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Audit Logs – OCSI IT Inventory</title>
+<title>Audits & Logs</title>
 <style>
-  :root{--bg:#0f172a;--bg2:#111827;}
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f3f4f6;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
   .topbar{
-    position:sticky;top:0;z-index:10;background:var(--bg);color:white;
-    padding:10px 18px;display:flex;justify-content:space-between;align-items:center;
-    box-shadow:0 2px 6px rgba(15,23,42,.6);
+    background:var(--bg);color:white;
+    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
   }
-  .topbar-title{font-weight:700;font-size:1.05rem;}
-  .layout{display:grid;grid-template-columns:230px 1fr;min-height:calc(100vh - 52px);}
-  .sidebar{background:var(--bg2);color:white;padding:14px 10px;}
-  .logo{font-weight:700;margin-bottom:10px;padding:0 6px;}
-  .nav a{
-    display:flex;align-items:center;gap:8px;padding:9px 10px;margin-bottom:5px;
-    border-radius:8px;color:#d1d5db;text-decoration:none;font-size:.9rem;
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .content{padding:22px;max-width:1100px;margin:0 auto;}
+
+  h1{margin:0 0 6px;font-size:1.4rem;}
+  .subtitle{color:#64748b;font-size:.9rem;margin-bottom:16px;}
+
+  .card{
+    background:white;border-radius:12px;
+    padding:16px;border:1px solid var(--border);
+    margin-bottom:18px;
   }
-  .nav a span.icon{width:18px;text-align:center;}
-  .nav a:hover,.nav a.active{background:#1f2937;color:white;}
-  .content{padding:18px 20px;max-width:1100px;margin:0 auto;}
-  .card{background:white;border-radius:12px;padding:14px 16px;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(15,23,42,.06);}
-  table{width:100%;border-collapse:collapse;margin-top:8px;}
-  th,td{padding:8px 9px;font-size:.84rem;border-bottom:1px solid #e5e7eb;text-align:left;}
-  th{background:#f1f5f9;}
-  .muted{font-size:.8rem;color:#6b7280;margin-bottom:6px;}
-  .badge{padding:2px 8px;border-radius:999px;font-size:.75rem;margin-right:6px;}
-  .badge.super_admin{background:#7c3aed;color:white;}
-  .badge.admin{background:#f97316;color:white;}
-  .badge.it{background:#1d4ed8;color:white;}
-  .badge.viewer{background:#4b5563;color:white;}
-  .logout{margin-left:10px;border:none;background:#ef4444;color:white;border-radius:999px;padding:5px 10px;font-size:.8rem;cursor:pointer;}
+
+  .filters{
+    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;
+  }
+  select,input{
+    padding:6px 9px;border-radius:8px;border:1px solid var(--border);font-size:.85rem;
+  }
+  .btn{
+    border:none;cursor:pointer;
+    padding:6px 11px;border-radius:999px;
+    font-size:.83rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--brand);color:white;
+  }
+
+  .table-wrap{border-radius:12px;border:1px solid var(--border);overflow:auto;margin-top:6px;}
+  table{border-collapse:collapse;width:100%;min-width:780px;font-size:.84rem;}
+  th,td{padding:7px 9px;border-bottom:1px solid #f1f5f9;text-align:left;}
+  th{background:#f8fafc;font-weight:600;color:#475569;}
+
+  .pill{
+    display:inline-flex;padding:2px 8px;border-radius:999px;font-size:.75rem;
+  }
+  .pill-create{background:#dcfce7;color:#166534;}
+  .pill-update{background:#dbeafe;color:#1d4ed8;}
+  .pill-delete{background:#fee2e2;color:#b91c1c;}
 </style>
 </head>
 <body>
+
 <div class="topbar">
-  <div><div class="topbar-title">Audit Logs</div></div>
-  <div style="display:flex;align-items:center;font-size:.85rem;">
-    <span id="roleBadge" class="badge viewer">VIEWER</span>
-    <span id="who" style="opacity:.85;">Loading…</span>
-    <button id="logoutBtn" class="logout">Logout</button>
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Audits & Logs</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
-    <div class="logo">OCSI IT Inventory</div>
-    <nav class="nav">
-      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">🖥</span><span>Inventory</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="scan.html"><span class="icon">📷</span><span>Scan QR</span></a>
-      <a href="export.html"><span class="icon">📤</span><span>Export</span></a>
-      <a class="active" href="audits.html"><span class="icon">📜</span><span>Audit Logs</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-    </nav>
-  </aside>
+  <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
-    <div class="card">
-      <p class="muted">
-        This page shows the latest actions recorded in <code>audit_logs</code> (if your Cloud Functions or frontend write them).
-      </p>
-      <table>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>User</th>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody id="logBody"></tbody>
-      </table>
-    </div>
+    <h1>Audit Trail</h1>
+    <p class="subtitle">
+      View who changed what and when across the inventory and software system.
+    </p>
+
+    <section class="card">
+      <div class="filters">
+        <select id="fAction">
+          <option value="">All actions</option>
+          <option value="create">Created</option>
+          <option value="update">Updated</option>
+          <option value="delete">Deleted</option>
+        </select>
+        <select id="fEntity">
+          <option value="">All entities</option>
+          <option value="item">Items</option>
+          <option value="software_license">Software Licenses</option>
+          <option value="software_product">Software Products</option>
+        </select>
+        <input id="fUser" placeholder="Filter by user email…" />
+        <button id="refreshBtn" class="btn" type="button">🔄 Refresh</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Action</th>
+              <th>Entity</th>
+              <th>Entity ID</th>
+              <th>User</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr><td colspan="6">Loading audit logs…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-  import {
-    getFirestore, collection, getDocs, doc, getDoc, query, orderBy, limit
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { db, watchAuth } from "./firebase.js";
+import {
+  collection, getDocs, orderBy, query
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
-  };
+const whoEl     = document.getElementById("who");
+const fAction   = document.getElementById("fAction");
+const fEntity   = document.getElementById("fEntity");
+const fUser     = document.getElementById("fUser");
+const refreshBtn= document.getElementById("refreshBtn");
+const tbody     = document.getElementById("tbody");
 
-  const app  = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db   = getFirestore(app);
+let allLogs = [];
 
-  const ALLOWED_ROLES = ["viewer","it","admin","super_admin"];
+watchAuth({
+  allowedRoles:["admin","it","viewer"], // everyone can see logs
+  whoEl,
+  onReady: loadLogs
+});
 
-  const who   = document.getElementById("who");
-  const badge = document.getElementById("roleBadge");
-  const logoutBtn = document.getElementById("logoutBtn");
-  const logBody = document.getElementById("logBody");
+async function loadLogs(){
+  const qRef = query(collection(db,"audits"), orderBy("timestamp","desc"));
+  const snap = await getDocs(qRef);
+  allLogs = [];
+  snap.forEach(d=>{
+    allLogs.push({ id:d.id, ...d.data() });
+  });
+  render();
+}
 
-  function setBadge(role){
-    const r = (role||"viewer").toLowerCase();
-    badge.className = "badge "+r;
-    badge.textContent = r.toUpperCase();
-  }
+function render(){
+  const act = fAction.value;
+  const ent = fEntity.value;
+  const userTerm = (fUser.value || "").toLowerCase();
 
-  logoutBtn.addEventListener("click",()=>signOut(auth).then(()=>location.href="login.html"));
-
-  onAuthStateChanged(auth, async (user)=>{
-    if(!user){ location.href="login.html"; return; }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role = uSnap.exists()? (uSnap.data().role||"viewer"):"viewer";
-    if(!ALLOWED_ROLES.includes(role)){ alert("Access denied."); location.href="login.html"; return; }
-    who.textContent = user.email;
-    setBadge(role);
-    await loadLogs();
+  const rows = allLogs.filter(log=>{
+    if(act && log.action!==act) return false;
+    if(ent && log.entityType!==ent) return false;
+    if(userTerm && !(log.userEmail||"").toLowerCase().includes(userTerm)) return false;
+    return true;
   });
 
-  function toDate(x){ return x?.toDate?.() || (x? new Date(x):null); }
-
-  async function loadLogs(){
-    try{
-      const qLogs = query(collection(db,"audit_logs"), orderBy("timestamp","desc"), limit(100));
-      const snap = await getDocs(qLogs);
-      if(snap.empty){
-        logBody.innerHTML = `<tr><td colspan="5" style="text-align:center;font-size:.85rem;color:#6b7280;">No audit logs found. You can start writing to <code>audit_logs</code> from Cloud Functions.</td></tr>`;
-        return;
-      }
-      const rows = [];
-      snap.forEach(d=>{
-        const l = d.data();
-        const t = toDate(l.timestamp);
-        rows.push(`<tr>
-          <td>${t? t.toLocaleString():""}</td>
-          <td>${l.userEmail||""}</td>
-          <td>${l.action||""}</td>
-          <td>${l.target||""}</td>
-          <td>${l.details||""}</td>
-        </tr>`);
-      });
-      logBody.innerHTML = rows.join("");
-    }catch(e){
-      logBody.innerHTML = `<tr><td colspan="5" style="text-align:center;font-size:.85rem;color:#b91c1c;">Error loading logs: ${e.message}</td></tr>`;
-    }
+  if(!rows.length){
+    tbody.innerHTML = `<tr><td colspan="6">No audit events match the current filters.</td></tr>`;
+    return;
   }
+
+  tbody.innerHTML = rows.slice(0,200).map(l=>{
+    const ts = l.timestamp?.toDate ? l.timestamp.toDate() : (l.timestamp ? new Date(l.timestamp) : null);
+    const timeStr = ts ? ts.toISOString().replace("T"," ").slice(0,19) : "–";
+    const actLabel = l.action || "unknown";
+    const pillClass =
+      actLabel==="create" ? "pill-create" :
+      actLabel==="update" ? "pill-update" :
+      actLabel==="delete" ? "pill-delete" : "";
+
+    return `
+      <tr>
+        <td>${timeStr}</td>
+        <td><span class="pill ${pillClass}">${escapeHtml(actLabel)}</span></td>
+        <td>${escapeHtml(l.entityType || "")}</td>
+        <td>${escapeHtml(l.entityId || "")}</td>
+        <td>${escapeHtml(l.userEmail || "")}</td>
+        <td>${escapeHtml(l.details || "")}</td>
+      </tr>`;
+  }).join("");
+}
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g,c=>(
+    { "&":"&amp;","<":"&lt;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+  ));
+}
+
+fAction.addEventListener("change", render);
+fEntity.addEventListener("change", render);
+fUser.addEventListener("input", render);
+refreshBtn.addEventListener("click", loadLogs);
 </script>
+
 </body>
 </html>
