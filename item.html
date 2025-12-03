@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Device Details</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory – Device Details</title>
 <style>
   :root{
     --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
@@ -65,18 +66,7 @@
 </div>
 
 <div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
-  </aside>
+  <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
     <h1 id="title">Device</h1>
@@ -204,66 +194,40 @@
   </main>
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, doc, getDoc }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { db, watchAuth } from "./firebase.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth = getAuth(app);
-
-  const ALLOWED_ROLES = ["admin","it","viewer"];
-
-  const who = document.getElementById("who");
-  const params = new URLSearchParams(location.search);
-  const itemId = params.get("id");
+  const who   = document.getElementById("who");
+  const params= new URLSearchParams(location.search);
+  const itemId= params.get("id");
   const editLink = document.getElementById("editLink");
 
   const field = id => document.getElementById(id);
 
-  onAuthStateChanged(auth, async user=>{
-    if(!user){
-      location.href="login.html";
-      return;
-    }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const role  = uSnap.exists()? (uSnap.data().role||"viewer") : "viewer";
-    if(!ALLOWED_ROLES.includes(role)){
-      alert("Access denied.");
-      location.href="index.html";
-      return;
-    }
-    const badge = role==="admin" ? "badge-admin"
-                 : role==="it" ? "badge-it" : "badge-viewer";
-    who.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
-
-    if(itemId){
-      editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
-      if(role==="viewer"){
+  watchAuth({
+    allowedRoles:["admin","it","viewer"],
+    whoEl: who,
+    onReady: async (_user, role)=>{
+      if(itemId){
+        if(role==="viewer") editLink.style.display="none";
+        else editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
+        await loadItem();
+      }else{
+        document.getElementById("subtitle").textContent = "No device ID provided.";
         editLink.style.display="none";
       }
-      await loadItem();
-    }else{
-      document.getElementById("subtitle").textContent = "No device ID provided.";
-      editLink.style.display="none";
     }
   });
 
   function show(v){ return v || "–"; }
-  function showDate(v){ return v ? v.substring(0,10) : "–"; }
+  function showDate(v){
+    if(!v) return "–";
+    if(v.toDate) return v.toDate().toISOString().slice(0,10);
+    return String(v).slice(0,10);
+  }
 
   async function loadItem(){
     const snap = await getDoc(doc(db,"items",itemId));
@@ -298,15 +262,15 @@
 
     field("f_ipAddress").textContent = show(d.ipAddress);
     field("f_macAddress").textContent = show(d.macAddress);
-    field("f_osVersion").textContent = show(d.osVersion);
+    field("f_osVersion").textContent  = show(d.osVersion);
 
-    field("f_purchaseDate").textContent = showDate(d.purchaseDate);
-    field("f_installationDate").textContent = showDate(d.installationDate);
-    field("f_vendor").textContent = show(d.vendor);
-    field("f_warrantyEndDate").textContent = showDate(d.warrantyEndDate);
-    field("f_replacementDate").textContent = showDate(d.replacementDate);
-    field("f_replacementAlert").textContent = d.replacementAlert ? "Yes" : "No";
-    field("f_removedDate").textContent = showDate(d.removedDate);
+    field("f_purchaseDate").textContent      = showDate(d.purchaseDate);
+    field("f_installationDate").textContent  = showDate(d.installationDate);
+    field("f_vendor").textContent            = show(d.vendor);
+    field("f_warrantyEndDate").textContent   = showDate(d.warrantyEndDate);
+    field("f_replacementDate").textContent   = showDate(d.replacementDate);
+    field("f_replacementAlert").textContent  = d.replacementAlert ? "Yes" : "No";
+    field("f_removedDate").textContent       = showDate(d.removedDate);
 
     field("f_notes").textContent = d.notes ? d.notes : "No notes recorded.";
   }
