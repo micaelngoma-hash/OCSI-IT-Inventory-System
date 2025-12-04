@@ -4,100 +4,31 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – QR Scan Device</title>
-
-<!-- QR Scanner library -->
-<script src="https://unpkg.com/html5-qrcode"></script>
-
 <style>
-  :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-  }
-  *{box-sizing:border-box;}
+  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
-  /* TOP BAR */
   .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--bg);color:white;
-    padding:12px 16px;
+    background:var(--bg);color:white;padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
+    position:sticky;top:0;z-index:20;
   }
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .sidebar{background:var(--bg2);padding:16px;color:white;}
+  .content{padding:22px;max-width:700px;margin:0 auto;}
 
-  /* PAGE LAYOUT */
-  .layout{
-    display:grid;
-    grid-template-columns:240px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-
-  .sidebar{
-    background:var(--bg2);color:white;padding:14px;
-  }
-
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
-
-  .content{
-    padding:18px;
-    max-width:900px;
-    margin:0 auto;
-    width:100%;
-  }
-
-  /* HEADINGS */
-  h1{margin:0 0 10px;font-size:1.45rem;}
-  .sub{margin:0 0 16px;font-size:.9rem;color:#64748b;}
-
-  /* SCAN BOX */
-  #reader{
-    width:100%;
-    max-width:420px;
-    margin:0 auto;
-    border-radius:14px;
-    overflow:hidden;
-    background:white;
-    border:1px solid var(--border);
-  }
-
-  .status{
-    margin-top:12px;
-    font-size:.9rem;
-    text-align:center;
-    color:#475569;
-  }
-
-  /* MANUAL SEARCH */
-  .input-box{
-    margin-top:24px;
-    padding:14px;
-    background:white;
-    border:1px solid var(--border);
-    border-radius:14px;
-  }
-  input{
-    width:100%;
-    padding:10px;
-    border-radius:10px;
-    border:1px solid var(--border);
-    font-size:1rem;
-    margin-top:6px;
+  #preview{
+    width:100%;border-radius:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+    margin-bottom:14px;
   }
   .btn{
-    margin-top:12px;
-    padding:8px 14px;
-    background:var(--brand);
-    color:white;
-    border:none;
-    border-radius:999px;
-    font-size:.9rem;
-    cursor:pointer;
-    width:100%;
+    padding:10px 18px;border-radius:999px;
+    background:var(--brand);color:white;
+    text-decoration:none;border:none;cursor:pointer;
+    font-size:1rem;
+  }
+  #status{
+    margin-top:12px;font-size:1.05rem;color:#334155;
   }
 </style>
 </head>
@@ -105,113 +36,77 @@
 
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+  <div id="who" style="opacity:.8;font-size:.85rem;">Checking session…</div>
 </div>
 
 <div class="layout">
+  <aside id="sidebar-root" class="sidebar"></aside>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span>Main Dashboard</a>
-      <a href="software-dashboard.html"><span class="icon">💻</span>Software Dashboard</a>
-      <a href="software-licenses.html"><span class="icon">🔑</span>Licenses & Compliance</a>
-      <a href="inventory-list.html"><span class="icon">📋</span>Inventory List</a>
-      <a class="active" href="scan.html"><span class="icon">📱</span>QR Scan Device</a>
-      <a href="admin-console.html"><span class="icon">⚙️</span>Admin Console</a>
-      <a href="export.html"><span class="icon">⬇️</span>Export</a>
-      <a href="audits.html"><span class="icon">🕒</span>Audits</a>
-      <a href="login.html"><span class="icon">🚪</span>Logout</a>
-    </nav>
-  </aside>
-
-  <!-- MAIN CONTENT -->
   <main class="content">
-    <h1>Scan Device QR Code</h1>
-    <p class="sub">Camera will start automatically. Point it at the device’s QR label.</p>
+    <h1>Scan QR Code</h1>
+    <p>Point your camera at the device QR sticker.</p>
 
-    <div id="reader"></div>
-    <div id="scanStatus" class="status">Starting camera…</div>
+    <video id="preview" autoplay playsinline></video>
 
-    <div class="input-box">
-      <label>Or manually enter Asset ID</label>
-      <input id="manualId" placeholder="Example: LAPTOP-0453"/>
-      <button class="btn" id="manualBtn">Open Device</button>
-    </div>
+    <div id="status">Initializing camera…</div>
   </main>
-
 </div>
 
+<script src="sidebar.js"></script>
+
 <script type="module">
-  import { db, auth, watchAuth } from "./firebase.js";
+  import { watchAuth } from "./firebase.js";
 
-  const whoEl = document.getElementById("who");
-  const scanStatus = document.getElementById("scanStatus");
-
-  // ------------------------------
-  // AUTH CHECK
-  // ------------------------------
+  // Permissions
   watchAuth({
     allowedRoles:["admin","it","viewer"],
-    whoEl,
-    onReady:()=> startScanner()
+    whoEl: document.getElementById("who"),
   });
 
-  // ------------------------------
-  // AUTO CAMERA START
-  // ------------------------------
-  let scanner;
+  // Camera initialization
+  const video = document.getElementById("preview");
+  const status = document.getElementById("status");
 
-  function startScanner(){
-    scanner = new Html5Qrcode("reader");
-    const config = { fps:10, qrbox:250 };
-
-    Html5Qrcode.getCameras().then(cameras =>{
-      if(cameras.length === 0){
-        scanStatus.textContent = "No camera found.";
-        return;
-      }
-
-      // Prefer rear camera
-      let camId = cameras[0].id;
-      const backCam = cameras.find(c => c.label.toLowerCase().includes("back"));
-      if(backCam) camId = backCam.id;
-
-      scanner.start(
-        camId,
-        config,
-        qrText => onScanSuccess(qrText),
-        () => {} // ignore decoding errors
-      ).then(()=>{
-        scanStatus.textContent = "Scanning… Point at a QR code.";
-      }).catch(err=>{
-        scanStatus.textContent = "Camera error: " + err;
-      });
-
-    }).catch(err=>{
-      scanStatus.textContent = "Camera access denied.";
-    });
+  async function startCamera(){
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }});
+      video.srcObject = stream;
+      status.textContent = "Point at a QR code…";
+      startScanner();
+    }catch(err){
+      status.textContent = "Camera access blocked.";
+    }
   }
 
-  // ------------------------------
-  // QR SUCCESS HANDLER
-  // ------------------------------
-  function onScanSuccess(text){
-    scanner.stop();
-    scanStatus.textContent = "QR detected!";
-    const id = text.trim();
-    location.href = `item.html?id=${encodeURIComponent(id)}`;
+  // Simple QR detection using barcode detector (Chrome/Android/iOS)
+  async function startScanner(){
+    if(!("BarcodeDetector" in window)){
+      status.textContent = "QR scanning not supported in this browser.";
+      return;
+    }
+
+    const detector = new BarcodeDetector({ formats:["qr_code"] });
+    setInterval(async ()=>{
+      try{
+        const codes = await detector.detect(video);
+        if(codes.length){
+          const text = codes[0].rawValue;
+          status.textContent = "QR detected → opening…";
+          if(text.startsWith("device:")){
+            const id = text.replace("device:","");
+            location.href = `item.html?id=${encodeURIComponent(id)}`;
+          }else{
+            status.textContent = "Invalid QR code.";
+          }
+        }
+      }catch(e){}
+    }, 400);
   }
 
-  // ------------------------------
-  // MANUAL SEARCH
-  // ------------------------------
-  document.getElementById("manualBtn").onclick = ()=>{
-    const id = document.getElementById("manualId").value.trim();
-    if(!id) return alert("Enter an Asset ID.");
-    location.href = `item.html?id=${encodeURIComponent(id)}`;
-  };
+  startCamera();
 </script>
 
 </body>
 </html>
+
+
