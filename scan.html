@@ -5,105 +5,244 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – QR Scan Device</title>
 <style>
-  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{
-    background:var(--bg);color:white;padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
-    position:sticky;top:0;z-index:20;
-  }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-  .sidebar{background:var(--bg2);padding:16px;color:white;}
-  .content{padding:22px;max-width:700px;margin:0 auto;}
 
-  #preview{
-    width:100%;border-radius:12px;
-    box-shadow:0 2px 10px rgba(0,0,0,.15);
-    margin-bottom:14px;
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
+
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1100px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:2fr 1.2fr;
+    gap:16px;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .card h2{margin:0 0 8px;font-size:1.05rem;}
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+
+  #reader{
+    width:100%;
+    max-width:450px;
+    margin:0 auto;
+  }
+
+  label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
+  input[type="text"]{
+    width:100%;
+    padding:8px 9px;
+    border-radius:9px;
+    border:1px solid #cbd5e1;
+    font-size:.9rem;
+  }
+
   .btn{
-    padding:10px 18px;border-radius:999px;
-    background:var(--brand);color:white;
-    text-decoration:none;border:none;cursor:pointer;
-    font-size:1rem;
+    border:none;cursor:pointer;
+    padding:7px 13px;border-radius:999px;
+    font-size:.86rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;
+    text-decoration:none;
   }
-  #status{
-    margin-top:12px;font-size:1.05rem;color:#334155;
-  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div>
-  <div id="who" style="opacity:.8;font-size:.85rem;">Checking session…</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside id="sidebar-root" class="sidebar"></aside>
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a class="active" href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
 
   <main class="content">
-    <h1>Scan QR Code</h1>
-    <p>Point your camera at the device QR sticker.</p>
+    <h1>Scan or Lookup Device</h1>
+    <p class="subtitle">
+      Scan a QR code attached to a device, or enter an Asset ID / document ID manually to open its details.
+    </p>
 
-    <video id="preview" autoplay playsinline></video>
+    <div class="grid">
+      <section class="card">
+        <h2>Camera Scanner</h2>
+        <p class="muted">Grant camera permission, then point to the device QR code. On success you’ll be redirected.</p>
+        <div id="reader"></div>
+        <div class="status" id="scanStatus"></div>
+      </section>
 
-    <div id="status">Initializing camera…</div>
+      <section class="card">
+        <h2>Manual Lookup</h2>
+        <p class="muted">If scanning fails, type the <strong>Firestore document ID</strong> or <strong>Asset ID</strong>.</p>
+
+        <label for="manualId">Device ID / Asset ID</label>
+        <input id="manualId" type="text" placeholder="e.g. 8dfGJk... or OCSI-LAP-023" />
+
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnOpen">Open Device</button>
+        </div>
+
+        <div class="status" id="manualStatus"></div>
+      </section>
+    </div>
   </main>
 </div>
 
-<script src="sidebar.js"></script>
+<!-- QR library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script type="module">
   import { watchAuth } from "./firebase.js";
+  import {
+    getFirestore, collection, query, where, getDocs, doc, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { app } from "./firebase.js";
 
-  // Permissions
+  const db = getFirestore(app);
+
+  const whoEl        = document.getElementById("who");
+  const scanStatusEl = document.getElementById("scanStatus");
+  const manualIdEl   = document.getElementById("manualId");
+  const manualStatus = document.getElementById("manualStatus");
+  const btnOpen      = document.getElementById("btnOpen");
+
   watchAuth({
     allowedRoles:["admin","it","viewer"],
-    whoEl: document.getElementById("who"),
+    whoEl,
+    onReady: ()=>{
+      initScanner();
+      btnOpen.addEventListener("click", onManualOpen);
+    }
   });
 
-  // Camera initialization
-  const video = document.getElementById("preview");
-  const status = document.getElementById("status");
-
-  async function startCamera(){
-    try{
-      const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }});
-      video.srcObject = stream;
-      status.textContent = "Point at a QR code…";
-      startScanner();
-    }catch(err){
-      status.textContent = "Camera access blocked.";
-    }
-  }
-
-  // Simple QR detection using barcode detector (Chrome/Android/iOS)
-  async function startScanner(){
-    if(!("BarcodeDetector" in window)){
-      status.textContent = "QR scanning not supported in this browser.";
+  function initScanner(){
+    if(!window.Html5Qrcode){
+      scanStatusEl.textContent = "Scanner library failed to load.";
       return;
     }
+    const html5QrCode = new Html5Qrcode("reader");
+    const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
-    const detector = new BarcodeDetector({ formats:["qr_code"] });
-    setInterval(async ()=>{
-      try{
-        const codes = await detector.detect(video);
-        if(codes.length){
-          const text = codes[0].rawValue;
-          status.textContent = "QR detected → opening…";
-          if(text.startsWith("device:")){
-            const id = text.replace("device:","");
-            location.href = `item.html?id=${encodeURIComponent(id)}`;
-          }else{
-            status.textContent = "Invalid QR code.";
-          }
+    html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      decodedText => {
+        scanStatusEl.textContent = "Scanned: " + decodedText;
+        // Assume QR encodes the Firestore doc ID directly:
+        const id = decodedText.trim();
+        if(id){
+          html5QrCode.stop().catch(()=>{});
+          window.location.href = "item.html?id=" + encodeURIComponent(id);
         }
-      }catch(e){}
-    }, 400);
+      },
+      errorMessage => {
+        // noisy; you can comment out if you want
+        // scanStatusEl.textContent = "Scanning…";
+      }
+    ).catch(err=>{
+      scanStatusEl.textContent = "Unable to start scanner: " + err;
+    });
   }
 
-  startCamera();
+  async function onManualOpen(){
+    const v = (manualIdEl.value || "").trim();
+    if(!v){
+      manualStatus.textContent = "Enter a device document ID or Asset ID.";
+      return;
+    }
+    manualStatus.textContent = "Looking up…";
+
+    // First try as Firestore doc ID
+    try{
+      const ref = doc(db,"items",v);
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        window.location.href = "item.html?id=" + encodeURIComponent(v);
+        return;
+      }
+    }catch(e){
+      // ignore
+    }
+
+    // Then try by assetId field
+    try{
+      const q = query(collection(db,"items"), where("assetId","==",v));
+      const snap = await getDocs(q);
+      if(!snap.empty){
+        const first = snap.docs[0];
+        window.location.href = "item.html?id=" + encodeURIComponent(first.id);
+        return;
+      }
+    }catch(e){
+      console.error(e);
+    }
+
+    manualStatus.textContent = "Device not found by document ID or assetId.";
+  }
 </script>
 
 </body>
