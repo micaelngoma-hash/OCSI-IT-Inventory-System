@@ -6,66 +6,111 @@
 <title>OCSI IT Inventory – Login</title>
 <style>
   :root{
-    --bg:#0f172a;--brand:#1a73e8;
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0;font-family:system-ui;
-    background:radial-gradient(circle at top,#1d263b,#020617);
-    color:white;display:flex;align-items:center;justify-content:center;
+    margin:0;
+    font-family:system-ui;
+    background:radial-gradient(circle at top,#1e293b,#020617);
+    color:white;
     min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
   }
+
   .card{
-    background:#020617e6;border-radius:16px;
-    padding:24px 22px;width:320px;
-    border:1px solid #1f2937;
-    box-shadow:0 18px 45px rgba(0,0,0,.6);
+    background:white;
+    color:#0f172a;
+    border-radius:18px;
+    padding:20px 24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:0 20px 40px rgba(15,23,42,.45);
   }
-  h1{margin:0 0 6px;font-size:1.4rem;}
-  p{margin:0 0 14px;font-size:.9rem;color:#9ca3af;}
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .sub{margin:0 0 16px;font-size:.9rem;color:#64748b;}
+
+  label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
+  input[type="email"],input[type="password"]{
+    width:100%;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid #cbd5e1;
+    font-size:.9rem;
+    margin-bottom:10px;
+  }
+
   .btn{
-    border:none;border-radius:999px;
-    padding:9px 12px;width:100%;
+    border:none;cursor:pointer;
+    padding:8px 14px;border-radius:999px;
+    font-size:.9rem;font-weight:600;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:100%;
     background:var(--brand);color:white;
-    font-weight:600;font-size:.9rem;
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    cursor:pointer;
   }
-  .small{font-size:.78rem;color:#6b7280;margin-top:10px;}
+
+  .status{
+    font-size:.8rem;margin-top:8px;min-height:18px;
+  }
+  .status.error{color:#b91c1c;}
+  .status.ok{color:#166534;}
+
+  .top-logo{
+    font-weight:700;font-size:.95rem;margin-bottom:8px;color:#e5e7eb;text-align:center;
+  }
 </style>
 </head>
 <body>
 
 <div class="card">
-  <h1>OCSI IT Inventory</h1>
-  <p>Sign in with your OCSI Google Workspace account.</p>
-  <button id="googleBtn" class="btn" type="button">
-    <span>🔐</span><span>Sign in with Google</span>
-  </button>
-  <div class="small">
-    Access is restricted to IT, Office Staff, and Faculty Staff accounts.
-  </div>
+  <div class="top-logo">OCSI IT Inventory</div>
+  <h1>Sign in</h1>
+  <p class="sub">Use your registered school email to access the inventory dashboard.</p>
+
+  <form id="loginForm">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required/>
+
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required/>
+
+    <button class="btn" type="submit">Login</button>
+  </form>
+
+  <div id="status" class="status"></div>
 </div>
 
 <script type="module">
-  import { auth, loginWithGoogle, watchAuth } from "./firebase.js";
+  import { auth } from "./firebase.js";
+  import { signInWithEmailAndPassword }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-  // If already logged in, go straight to dashboard
-  watchAuth({
-    onReady:()=>{ location.href="index.html"; },
-    allowedRoles:["admin","it","viewer"],
-    whoEl:null
-  });
+  const form   = document.getElementById("loginForm");
+  const email  = document.getElementById("email");
+  const pass   = document.getElementById("password");
+  const status = document.getElementById("status");
 
-  document.getElementById("googleBtn").onclick = async ()=>{
+  form.addEventListener("submit", async e=>{
+    e.preventDefault();
+    status.textContent = "Signing in…";
+    status.className = "status";
+
     try{
-      await loginWithGoogle();
-      location.href="index.html";
-    }catch(e){
-      console.error(e);
-      alert("Login failed: "+e.message);
+      const em = email.value.trim();
+      const pw = pass.value;
+      await signInWithEmailAndPassword(auth, em, pw);
+      status.textContent = "Login successful. Redirecting…";
+      status.className = "status ok";
+      window.location.href = "index.html";
+    }catch(err){
+      console.error(err);
+      status.textContent = err.message;
+      status.className = "status error";
     }
-  };
+  });
 </script>
 
 </body>
