@@ -256,9 +256,8 @@
   const historyList  = document.getElementById("historyList");
 
   let html5QrCode = null;
-  let cameras = [];
-  let currentCamIndex = 0;
   let isScanning = false;
+  let currentFacingMode = "environment"; // back camera by default
   const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
   const scanHistory = [];
 
@@ -278,59 +277,42 @@
       return;
     }
     html5QrCode = new Html5Qrcode("reader");
-    scanStatusEl.textContent = "Initializing camera…";
-
-    Html5Qrcode.getCameras().then(devs=>{
-      if(!devs || !devs.length){
-        scanStatusEl.textContent = "No camera found.";
-        return;
-      }
-      cameras = devs;
-
-      // Prefer back camera if label contains 'back'
-      const backIndex = devs.findIndex(d =>
-        (d.label || "").toLowerCase().includes("back")
-      );
-      currentCamIndex = backIndex >= 0 ? backIndex : 0;
-
-      startCamera();
-    }).catch(err=>{
-      scanStatusEl.textContent = "Unable to access camera: " + err;
-    });
+    scanStatusEl.textContent = "Starting camera…";
+    startCamera();
   }
 
   function startCamera(){
-    if(!cameras.length || !html5QrCode){
-      scanStatusEl.textContent = "No camera available.";
+    if(!html5QrCode){
+      scanStatusEl.textContent = "Scanner not ready.";
       return;
     }
-    const cam = cameras[currentCamIndex] || cameras[0];
-    scanStatusEl.textContent = "Starting camera…";
+
+    scanStatusEl.textContent = "Requesting camera access…";
 
     html5QrCode.start(
-      { deviceId: { exact: cam.id } },
+      { facingMode: currentFacingMode },   // <-- auto-select camera based on facingMode
       scanConfig,
       decodedText => onScanSuccess(decodedText),
       _errorMessage => {
-        // ignore per-frame decode errors; keep scanning
+        // per-frame decode errors; ignore to avoid flicker
       }
     ).then(()=>{
       isScanning = true;
-      scanStatusEl.textContent = "Scanning… Point to the QR code.";
+      scanStatusEl.textContent = "Scanning… Point the camera at the QR code.";
       addOverlay();
     }).catch(err=>{
+      console.error("html5QrCode.start error:", err);
       scanStatusEl.textContent = "Unable to start scanner: " + err;
     });
   }
 
   function switchCamera(){
-    if(!html5QrCode || !cameras.length) return;
+    if(!html5QrCode) return;
+
+    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
     scanStatusEl.textContent = "Switching camera…";
 
-    const nextIndex = (currentCamIndex + 1) % cameras.length;
-
     const restart = ()=>{
-      currentCamIndex = nextIndex;
       startCamera();
     };
 
@@ -338,7 +320,8 @@
       html5QrCode.stop().then(()=>{
         isScanning = false;
         restart();
-      }).catch(()=>{
+      }).catch(err=>{
+        console.warn("Error stopping scanner while switching:", err);
         isScanning = false;
         restart();
       });
@@ -470,7 +453,7 @@
   function escapeHtml(s){
     if(!s) return "";
     return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+      { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c]
     ));
   }
 </script>
