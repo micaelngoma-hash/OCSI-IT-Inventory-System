@@ -3,110 +3,115 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OCSI IT Inventory – QR Scan Device</title>
+<title>OCSI IT Inventory – Login</title>
 <style>
-  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{
-    background:var(--bg);color:white;padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
-    position:sticky;top:0;z-index:20;
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-  .sidebar{background:var(--bg2);padding:16px;color:white;}
-  .content{padding:22px;max-width:700px;margin:0 auto;}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:system-ui;
+    background:radial-gradient(circle at top,#1e293b,#020617);
+    color:white;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+  }
 
-  #preview{
-    width:100%;border-radius:12px;
-    box-shadow:0 2px 10px rgba(0,0,0,.15);
-    margin-bottom:14px;
+  .card{
+    background:white;
+    color:#0f172a;
+    border-radius:18px;
+    padding:20px 24px;
+    width:100%;
+    max-width:380px;
+    box-shadow:0 20px 40px rgba(15,23,42,.45);
   }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .sub{margin:0 0 16px;font-size:.9rem;color:#64748b;}
+
+  label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
+  input[type="email"],input[type="password"]{
+    width:100%;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid #cbd5e1;
+    font-size:.9rem;
+    margin-bottom:10px;
+  }
+
   .btn{
-    padding:10px 18px;border-radius:999px;
+    border:none;cursor:pointer;
+    padding:8px 14px;border-radius:999px;
+    font-size:.9rem;font-weight:600;
+    display:inline-flex;align-items:center;justify-content:center;
+    width:100%;
     background:var(--brand);color:white;
-    text-decoration:none;border:none;cursor:pointer;
-    font-size:1rem;
   }
-  #status{
-    margin-top:12px;font-size:1.05rem;color:#334155;
+
+  .status{
+    font-size:.8rem;margin-top:8px;min-height:18px;
+  }
+  .status.error{color:#b91c1c;}
+  .status.ok{color:#166534;}
+
+  .top-logo{
+    font-weight:700;font-size:.95rem;margin-bottom:8px;color:#e5e7eb;text-align:center;
   }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div>
-  <div id="who" style="opacity:.8;font-size:.85rem;">Checking session…</div>
+<div class="card">
+  <div class="top-logo">OCSI IT Inventory</div>
+  <h1>Sign in</h1>
+  <p class="sub">Use your registered school email to access the inventory dashboard.</p>
+
+  <form id="loginForm">
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="username" required/>
+
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" required/>
+
+    <button class="btn" type="submit">Login</button>
+  </form>
+
+  <div id="status" class="status"></div>
 </div>
-
-<div class="layout">
-  <aside id="sidebar-root" class="sidebar"></aside>
-
-  <main class="content">
-    <h1>Scan QR Code</h1>
-    <p>Point your camera at the device QR sticker.</p>
-
-    <video id="preview" autoplay playsinline></video>
-
-    <div id="status">Initializing camera…</div>
-  </main>
-</div>
-
-<script src="sidebar.js"></script>
 
 <script type="module">
-  import { watchAuth } from "./firebase.js";
+  import { auth } from "./firebase.js";
+  import { signInWithEmailAndPassword }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-  // Permissions
-  watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl: document.getElementById("who"),
-  });
-
-  // Camera initialization
-  const video = document.getElementById("preview");
+  const form   = document.getElementById("loginForm");
+  const email  = document.getElementById("email");
+  const pass   = document.getElementById("password");
   const status = document.getElementById("status");
 
-  async function startCamera(){
+  form.addEventListener("submit", async e=>{
+    e.preventDefault();
+    status.textContent = "Signing in…";
+    status.className = "status";
+
     try{
-      const stream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:"environment" }});
-      video.srcObject = stream;
-      status.textContent = "Point at a QR code…";
-      startScanner();
+      const em = email.value.trim();
+      const pw = pass.value;
+      await signInWithEmailAndPassword(auth, em, pw);
+      status.textContent = "Login successful. Redirecting…";
+      status.className = "status ok";
+      window.location.href = "index.html";
     }catch(err){
-      status.textContent = "Camera access blocked.";
+      console.error(err);
+      status.textContent = err.message;
+      status.className = "status error";
     }
-  }
-
-  // Simple QR detection using barcode detector (Chrome/Android/iOS)
-  async function startScanner(){
-    if(!("BarcodeDetector" in window)){
-      status.textContent = "QR scanning not supported in this browser.";
-      return;
-    }
-
-    const detector = new BarcodeDetector({ formats:["qr_code"] });
-    setInterval(async ()=>{
-      try{
-        const codes = await detector.detect(video);
-        if(codes.length){
-          const text = codes[0].rawValue;
-          status.textContent = "QR detected → opening…";
-          if(text.startsWith("device:")){
-            const id = text.replace("device:","");
-            location.href = `item.html?id=${encodeURIComponent(id)}`;
-          }else{
-            status.textContent = "Invalid QR code.";
-          }
-        }
-      }catch(e){}
-    }, 400);
-  }
-
-  startCamera();
+  });
 </script>
 
 </body>
 </html>
-
-
