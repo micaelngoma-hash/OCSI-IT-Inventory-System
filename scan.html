@@ -96,17 +96,6 @@
     box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
     pointer-events:none;
   }
-  .scan-overlay::before,
-  .scan-overlay::after{
-    content:"";
-    position:absolute;
-    inset:35%;
-    border-top:2px solid rgba(248,250,252,0.8);
-    border-left:2px solid rgba(248,250,252,0.8);
-    border-right:2px solid rgba(248,250,252,0.8);
-    border-bottom:2px solid rgba(248,250,252,0.8);
-    opacity:.7;
-  }
 
   /* Glow on success */
   .scan-glow{
@@ -203,7 +192,6 @@
         <p class="muted">Grant camera permission, then point to the device QR code. On success you’ll be redirected.</p>
         <div id="reader"></div>
 
-        <!-- Camera controls -->
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn btn-ghost" id="btnFlipCam">Switch camera</button>
         </div>
@@ -226,7 +214,6 @@
       </section>
     </div>
 
-    <!-- Scan history card -->
     <section class="card">
       <h2>Scan History</h2>
       <p class="muted">Recent codes scanned in this session.</p>
@@ -239,13 +226,11 @@
 <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
 <script type="module">
-  import { watchAuth } from "./firebase.js";
+  // IMPORTANT CHANGE: use the same pattern as other pages
+  import { db, watchAuth } from "./firebase.js";
   import {
-    getFirestore, collection, query, where, getDocs, doc, getDoc
+    collection, query, where, getDocs, doc, getDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { app } from "./firebase.js";
-
-  const db = getFirestore(app);
 
   const whoEl        = document.getElementById("who");
   const scanStatusEl = document.getElementById("scanStatus");
@@ -257,7 +242,7 @@
 
   let html5QrCode = null;
   let isScanning = false;
-  let currentFacingMode = "environment"; // back camera by default
+  let currentFacingMode = "environment"; // back camera
   const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
   const scanHistory = [];
 
@@ -265,7 +250,7 @@
     allowedRoles:["admin","it","viewer"],
     whoEl,
     onReady: ()=>{
-      initScanner();
+      initScanner();            // auto-start camera after auth
       btnOpen.addEventListener("click", onManualOpen);
       btnFlipCam.addEventListener("click", switchCamera);
     }
@@ -290,12 +275,10 @@
     scanStatusEl.textContent = "Requesting camera access…";
 
     html5QrCode.start(
-      { facingMode: currentFacingMode },   // <-- auto-select camera based on facingMode
+      { facingMode: currentFacingMode }, // <--- this is what worked for you before
       scanConfig,
       decodedText => onScanSuccess(decodedText),
-      _errorMessage => {
-        // per-frame decode errors; ignore to avoid flicker
-      }
+      _errorMessage => { /* ignore per-frame decode errors */ }
     ).then(()=>{
       isScanning = true;
       scanStatusEl.textContent = "Scanning… Point the camera at the QR code.";
@@ -312,9 +295,7 @@
     currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
     scanStatusEl.textContent = "Switching camera…";
 
-    const restart = ()=>{
-      startCamera();
-    };
+    const restart = ()=> startCamera();
 
     if(isScanning){
       html5QrCode.stop().then(()=>{
@@ -334,7 +315,6 @@
     const container = document.getElementById("reader");
     if(!container) return;
     if(container.querySelector(".scan-overlay")) return;
-
     const overlay = document.createElement("div");
     overlay.className = "scan-overlay";
     container.appendChild(overlay);
@@ -367,8 +347,8 @@
     }
     manualStatus.textContent = "Looking up…";
 
-    // Try as Firestore doc ID
     try{
+      // 1) Try as Firestore document ID
       const ref = doc(db,"items",v);
       const snap = await getDoc(ref);
       if(snap.exists()){
@@ -377,11 +357,11 @@
         return;
       }
     }catch(e){
-      // ignore
+      console.error(e);
     }
 
-    // Try by assetId field
     try{
+      // 2) Try by assetId field
       const q = query(collection(db,"items"), where("assetId","==",v));
       const snap = await getDocs(q);
       if(!snap.empty){
@@ -398,11 +378,7 @@
   }
 
   function addToHistory(text, source){
-    const entry = {
-      text,
-      source,
-      time: new Date()
-    };
+    const entry = { text, source, time:new Date() };
     scanHistory.unshift(entry);
     if(scanHistory.length > 10) scanHistory.pop();
     renderHistory();
@@ -434,8 +410,8 @@
     try{
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       if(!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const osc = ctx.createOscillator();
+      const ctx  = new AudioCtx();
+      const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
       osc.frequency.value = 880;
@@ -453,7 +429,7 @@
   function escapeHtml(s){
     if(!s) return "";
     return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
     ));
   }
 </script>
