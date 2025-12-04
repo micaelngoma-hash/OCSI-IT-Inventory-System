@@ -4,149 +4,374 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Software Dashboard</title>
-
 <style>
-  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
   .topbar{
-    background:var(--bg);color:white;padding:12px 16px;
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-  .sidebar{background:var(--bg2);padding:14px;color:white;}
-  .content{padding:28px;max-width:1300px;margin:0 auto;width:100%;}
 
-  h1{margin:0 0 20px;font-size:1.6rem;}
-
-  .grid{
+  .layout{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:18px;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1200px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid-main{
+    display:grid;
+    grid-template-columns:2.1fr 1.2fr;
+    gap:14px;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+    .grid-main{grid-template-columns:1fr;}
   }
 
   .card{
-    background:white;border-radius:14px;
-    padding:22px;border:1px solid var(--border);
-    display:flex;flex-direction:column;
-    gap:6px;box-shadow:0 2px 8px rgba(0,0,0,.05);
+    background:white;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
   }
+  .card h2{
+    margin:0 0 8px;
+    font-size:1.05rem;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .card h2 span.right-link{
+    font-size:.8rem;font-weight:400;
+  }
+  .card h2 span.right-link a{
+    color:var(--brand);text-decoration:none;
+  }
+  .card h2 span.right-link a:hover{text-decoration:underline;}
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
 
-  .card h3{
-    margin:0;font-size:1rem;color:#475569;
-    font-weight:600;
+  .tiles{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:10px;
   }
-
-  .stat{
-    font-size:2.6rem;font-weight:800;color:#0f172a;
+  .tile{
+    border-radius:12px;
+    padding:10px 12px;
+    border:1px solid #e5e7eb;
+    background:#f9fafb;
+    display:flex;flex-direction:column;gap:4px;
   }
-
-  .muted{
-    color:#64748b;font-size:.9rem;
+  .tile-header{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:.82rem;color:#6b7280;
   }
+  .tile-icon{font-size:1rem;}
+  .tile-label{font-weight:500;}
+  .tile-value{font-size:1.6rem;font-weight:700;}
+  .tile-sub{font-size:.78rem;color:#9ca3af;}
 
   .btn{
-    margin-top:8px;padding:8px 12px;
-    background:var(--brand);color:white;
-    border-radius:8px;text-decoration:none;
-    font-size:.85rem;width:max-content;
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
   }
-</style>
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
 
+  .pill{
+    padding:2px 9px;border-radius:999px;font-size:.75rem;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  .pill-good{background:#dcfce7;color:#166534;}
+  .pill-warn{background:#ffedd5;color:#c2410c;}
+  .pill-bad{background:#fee2e2;color:#b91c1c;}
+  .pill-neutral{background:#e5e7eb;color:#374151;}
+
+  .list{
+    margin:4px 0 0;
+    padding:0;
+    list-style:none;
+    font-size:.86rem;
+  }
+  .list li{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:4px 0;border-bottom:1px dashed #e5e7eb;
+  }
+  .list li:last-child{border-bottom:none;}
+  .list span.label{color:#475569;}
+  .list span.value{color:#0f172a;font-weight:500;font-size:.85rem;}
+
+  .inline-link{color:var(--brand);text-decoration:none;font-size:.83rem;}
+  .inline-link:hover{text-decoration:underline;}
+
+  .small{font-size:.78rem;color:#9ca3af;margin-top:6px;}
+</style>
 </head>
 <body>
 
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Software Dashboard</div>
-  <div id="who" style="font-size:.85rem;opacity:.8;">Checking session…</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar" id="sidebar-root"></aside>
+  <!-- Sidebar (embedded) -->
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a class="active" href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
 
+  <!-- Main content -->
   <main class="content">
-    <h1>Software Overview</h1>
+    <h1>Software & Licensing Overview</h1>
+    <p class="subtitle">
+      Snapshot of software catalog, license pools and compliance at a glance.
+    </p>
 
-    <div class="grid">
-      <div class="card">
-        <h3>Software Products</h3>
-        <div class="stat" id="prodCount">--</div>
-        <div class="muted">Tracked titles</div>
-        <a href="software-licenses.html" class="btn">Manage Software</a>
-      </div>
+    <div class="grid-main">
+      <!-- LEFT: tiles + buttons -->
+      <section class="card">
+        <h2>
+          Software & Licenses
+          <span class="right-link">
+            <a href="software-licenses.html">Open licenses →</a>
+          </span>
+        </h2>
+        <p class="muted">High-level view of titles, seats and usage.</p>
 
-      <div class="card">
-        <h3>Licenses</h3>
-        <div class="stat" id="licCount">--</div>
-        <div class="muted">License pools in inventory</div>
-        <a href="software-licenses.html" class="btn">Open Licenses</a>
-      </div>
+        <div class="tiles">
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Software Titles</span>
+              <span class="tile-icon">📦</span>
+            </div>
+            <div class="tile-value" id="prodCount">--</div>
+            <div class="tile-sub">Entries in <code>software_product</code>.</div>
+          </div>
 
-      <div class="card">
-        <h3>Available Seats</h3>
-        <div class="stat" id="availSeats">--</div>
-        <div class="muted">Seats not yet assigned</div>
-      </div>
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">License Pools</span>
+              <span class="tile-icon">🔐</span>
+            </div>
+            <div class="tile-value" id="licCount">--</div>
+            <div class="tile-sub">Records in <code>software_license</code>.</div>
+          </div>
 
-      <div class="card">
-        <h3>Compliance Alerts</h3>
-        <div class="stat" id="alerts">--</div>
-        <div class="muted">Expiring/over-assigned licenses</div>
-        <a href="software-licenses.html" class="btn">View Compliance</a>
-      </div>
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Seats Used</span>
+              <span class="tile-icon">🧑‍💻</span>
+            </div>
+            <div class="tile-value" id="usedSeats">--</div>
+            <div class="tile-sub"><span id="usedPct">--%</span> of total seats in use.</div>
+          </div>
+
+          <div class="tile">
+            <div class="tile-header">
+              <span class="tile-label">Seats Available</span>
+              <span class="tile-icon">📊</span>
+            </div>
+            <div class="tile-value" id="availSeats">--</div>
+            <div class="tile-sub">Remaining before hitting capacity.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <a class="btn btn-primary" href="software-licenses.html">
+            Manage Licenses
+          </a>
+          <a class="btn btn-ghost" href="software-licenses.html">
+            View Assignments
+          </a>
+        </div>
+      </section>
+
+      <!-- RIGHT: alerts list -->
+      <section class="card">
+        <h2>
+          Compliance Alerts
+          <span class="right-link">
+            <a href="software-licenses.html">Detailed view →</a>
+          </span>
+        </h2>
+        <p class="muted">
+          Licenses that are overused, expired or expiring within 30 days.
+        </p>
+
+        <ul class="list" id="alertList">
+          <li><span class="label">Loading alerts…</span><span class="value">–</span></li>
+        </ul>
+
+        <p class="small">
+          Alerts are computed from <strong>totalSeats</strong>,
+          <strong>assignedSeats</strong> and <strong>expiryDate</strong> in
+          <code>software_license</code>.
+        </p>
+      </section>
     </div>
-
   </main>
 </div>
 
-<script src="sidebar.js"></script>
-
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { collection, getDocs }
+    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const who           = document.getElementById("who");
-  const prodCount     = document.getElementById("prodCount");
-  const licCount      = document.getElementById("licCount");
-  const availSeats    = document.getElementById("availSeats");
-  const alerts        = document.getElementById("alerts");
+  const whoEl     = document.getElementById("who");
+  const prodEl    = document.getElementById("prodCount");
+  const licEl     = document.getElementById("licCount");
+  const usedEl    = document.getElementById("usedSeats");
+  const usedPctEl = document.getElementById("usedPct");
+  const availEl   = document.getElementById("availSeats");
+  const alertList = document.getElementById("alertList");
 
   watchAuth({
     allowedRoles:["admin","it","viewer"],
-    whoEl: who,
-    onReady: loadStats
+    whoEl,
+    onReady: async ()=>{
+      await loadStatsAndAlerts();
+    }
   });
 
-  function toDate(x){
-    return x?.toDate?.() || (x ? new Date(x) : null);
+  function toDate(val){
+    if(!val) return null;
+    if(val.toDate) return val.toDate();
+    return new Date(val);
   }
 
-  async function loadStats(){
+  async function loadStatsAndAlerts(){
+    // Products
     const prodSnap = await getDocs(collection(db,"software_product"));
-    const licSnap  = await getDocs(collection(db,"software_license"));
+    prodEl.textContent = prodSnap.size;
 
-    prodCount.textContent = prodSnap.size;
-    licCount.textContent  = licSnap.size;
+    // Licenses
+    const licSnap = await getDocs(collection(db,"software_license"));
+    licEl.textContent = licSnap.size;
 
-    let totalSeats=0, usedSeats=0, alertCount=0;
+    let totalSeats = 0;
+    let usedSeats  = 0;
+    const alerts   = [];
 
-    const now = new Date();
-    const lim30 = new Date(now.getTime() + 30*24*60*60*1000);
+    const now  = new Date();
+    const soon = new Date(now.getTime() + 30*24*60*60*1000);
 
     licSnap.forEach(ds=>{
-      const l = ds.data();
-      totalSeats += Number(l.totalSeats||0);
-      usedSeats  += Number(l.assignedSeats||0);
+      const lic = ds.data();
+      const name = lic.softwareName || lic.name || "License";
+      const total = Number(lic.totalSeats || 0);
+      const used  = Number(lic.assignedSeats || 0);
+      const exp   = toDate(lic.expiryDate);
 
-      if( Number(l.assignedSeats||0) > Number(l.totalSeats||0) )
-        alertCount++;
+      totalSeats += total;
+      usedSeats  += used;
 
-      const exp = toDate(l.expiryDate);
-      if(exp && exp <= lim30) alertCount++;
+      let type = null;
+      let msg  = "";
+
+      if(total && used > total){
+        type = "bad";
+        msg  = `Overused by ${used - total} seat(s)`;
+      }else if(exp && exp < now){
+        type = "bad";
+        msg  = "Expired";
+      }else if(exp && exp <= soon){
+        const days = Math.ceil((exp - now)/(1000*60*60*24));
+        type = "warn";
+        msg  = `Expires in ${days} day(s)`;
+      }
+
+      if(type){
+        alerts.push({ name, msg, type });
+      }
     });
 
-    availSeats.textContent = Math.max(0, totalSeats - usedSeats);
-    alerts.textContent = alertCount;
+    usedEl.textContent = usedSeats;
+    const free = Math.max(0, totalSeats - usedSeats);
+    availEl.textContent = free;
+    const pct = totalSeats ? Math.round((usedSeats/totalSeats)*100) : 0;
+    usedPctEl.textContent = pct + "%";
+
+    // Alerts list
+    if(alerts.length === 0){
+      alertList.innerHTML = `
+        <li>
+          <span class="label">No license alerts.</span>
+          <span class="value pill pill-good">OK</span>
+        </li>`;
+    }else{
+      alertList.innerHTML = alerts.slice(0,6).map(a=>{
+        const cls = a.type === "bad" ? "pill-bad" : "pill-warn";
+        return `
+          <li>
+            <span class="label">${escapeHtml(a.name)}</span>
+            <span class="value pill ${cls}">${escapeHtml(a.msg)}</span>
+          </li>`;
+      }).join("");
+
+      if(alerts.length > 6){
+        const more = alerts.length - 6;
+        alertList.innerHTML += `
+          <li>
+            <span class="label">${more} more licenses…</span>
+            <span class="value">
+              <a class="inline-link" href="software-licenses.html">View all</a>
+            </span>
+          </li>`;
+      }
+    }
+  }
+
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g, c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
   }
 </script>
 
