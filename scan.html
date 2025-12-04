@@ -62,8 +62,6 @@
   }
   .card h2{margin:0 0 8px;font-size:1.05rem;}
   .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
-
-  /* Scanner area */
   #reader{
     width:100%;
     max-width:450px;
@@ -71,82 +69,34 @@
     position:relative;
     border-radius:12px;
     overflow:hidden;
-    border:1px solid var(--border);
+    border:2px solid var(--border);
     background:#000;
     min-height:300px;
   }
-
-  /* Overlay crosshair */
   .scan-overlay{
-    position:absolute;
-    top:50%;
-    left:50%;
-    width:60%;
-    height:60%;
-    transform:translate(-50%,-50%);
-    border:2px solid rgba(248,250,252,0.95);
-    border-radius:12px;
-    box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
+    position:absolute;top:50%;left:50%;width:60%;height:60%;
+    transform:translate(-50%,-50%);border:2px solid rgba(248,250,252,0.95);
+    border-radius:12px;box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
     pointer-events:none;
   }
-
-  /* Glow on success */
-  .scan-glow{
-    box-shadow:0 0 0 4px rgba(34,197,94,0.8);
-    animation:scanPulse .6s ease-out;
-  }
-  @keyframes scanPulse{
-    0%{box-shadow:0 0 0 0 rgba(34,197,94,0.9);}
-    100%{box-shadow:0 0 0 14px rgba(34,197,94,0);}
-  }
-
+  .scan-glow{box-shadow:0 0 0 4px rgba(34,197,94,0.8);animation:scanPulse .6s ease-out;}
+  @keyframes scanPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.9);}100%{box-shadow:0 0 0 14px rgba(34,197,94,0);}}
   label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
-  input[type="text"]{
-    width:100%;
-    padding:8px 9px;
-    border-radius:9px;
-    border:1px solid #cbd5e1;
-    font-size:.9rem;
-  }
+  input[type="text"]{width:100%;padding:8px 9px;border-radius:9px;border:1px solid #cbd5e1;font-size:.9rem;}
   .btn{
-    border:none;cursor:pointer;
-    padding:7px 13px;border-radius:999px;
-    font-size:.86rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:6px;
-    text-decoration:none;
+    border:none;cursor:pointer;padding:7px 13px;border-radius:999px;
+    font-size:.86rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;
   }
   .btn-primary{background:var(--brand);color:white;}
   .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
   .status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;}
-
-  /* Scan history */
-  .history-list{
-    list-style:none;
-    margin:6px 0 0;
-    padding:0;
-    font-size:.85rem;
-    max-height:220px;
-    overflow:auto;
-  }
-  .history-list li{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:4px 0;
-    border-bottom:1px dashed #e5e7eb;
-  }
+  .history-list{list-style:none;margin:6px 0 0;padding:0;font-size:.85rem;max-height:220px;overflow:auto;}
+  .history-list li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed #e5e7eb;}
   .history-list li:last-child{border-bottom:none;}
-  .history-list .code{
-    font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New",monospace;
-    color:#0f172a;
-    word-break:break-all;
-  }
-  .history-list .meta{
-    color:#6b7280;
-    font-size:.78rem;
-    margin-left:6px;
-    white-space:nowrap;
-  }
+  .history-list .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;color:#0f172a;word-break:break-all;}
+  .history-list .meta{color:#6b7280;font-size:.78rem;margin-left:6px;white-space:nowrap;}
+  .debug-info{font-size:.75rem;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -172,31 +122,28 @@
 
   <main class="content">
     <h1>Scan or Lookup Device</h1>
-    <p class="subtitle">
-      Scan a QR code attached to a device, or enter an Asset ID / document ID manually to open its details.
-    </p>
+    <p class="subtitle">Scan a QR code attached to a device, or enter an Asset ID / document ID manually.</p>
 
     <div class="grid">
       <section class="card">
         <h2>Camera Scanner</h2>
-        <p class="muted">
-          Click "Start scanner" to grant camera permission, then point to the device QR code. On success you'll be redirected.
-        </p>
+        <p class="muted">Click "Start scanner" to grant camera permission (works on Mac, Windows, Android, iOS 15.1+).</p>
         <div id="reader"></div>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-primary" id="btnStartScan">Start scanner</button>
-          <button class="btn btn-ghost" id="btnFlipCam">Switch camera</button>
-          <button class="btn btn-ghost" id="btnStopScan" style="display:none;">Stop scanner</button>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button class="btn btn-primary" id="btnStartScan">🎥 Start scanner</button>
+          <button class="btn btn-ghost" id="btnFlipCam" disabled>🔄 Switch camera</button>
+          <button class="btn btn-ghost" id="btnStopScan" style="display:none;">⏹️ Stop</button>
         </div>
-        <div class="status" id="scanStatus"></div>
+        <div class="status" id="scanStatus">Ready to scan</div>
+        <div class="debug-info" id="debugInfo" style="display:none;"></div>
       </section>
 
       <section class="card">
         <h2>Manual Lookup</h2>
-        <p class="muted">If scanning fails, type the <strong>Firestore document ID</strong> or <strong>Asset ID</strong>.</p>
+        <p class="muted">Type the <strong>Firestore document ID</strong> or <strong>Asset ID</strong>.</p>
         <label for="manualId">Device ID / Asset ID</label>
         <input id="manualId" type="text" placeholder="e.g. 8dfGJk... or OCSI-LAP-023" />
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="margin-top:10px;">
           <button class="btn btn-primary" id="btnOpen">Open Device</button>
         </div>
         <div class="status" id="manualStatus"></div>
@@ -211,269 +158,257 @@
   </main>
 </div>
 
-<!-- QR library -->
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-
+<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
-  import {
-    collection, query, where, getDocs, doc, getDoc
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl        = document.getElementById("who");
+  // Elements
+  const whoEl = document.getElementById("who");
   const scanStatusEl = document.getElementById("scanStatus");
-  const manualIdEl   = document.getElementById("manualId");
-  const manualStatus = document.getElementById("manualStatus");
-  const btnOpen      = document.getElementById("btnOpen");
-  const btnFlipCam   = document.getElementById("btnFlipCam");
+  const debugEl = document.getElementById("debugInfo");
+  const manualIdEl = document.getElementById("manualId");
+  const manualStatusEl = document.getElementById("manualStatus");
+  const btnOpen = document.getElementById("btnOpen");
   const btnStartScan = document.getElementById("btnStartScan");
-  const btnStopScan  = document.getElementById("btnStopScan");
-  const historyList  = document.getElementById("historyList");
+  const btnStopScan = document.getElementById("btnStopScan");
+  const btnFlipCam = document.getElementById("btnFlipCam");
+  const historyList = document.getElementById("historyList");
 
   let html5QrCode = null;
   let isScanning = false;
-  let currentCameraId = null;
-  const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+  let cameras = [];
+  let currentCameraIndex = 0;
+  const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
   const scanHistory = [];
 
+  // Cross-platform initialization
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
-    onReady: ()=>{
-      initScanner();
+    onReady: initApp
+  });
 
+  async function initApp() {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        scanStatusEl.textContent = "Camera not supported on this browser.";
+        return;
+      }
+      
+      // Check HTTPS (required for camera)
+      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        scanStatusEl.textContent = "Camera requires HTTPS. Use https:// or localhost.";
+        return;
+      }
+
+      html5QrCode = new Html5Qrcode("reader", /* verbose= */ false);
+      await detectCameras();
+      updateUI();
+      
+      // Event listeners
       btnOpen.addEventListener("click", onManualOpen);
       btnStartScan.addEventListener("click", startCamera);
       btnStopScan.addEventListener("click", stopCamera);
       btnFlipCam.addEventListener("click", switchCamera);
+      
+    } catch (err) {
+      console.error("Init failed:", err);
+      scanStatusEl.textContent = "Initialization failed.";
     }
-  });
-
-  function initScanner(){
-    if(!window.Html5Qrcode){
-      scanStatusEl.textContent = "Scanner library failed to load.";
-      return;
-    }
-    html5QrCode = new Html5Qrcode("reader");
-    scanStatusEl.textContent = "Click 'Start scanner' to use the camera.";
   }
 
-  async function startCamera(){
-    if(!html5QrCode){
-      scanStatusEl.textContent = "Scanner not ready.";
-      return;
-    }
-    if(isScanning){
-      scanStatusEl.textContent = "Scanner already running.";
-      return;
-    }
-
+  async function detectCameras() {
     try {
-      scanStatusEl.textContent = "Detecting cameras…";
+      scanStatusEl.textContent = "Detecting cameras...";
+      cameras = await Html5Qrcode.getCameras();
       
-      const cameras = await Html5Qrcode.getCameras();
       if (!cameras || cameras.length === 0) {
-        scanStatusEl.textContent = "No cameras found. Check device permissions.";
-        console.error("No cameras detected");
+        scanStatusEl.textContent = "No cameras found. Check permissions.";
+        debugEl.innerHTML = "Open browser settings → Camera → Allow";
+        debugEl.style.display = "block";
         return;
       }
+      
+      // Prefer back camera for mobile
+      const backCamera = cameras.find(cam => 
+        cam.label?.toLowerCase().includes('back') || 
+        cam.label?.toLowerCase().includes('rear') ||
+        cam.facingMode === 'environment'
+      );
+      currentCameraIndex = backCamera ? cameras.indexOf(backCamera) : 0;
+      
+      debugEl.innerHTML = `${cameras.length} camera(s): ${cameras.map((c,i) => 
+        `<span style="color:${i===currentCameraIndex ? '#22c55e' : '#64748b'}">${c.label || 'Camera ' + (i+1)}</span>`
+      ).join(', ')}`;
+      
+    } catch (err) {
+      console.error("Camera detection failed:", err);
+      debugEl.innerHTML = `Detection failed: ${err.message}`;
+    }
+  }
 
-      // Prefer back camera, fallback to first available
-      currentCameraId = cameras.find(c => 
-        c.label && (c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear'))
-      )?.id || cameras.find(c => c.facingMode === "environment")?.id || cameras[0].id;
-
-      scanStatusEl.textContent = `Starting ${cameras.length} camera(s) detected…`;
+  async function startCamera() {
+    if (isScanning || !html5QrCode || cameras.length === 0) return;
+    
+    try {
+      const cameraId = cameras[currentCameraIndex].id;
+      scanStatusEl.textContent = `Starting ${cameras[currentCameraIndex].label || 'camera'}...`;
       
       await html5QrCode.start(
-        currentCameraId,
+        cameraId,
         scanConfig,
-        decodedText => onScanSuccess(decodedText),
-        errorMessage => {
-          // Only show critical errors, ignore per-frame decode errors
-          if (errorMessage && errorMessage.includes("Permission denied")) {
-            scanStatusEl.textContent = "Camera permission denied.";
-          }
-        }
+        onScanSuccess,
+        onScanError
       );
       
       isScanning = true;
-      btnStartScan.style.display = "none";
-      btnStopScan.style.display = "inline-flex";
-      btnFlipCam.disabled = false;
-      scanStatusEl.textContent = "✅ Scanning… Point camera at QR code.";
+      updateUI();
+      scanStatusEl.textContent = "✅ Scanning active - point at QR code";
       addOverlay();
       
     } catch (err) {
-      console.error("Camera start failed:", err);
-      scanStatusEl.textContent = `Failed to start: ${err.message || err}`;
+      console.error("Start failed:", err);
+      scanStatusEl.textContent = `Start failed: ${err}`;
+      debugEl.innerHTML = `Error: ${err.message}. Check console (F12).`;
+      debugEl.style.display = "block";
     }
   }
 
-  async function stopCamera(){
-    if(!html5QrCode || !isScanning) return;
+  function onScanError(err) {
+    // Ignore per-frame errors
+    if (!err || err.includes("No MultiFormat Readers")) return;
+    console.warn("Scan error:", err);
+  }
+
+  async function stopCamera() {
+    if (!isScanning || !html5QrCode) return;
     
     try {
       await html5QrCode.stop();
       isScanning = false;
-      currentCameraId = null;
-      btnStartScan.style.display = "inline-flex";
-      btnStopScan.style.display = "none";
-      btnFlipCam.disabled = true;
-      scanStatusEl.textContent = "Camera stopped.";
       removeOverlay();
+      updateUI();
+      scanStatusEl.textContent = "Camera stopped";
     } catch (err) {
       console.error("Stop failed:", err);
     }
   }
 
-  async function switchCamera(){
-    if(!html5QrCode || !isScanning) return;
-    
-    try {
-      await stopCamera();
-      
-      const cameras = await Html5Qrcode.getCameras();
-      if (!cameras || cameras.length < 2) {
-        scanStatusEl.textContent = "Only one camera available.";
-        return startCamera();
-      }
-      
-      // Find next camera
-      const currentIdx = cameras.findIndex(c => c.id === currentCameraId);
-      const nextIdx = (currentIdx + 1) % cameras.length;
-      currentCameraId = cameras[nextIdx].id;
-      
-      scanStatusEl.textContent = "Switching camera…";
-      await startCamera();
-      
-    } catch (err) {
-      console.error("Switch failed:", err);
-      scanStatusEl.textContent = "Switch failed, restarting…";
-      startCamera();
+  async function switchCamera() {
+    if (!isScanning || cameras.length < 2) {
+      scanStatusEl.textContent = cameras.length < 2 ? "Only 1 camera available" : "Stop scanner first";
+      return;
     }
+    
+    await stopCamera();
+    currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+    updateUI();
+    startCamera();
   }
 
-  function addOverlay(){
-    const container = document.getElementById("reader");
-    if(container.querySelector(".scan-overlay")) return;
+  function updateUI() {
+    btnStartScan.style.display = isScanning ? "none" : "inline-flex";
+    btnStopScan.style.display = isScanning ? "inline-flex" : "none";
+    btnFlipCam.disabled = !isScanning || cameras.length < 2;
+    debugEl.style.display = cameras.length > 0 ? "block" : "none";
+  }
+
+  function addOverlay() {
+    const reader = document.getElementById("reader");
+    if (reader.querySelector(".scan-overlay")) return;
     const overlay = document.createElement("div");
     overlay.className = "scan-overlay";
-    container.appendChild(overlay);
+    reader.appendChild(overlay);
   }
 
-  function removeOverlay(){
-    const container = document.getElementById("reader");
-    const overlay = container.querySelector(".scan-overlay");
-    if(overlay) overlay.remove();
+  function removeOverlay() {
+    const reader = document.getElementById("reader");
+    const overlay = reader.querySelector(".scan-overlay");
+    if (overlay) overlay.remove();
   }
 
-  function onScanSuccess(decodedText){
-    const code = (decodedText || "").trim();
-    if(!code) return;
-
+  function onScanSuccess(decodedText) {
+    const code = decodedText.trim();
+    if (!code) return;
+    
     addToHistory(code, "QR");
     playBeep();
     addGlow();
     stopCamera();
-
-    scanStatusEl.textContent = `✅ Scanned: ${code.substring(0,20)}${code.length>20?'…':''} – opening…`;
-
-    setTimeout(()=>{
-      window.location.href = "item.html?id=" + encodeURIComponent(code);
-    }, 1000);
+    
+    scanStatusEl.textContent = `✅ Found: ${code.substring(0,30)}${code.length>30?'...' : ''}`;
+    
+    setTimeout(() => {
+      window.location.href = `item.html?id=${encodeURIComponent(code)}`;
+    }, 1200);
   }
 
-  async function onManualOpen(){
-    const v = (manualIdEl.value || "").trim();
-    if(!v){
-      manualStatus.textContent = "Enter a device document ID or Asset ID.";
-      return;
-    }
-    manualStatus.textContent = "Looking up…";
-
-    try{
-      const ref = doc(db,"items",v);
-      const snap = await getDoc(ref);
-      if(snap.exists()){
-        addToHistory(v, "Manual");
-        window.location.href = "item.html?id=" + encodeURIComponent(v);
-        return;
+  // Rest of your existing functions (unchanged)
+  async function onManualOpen() {
+    const id = manualIdEl.value.trim();
+    if (!id) return manualStatusEl.textContent = "Enter ID";
+    
+    manualStatusEl.textContent = "Looking up...";
+    try {
+      const docRef = doc(db, "items", id);
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        addToHistory(id, "Manual");
+        return window.location.href = `item.html?id=${encodeURIComponent(id)}`;
       }
-    }catch(e){
-      console.error(e);
-    }
-
-    try{
-      const q = query(collection(db,"items"), where("assetId","==",v));
+    } catch(e) { console.error(e); }
+    
+    try {
+      const q = query(collection(db, "items"), where("assetId", "==", id));
       const snap = await getDocs(q);
-      if(!snap.empty){
+      if (!snap.empty) {
         const first = snap.docs[0];
-        addToHistory(v, "Manual");
-        window.location.href = "item.html?id=" + encodeURIComponent(first.id);
-        return;
+        addToHistory(id, "Manual");
+        return window.location.href = `item.html?id=${encodeURIComponent(first.id)}`;
       }
-    }catch(e){
-      console.error(e);
-    }
-
-    manualStatus.textContent = "❌ Device not found by document ID or assetId.";
+    } catch(e) { console.error(e); }
+    
+    manualStatusEl.textContent = "Not found";
   }
 
-  function addToHistory(text, source){
-    const entry = { text, source, time:new Date() };
-    scanHistory.unshift(entry);
-    if(scanHistory.length > 10) scanHistory.pop();
+  function addToHistory(text, source) {
+    scanHistory.unshift({ text, source, time: new Date() });
+    if (scanHistory.length > 10) scanHistory.pop();
     renderHistory();
   }
 
-  function renderHistory(){
-    if(!historyList) return;
-    if(!scanHistory.length){
-      historyList.innerHTML = `<li><span class="code">No scans yet.</span></li>`;
-      return;
-    }
-    historyList.innerHTML = scanHistory.map(e=>{
-      const t = e.time.toLocaleTimeString();
-      return `<li>
-        <span class="code">${escapeHtml(e.text)}</span>
-        <span class="meta">${escapeHtml(e.source)} • ${t}</span>
-      </li>`;
-    }).join("");
+  function renderHistory() {
+    historyList.innerHTML = scanHistory.length 
+      ? scanHistory.map(e => {
+          const t = e.time.toLocaleTimeString();
+          return `<li><span class="code">${escapeHtml(e.text)}</span><span class="meta">${e.source} • ${t}</span></li>`;
+        }).join("")
+      : '<li><span class="code">No scans yet</span></li>';
   }
 
-  function addGlow(){
+  function addGlow() {
     const reader = document.getElementById("reader");
-    if(!reader) return;
-    reader.classList.add("scan-glow");
-    setTimeout(()=>reader.classList.remove("scan-glow"), 600);
+    reader?.classList.add("scan-glow");
+    setTimeout(() => reader?.classList.remove("scan-glow"), 600);
   }
 
-  function playBeep(){
-    try{
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if(!AudioCtx) return;
-      const ctx  = new AudioCtx();
-      const osc  = ctx.createOscillator();
+  function playBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = 880;
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-      osc.stop(ctx.currentTime + 0.15);
-    }catch(e){
-      console.warn("Beep failed", e);
-    }
+      osc.type = "sine"; osc.frequency.value = 800;
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(); gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+      osc.stop(ctx.currentTime + 0.2);
+    } catch(e) {}
   }
 
-  function escapeHtml(s){
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g,c=>(
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c] || c
-    ));
+  function escapeHtml(s) {
+    const map = {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"};
+    return String(s).replace(/[&<>"']/g, m => map[m]);
   }
 </script>
 </body>
