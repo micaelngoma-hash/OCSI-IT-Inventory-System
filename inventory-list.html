@@ -10,6 +10,7 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -27,15 +28,20 @@
     display:flex;align-items:center;gap:8px;
     padding:9px 11px;border-radius:9px;
     color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
+    font-size:.92rem;
   }
   .nav a:hover,.nav a.active{background:#111a33;}
   .nav .icon{width:18px;text-align:center;opacity:.8;}
+
   .content{
-    padding:18px;max-width:1150px;margin:0 auto;width:100%;
+    padding:18px;
+    max-width:1150px;
+    margin:0 auto;
+    width:100%;
   }
-  h1{margin:0 0 10px;font-size:1.4rem;}
+  h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
   .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
   .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
   .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
@@ -49,10 +55,11 @@
     display:flex;align-items:center;gap:6px;
     background:white;border:1px solid var(--border);
     border-radius:999px;padding:4px 10px;
-    max-width:280px;width:100%;
+    max-width:320px;width:100%;
   }
   .search-box input{
     border:none;outline:none;font-size:.88rem;width:100%;
+    background:transparent;
   }
   .filters{display:flex;gap:8px;flex-wrap:wrap;}
   select{
@@ -106,7 +113,7 @@
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
       <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses &amp; Compliance</span></a>
       <a class="active" href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
@@ -123,7 +130,7 @@
     <div class="toolbar">
       <div class="search-box">
         <span>🔍</span>
-        <input id="search" placeholder="Search by Asset ID, name, user, location…"/>
+        <input id="search" placeholder="Search by Asset ID, name, user, location…" />
       </div>
       <div class="filters">
         <select id="statusFilter">
@@ -164,7 +171,9 @@
 
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import {
+    collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const whoEl        = document.getElementById("who");
   const tbody        = document.getElementById("tbody");
@@ -172,20 +181,23 @@
   const statusFilter = document.getElementById("statusFilter");
   const addBtn       = document.getElementById("addBtn");
 
-  let currentRole = "viewer";
-  let allItems    = [];
+  const EDIT_ROLES = ["admin","it"];
+  let currentRole  = "viewer";
+  let allItems     = [];
 
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
-    onReady: async ({ role } = {})=>{
-      currentRole = role || "viewer";
+    onReady: async (_user, role)=>{
+      currentRole = role;
 
-      // viewers cannot create devices
-      if(currentRole !== "admin" && currentRole !== "it"){
+      // New Device button
+      if(!EDIT_ROLES.includes(role)){
         addBtn.style.display = "none";
       }else{
-        addBtn.onclick = ()=> location.href = "item-form.html";
+        addBtn.addEventListener("click", () => {
+          window.location.href = "item-form.html";
+        });
       }
 
       await loadItems();
@@ -193,12 +205,17 @@
   });
 
   async function loadItems(){
-    const snap = await getDocs(collection(db,"items"));
-    allItems = [];
-    snap.forEach(docSnap=>{
-      allItems.push({ id: docSnap.id, ...docSnap.data() });
-    });
-    render();
+    try{
+      const snap = await getDocs(collection(db,"items"));
+      allItems = [];
+      snap.forEach(docSnap => {
+        allItems.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      render();
+    }catch(err){
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="8">Error loading devices: ${escapeHtml(err.message)}</td></tr>`;
+    }
   }
 
   function render(){
@@ -208,12 +225,10 @@
     const rows = allItems.filter(it=>{
       if(st && (it.status || "") !== st) return false;
       if(!term) return true;
-
       const hay = [
         it.assetId, it.deviceName, it.assetType,
         it.assignedTo, it.location, it.department, it.ipAddress
       ].join(" ").toLowerCase();
-
       return hay.includes(term);
     });
 
@@ -225,19 +240,20 @@
     tbody.innerHTML = rows.map(it=>{
       const status = it.status || "unknown";
       let pillClass = "pill-gray";
-      if(status === "in-use") pillClass = "pill-green";
+      if(status === "in-use")      pillClass = "pill-green";
       else if(status === "loaned") pillClass = "pill-blue";
       else if(status === "retired" || status === "repair") pillClass = "pill-red";
 
-      const label = status.replace(/-/g," ");
-
+      const label   = status.replace(/-/g," ");
       const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
       const editUrl = `item-form.html?id=${encodeURIComponent(it.id)}`;
 
-      const editButton = (currentRole === "admin" || currentRole === "it")
-        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;"
-             href="${editUrl}">Edit</a>`
-        : "";
+      const actions = EDIT_ROLES.includes(currentRole)
+        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;" href="${viewUrl}">View</a>
+           <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${editUrl}">Edit</a>`
+        : `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${viewUrl}">View</a>`;
+
+      const locText = (it.location || "") + (it.buildingFloor ? " – " + it.buildingFloor : "");
 
       return `
         <tr>
@@ -246,22 +262,17 @@
           <td>${escapeHtml(it.assetType || "")}</td>
           <td><span class="pill ${pillClass}">${escapeHtml(label)}</span></td>
           <td>${escapeHtml(it.assignedTo || "")}</td>
-          <td>${escapeHtml((it.location || "") + (it.buildingFloor ? " – "+it.buildingFloor : ""))}</td>
+          <td>${escapeHtml(locText)}</td>
           <td>${escapeHtml(it.ipAddress || "")}</td>
-          <td>
-            <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;"
-               href="${viewUrl}">View</a>
-            ${editButton}
-          </td>
+          <td>${actions}</td>
         </tr>`;
     }).join("");
   }
 
   function escapeHtml(s){
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g, c => (
+    return s ? String(s).replace(/[&<>"']/g, c=>(
       { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    ));
+    )) : "";
   }
 
   searchInput.addEventListener("input", render);
