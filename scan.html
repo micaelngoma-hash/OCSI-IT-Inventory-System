@@ -73,6 +73,7 @@
     overflow:hidden;
     border:1px solid var(--border);
     background:#000;
+    min-height:300px;
   }
 
   /* Overlay crosshair */
@@ -179,13 +180,13 @@
       <section class="card">
         <h2>Camera Scanner</h2>
         <p class="muted">
-          Click “Start scanner” to grant camera permission, then point to the device QR code. On success you’ll be redirected.
+          Click "Start scanner" to grant camera permission, then point to the device QR code. On success you'll be redirected.
         </p>
         <div id="reader"></div>
         <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <!-- NEW explicit start button -->
           <button class="btn btn-primary" id="btnStartScan">Start scanner</button>
           <button class="btn btn-ghost" id="btnFlipCam">Switch camera</button>
+          <button class="btn btn-ghost" id="btnStopScan" style="display:none;">Stop scanner</button>
         </div>
         <div class="status" id="scanStatus"></div>
       </section>
@@ -226,11 +227,12 @@
   const btnOpen      = document.getElementById("btnOpen");
   const btnFlipCam   = document.getElementById("btnFlipCam");
   const btnStartScan = document.getElementById("btnStartScan");
+  const btnStopScan  = document.getElementById("btnStopScan");
   const historyList  = document.getElementById("historyList");
 
   let html5QrCode = null;
   let isScanning = false;
-  let currentFacingMode = "environment"; // back camera
+  let currentCameraId = null;
   const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
   const scanHistory = [];
 
@@ -238,11 +240,12 @@
     allowedRoles:["admin","it","viewer"],
     whoEl,
     onReady: ()=>{
-      initScanner(); // only prepares the scanner instance
+      initScanner();
 
       btnOpen.addEventListener("click", onManualOpen);
+      btnStartScan.addEventListener("click", startCamera);
+      btnStopScan.addEventListener("click", stopCamera);
       btnFlipCam.addEventListener("click", switchCamera);
-      btnStartScan.addEventListener("click", startCamera); // user-gesture start
     }
   });
 
@@ -252,10 +255,10 @@
       return;
     }
     html5QrCode = new Html5Qrcode("reader");
-    scanStatusEl.textContent = "Click “Start scanner” to use the camera.";
+    scanStatusEl.textContent = "Click 'Start scanner' to use the camera.";
   }
 
-  function startCamera(){
+  async function startCamera(){
     if(!html5QrCode){
       scanStatusEl.textContent = "Scanner not ready.";
       return;
@@ -265,50 +268,104 @@
       return;
     }
 
-    scanStatusEl.textContent = "Requesting camera access…";
-    html5QrCode.start(
-      { facingMode: currentFacingMode },
-      scanConfig,
-      decodedText => onScanSuccess(decodedText),
-      _errorMessage => { /* ignore per-frame decode errors */ }
-    ).then(()=>{
+    try {
+      scanStatusEl.textContent = "Detecting cameras…";
+      
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length === 0) {
+        scanStatusEl.textContent = "No cameras found. Check device permissions.";
+        console.error("No cameras detected");
+        return;
+      }
+
+      // Prefer back camera, fallback to first available
+      currentCameraId = cameras.find(c => 
+        c.label && (c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('rear'))
+      )?.id || cameras.find(c => c.facingMode === "environment")?.id || cameras[0].id;
+
+      scanStatusEl.textContent = `Starting ${cameras.length} camera(s) detected…`;
+      
+      await html5QrCode.start(
+        currentCameraId,
+        scanConfig,
+        decodedText => onScanSuccess(decodedText),
+        errorMessage => {
+          // Only show critical errors, ignore per-frame decode errors
+          if (errorMessage && errorMessage.includes("Permission denied")) {
+            scanStatusEl.textContent = "Camera permission denied.";
+          }
+        }
+      );
+      
       isScanning = true;
-      scanStatusEl.textContent = "Scanning… Point the camera at the QR code.";
+      btnStartScan.style.display = "none";
+      btnStopScan.style.display = "inline-flex";
+      btnFlipCam.disabled = false;
+      scanStatusEl.textContent = "✅ Scanning… Point camera at QR code.";
       addOverlay();
-    }).catch(err=>{
-      console.error("html5QrCode.start error:", err);
-      scanStatusEl.textContent = "Unable to start scanner: " + err;
-    });
+      
+    } catch (err) {
+      console.error("Camera start failed:", err);
+      scanStatusEl.textContent = `Failed to start: ${err.message || err}`;
+    }
   }
 
-  function switchCamera(){
-    if(!html5QrCode) return;
-    currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
-    scanStatusEl.textContent = "Switching camera…";
+  async function stopCamera(){
+    if(!html5QrCode || !isScanning) return;
+    
+    try {
+      await html5QrCode.stop();
+      isScanning = false;
+      currentCameraId = null;
+      btnStartScan.style.display = "inline-flex";
+      btnStopScan.style.display = "none";
+      btnFlipCam.disabled = true;
+      scanStatusEl.textContent = "Camera stopped.";
+      removeOverlay();
+    } catch (err) {
+      console.error("Stop failed:", err);
+    }
+  }
 
-    const restart = ()=> startCamera();
-
-    if(isScanning){
-      html5QrCode.stop().then(()=>{
-        isScanning = false;
-        restart();
-      }).catch(err=>{
-        console.warn("Error stopping scanner while switching:", err);
-        isScanning = false;
-        restart();
-      });
-    }else{
-      restart();
+  async function switchCamera(){
+    if(!html5QrCode || !isScanning) return;
+    
+    try {
+      await stopCamera();
+      
+      const cameras = await Html5Qrcode.getCameras();
+      if (!cameras || cameras.length < 2) {
+        scanStatusEl.textContent = "Only one camera available.";
+        return startCamera();
+      }
+      
+      // Find next camera
+      const currentIdx = cameras.findIndex(c => c.id === currentCameraId);
+      const nextIdx = (currentIdx + 1) % cameras.length;
+      currentCameraId = cameras[nextIdx].id;
+      
+      scanStatusEl.textContent = "Switching camera…";
+      await startCamera();
+      
+    } catch (err) {
+      console.error("Switch failed:", err);
+      scanStatusEl.textContent = "Switch failed, restarting…";
+      startCamera();
     }
   }
 
   function addOverlay(){
     const container = document.getElementById("reader");
-    if(!container) return;
     if(container.querySelector(".scan-overlay")) return;
     const overlay = document.createElement("div");
     overlay.className = "scan-overlay";
     container.appendChild(overlay);
+  }
+
+  function removeOverlay(){
+    const container = document.getElementById("reader");
+    const overlay = container.querySelector(".scan-overlay");
+    if(overlay) overlay.remove();
   }
 
   function onScanSuccess(decodedText){
@@ -318,16 +375,13 @@
     addToHistory(code, "QR");
     playBeep();
     addGlow();
+    stopCamera();
 
-    scanStatusEl.textContent = "Scanned: " + code + " – opening device…";
+    scanStatusEl.textContent = `✅ Scanned: ${code.substring(0,20)}${code.length>20?'…':''} – opening…`;
 
     setTimeout(()=>{
-      if(html5QrCode){
-        html5QrCode.stop().catch(()=>{});
-        isScanning = false;
-      }
       window.location.href = "item.html?id=" + encodeURIComponent(code);
-    }, 700);
+    }, 1000);
   }
 
   async function onManualOpen(){
@@ -363,7 +417,7 @@
       console.error(e);
     }
 
-    manualStatus.textContent = "Device not found by document ID or assetId.";
+    manualStatus.textContent = "❌ Device not found by document ID or assetId.";
   }
 
   function addToHistory(text, source){
@@ -418,7 +472,7 @@
   function escapeHtml(s){
     if(!s) return "";
     return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'" }[c]
+      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c] || c
     ));
   }
 </script>
