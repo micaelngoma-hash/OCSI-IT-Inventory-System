@@ -1,1 +1,479 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8"/> <meta name="viewport" content="width=device-width, initial-scale=1.0"/> <title>OCSI IT Inventory – QR Scan Device</title> <style> :root{ --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb; --good:#22c55e;--warn:#f97316;--bad:#ef4444; } *{box-sizing:border-box;} body{margin:0;font-family:system-ui;background:#f5f7fb;} .topbar{ position:sticky;top:0;z-index:20; background:var(--bg);color:white; padding:12px 16px; display:flex;justify-content:space-between;align-items:center; } .layout{ display:grid; grid-template-columns:240px 1fr; min-height:calc(100vh - 52px); } .sidebar{ background:var(--bg2);color:white;padding:14px; } .nav a{ display:flex;align-items:center;gap:8px; padding:9px 11px;border-radius:9px; color:#dbe4ff;text-decoration:none;margin-bottom:6px; font-size:0.92rem; } .nav a:hover,.nav a.active{background:#111a33;} .nav .icon{width:18px;text-align:center;opacity:.8;} .content{ padding:18px; max-width:1100px; margin:0 auto; width:100%; } h1{margin:0 0 4px;font-size:1.4rem;} .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;} .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;} .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;} .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;} .badge-viewer{background:rgba(148,163,184,.2);color:#475569;} .grid{ display:grid; grid-template-columns:2fr 1.2fr; gap:16px; } @media(max-width:960px){ .layout{grid-template-columns:1fr;} .grid{grid-template-columns:1fr;} } .card{ background:white;border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:12px; } .card h2{margin:0 0 8px;font-size:1.05rem;} .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;} #reader{ width:100%; max-width:450px; margin:0 auto; } label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;} input[type="text"]{ width:100%; padding:8px 9px; border-radius:9px; border:1px solid #cbd5e1; font-size:.9rem; } .btn{ border:none;cursor:pointer; padding:7px 13px;border-radius:999px; font-size:.86rem;font-weight:500; display:inline-flex;align-items:center;gap:6px; text-decoration:none; } .btn-primary{background:var(--brand);color:white;} .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;} .status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;} </style> </head> <body> <div class="topbar"> <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div> <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div> </div> <div class="layout"> <aside class="sidebar"> <nav class="nav"> <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a> <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a> <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a> <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a> <a class="active" href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a> <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a> <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a> <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a> <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a> </nav> </aside> <main class="content"> <h1>Scan or Lookup Device</h1> <p class="subtitle"> Scan a QR code attached to a device, or enter an Asset ID / document ID manually to open its details. </p> <div class="grid"> <section class="card"> <h2>Camera Scanner</h2> <p class="muted">Grant camera permission, then point to the device QR code. On success you’ll be redirected.</p> <div id="reader"></div> <div class="status" id="scanStatus"></div> </section> <section class="card"> <h2>Manual Lookup</h2> <p class="muted">If scanning fails, type the <strong>Firestore document ID</strong> or <strong>Asset ID</strong>.</p> <label for="manualId">Device ID / Asset ID</label> <input id="manualId" type="text" placeholder="e.g. 8dfGJk... or OCSI-LAP-023" /> <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;"> <button class="btn btn-primary" id="btnOpen">Open Device</button> </div> <div class="status" id="manualStatus"></div> </section> </div> </main> </div> <!-- QR library --> <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script> <script type="module"> import { watchAuth } from "./firebase.js"; import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"; import { app } from "./firebase.js"; const db = getFirestore(app); const whoEl = document.getElementById("who"); const scanStatusEl = document.getElementById("scanStatus"); const manualIdEl = document.getElementById("manualId"); const manualStatus = document.getElementById("manualStatus"); const btnOpen = document.getElementById("btnOpen"); watchAuth({ allowedRoles:["admin","it","viewer"], whoEl, onReady: ()=>{ initScanner(); btnOpen.addEventListener("click", onManualOpen); } }); function initScanner(){ if(!window.Html5Qrcode){ scanStatusEl.textContent = "Scanner library failed to load."; return; } const html5QrCode = new Html5Qrcode("reader"); const config = { fps: 10, qrbox: { width: 250, height: 250 } }; html5QrCode.start( { facingMode: "environment" }, config, decodedText => { scanStatusEl.textContent = "Scanned: " + decodedText; // Assume QR encodes the Firestore doc ID directly: const id = decodedText.trim(); if(id){ html5QrCode.stop().catch(()=>{}); window.location.href = "item.html?id=" + encodeURIComponent(id); } }, errorMessage => { // noisy; you can comment out if you want // scanStatusEl.textContent = "Scanning…"; } ).catch(err=>{ scanStatusEl.textContent = "Unable to start scanner: " + err; }); } async function onManualOpen(){ const v = (manualIdEl.value || "").trim(); if(!v){ manualStatus.textContent = "Enter a device document ID or Asset ID."; return; } manualStatus.textContent = "Looking up…"; // First try as Firestore doc ID try{ const ref = doc(db,"items",v); const snap = await getDoc(ref); if(snap.exists()){ window.location.href = "item.html?id=" + encodeURIComponent(v); return; } }catch(e){ // ignore } // Then try by assetId field try{ const q = query(collection(db,"items"), where("assetId","==",v)); const snap = await getDocs(q); if(!snap.empty){ const first = snap.docs[0]; window.location.href = "item.html?id=" + encodeURIComponent(first.id); return; } }catch(e){ console.error(e); } manualStatus.textContent = "Device not found by document ID or assetId."; } </script> </body> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory – QR Scan Device</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1100px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:2fr 1.2fr;
+    gap:16px;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .card h2{margin:0 0 8px;font-size:1.05rem;}
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+
+  /* Scanner area */
+  #reader{
+    width:100%;
+    max-width:450px;
+    margin:0 auto;
+    position:relative;
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid var(--border);
+    background:#000;
+  }
+
+  /* Overlay crosshair */
+  .scan-overlay{
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:60%;
+    height:60%;
+    transform:translate(-50%,-50%);
+    border:2px solid rgba(248,250,252,0.95);
+    border-radius:12px;
+    box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
+    pointer-events:none;
+  }
+  .scan-overlay::before,
+  .scan-overlay::after{
+    content:"";
+    position:absolute;
+    inset:35%;
+    border-top:2px solid rgba(248,250,252,0.8);
+    border-left:2px solid rgba(248,250,252,0.8);
+    border-right:2px solid rgba(248,250,252,0.8);
+    border-bottom:2px solid rgba(248,250,252,0.8);
+    opacity:.7;
+  }
+
+  /* Glow on success */
+  .scan-glow{
+    box-shadow:0 0 0 4px rgba(34,197,94,0.8);
+    animation:scanPulse .6s ease-out;
+  }
+  @keyframes scanPulse{
+    0%{box-shadow:0 0 0 0 rgba(34,197,94,0.9);}
+    100%{box-shadow:0 0 0 14px rgba(34,197,94,0);}
+  }
+
+  label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
+  input[type="text"]{
+    width:100%;
+    padding:8px 9px;
+    border-radius:9px;
+    border:1px solid #cbd5e1;
+    font-size:.9rem;
+  }
+
+  .btn{
+    border:none;cursor:pointer;
+    padding:7px 13px;border-radius:999px;
+    font-size:.86rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;
+    text-decoration:none;
+  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;}
+
+  /* Scan history */
+  .history-list{
+    list-style:none;
+    margin:6px 0 0;
+    padding:0;
+    font-size:.85rem;
+    max-height:220px;
+    overflow:auto;
+  }
+  .history-list li{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:4px 0;
+    border-bottom:1px dashed #e5e7eb;
+  }
+  .history-list li:last-child{border-bottom:none;}
+  .history-list .code{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New",monospace;
+    color:#0f172a;
+    word-break:break-all;
+  }
+  .history-list .meta{
+    color:#6b7280;
+    font-size:.78rem;
+    margin-left:6px;
+    white-space:nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a class="active" href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <h1>Scan or Lookup Device</h1>
+    <p class="subtitle">
+      Scan a QR code attached to a device, or enter an Asset ID / document ID manually to open its details.
+    </p>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Camera Scanner</h2>
+        <p class="muted">Grant camera permission, then point to the device QR code. On success you’ll be redirected.</p>
+        <div id="reader"></div>
+
+        <!-- Camera controls -->
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-ghost" id="btnFlipCam">Switch camera</button>
+        </div>
+
+        <div class="status" id="scanStatus"></div>
+      </section>
+
+      <section class="card">
+        <h2>Manual Lookup</h2>
+        <p class="muted">If scanning fails, type the <strong>Firestore document ID</strong> or <strong>Asset ID</strong>.</p>
+
+        <label for="manualId">Device ID / Asset ID</label>
+        <input id="manualId" type="text" placeholder="e.g. 8dfGJk... or OCSI-LAP-023" />
+
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnOpen">Open Device</button>
+        </div>
+
+        <div class="status" id="manualStatus"></div>
+      </section>
+    </div>
+
+    <!-- Scan history card -->
+    <section class="card">
+      <h2>Scan History</h2>
+      <p class="muted">Recent codes scanned in this session.</p>
+      <ul id="historyList" class="history-list"></ul>
+    </section>
+  </main>
+</div>
+
+<!-- QR library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+<script type="module">
+  import { watchAuth } from "./firebase.js";
+  import {
+    getFirestore, collection, query, where, getDocs, doc, getDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { app } from "./firebase.js";
+
+  const db = getFirestore(app);
+
+  const whoEl        = document.getElementById("who");
+  const scanStatusEl = document.getElementById("scanStatus");
+  const manualIdEl   = document.getElementById("manualId");
+  const manualStatus = document.getElementById("manualStatus");
+  const btnOpen      = document.getElementById("btnOpen");
+  const btnFlipCam   = document.getElementById("btnFlipCam");
+  const historyList  = document.getElementById("historyList");
+
+  let html5QrCode = null;
+  let cameras = [];
+  let currentCamIndex = 0;
+  let isScanning = false;
+  const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+  const scanHistory = [];
+
+  watchAuth({
+    allowedRoles:["admin","it","viewer"],
+    whoEl,
+    onReady: ()=>{
+      initScanner();
+      btnOpen.addEventListener("click", onManualOpen);
+      btnFlipCam.addEventListener("click", switchCamera);
+    }
+  });
+
+  function initScanner(){
+    if(!window.Html5Qrcode){
+      scanStatusEl.textContent = "Scanner library failed to load.";
+      return;
+    }
+    html5QrCode = new Html5Qrcode("reader");
+    scanStatusEl.textContent = "Initializing camera…";
+
+    Html5Qrcode.getCameras().then(devs=>{
+      if(!devs || !devs.length){
+        scanStatusEl.textContent = "No camera found.";
+        return;
+      }
+      cameras = devs;
+
+      // Prefer back camera if label contains 'back'
+      const backIndex = devs.findIndex(d =>
+        (d.label || "").toLowerCase().includes("back")
+      );
+      currentCamIndex = backIndex >= 0 ? backIndex : 0;
+
+      startCamera();
+    }).catch(err=>{
+      scanStatusEl.textContent = "Unable to access camera: " + err;
+    });
+  }
+
+  function startCamera(){
+    if(!cameras.length || !html5QrCode){
+      scanStatusEl.textContent = "No camera available.";
+      return;
+    }
+    const cam = cameras[currentCamIndex] || cameras[0];
+    scanStatusEl.textContent = "Starting camera…";
+
+    html5QrCode.start(
+      { deviceId: { exact: cam.id } },
+      scanConfig,
+      decodedText => onScanSuccess(decodedText),
+      _errorMessage => {
+        // ignore per-frame decode errors; keep scanning
+      }
+    ).then(()=>{
+      isScanning = true;
+      scanStatusEl.textContent = "Scanning… Point to the QR code.";
+      addOverlay();
+    }).catch(err=>{
+      scanStatusEl.textContent = "Unable to start scanner: " + err;
+    });
+  }
+
+  function switchCamera(){
+    if(!html5QrCode || !cameras.length) return;
+    scanStatusEl.textContent = "Switching camera…";
+
+    const nextIndex = (currentCamIndex + 1) % cameras.length;
+
+    const restart = ()=>{
+      currentCamIndex = nextIndex;
+      startCamera();
+    };
+
+    if(isScanning){
+      html5QrCode.stop().then(()=>{
+        isScanning = false;
+        restart();
+      }).catch(()=>{
+        isScanning = false;
+        restart();
+      });
+    }else{
+      restart();
+    }
+  }
+
+  function addOverlay(){
+    const container = document.getElementById("reader");
+    if(!container) return;
+    if(container.querySelector(".scan-overlay")) return;
+
+    const overlay = document.createElement("div");
+    overlay.className = "scan-overlay";
+    container.appendChild(overlay);
+  }
+
+  function onScanSuccess(decodedText){
+    const code = (decodedText || "").trim();
+    if(!code) return;
+
+    addToHistory(code, "QR");
+    playBeep();
+    addGlow();
+
+    scanStatusEl.textContent = "Scanned: " + code + " – opening device…";
+
+    setTimeout(()=>{
+      if(html5QrCode){
+        html5QrCode.stop().catch(()=>{});
+        isScanning = false;
+      }
+      window.location.href = "item.html?id=" + encodeURIComponent(code);
+    }, 700);
+  }
+
+  async function onManualOpen(){
+    const v = (manualIdEl.value || "").trim();
+    if(!v){
+      manualStatus.textContent = "Enter a device document ID or Asset ID.";
+      return;
+    }
+    manualStatus.textContent = "Looking up…";
+
+    // Try as Firestore doc ID
+    try{
+      const ref = doc(db,"items",v);
+      const snap = await getDoc(ref);
+      if(snap.exists()){
+        addToHistory(v, "Manual");
+        window.location.href = "item.html?id=" + encodeURIComponent(v);
+        return;
+      }
+    }catch(e){
+      // ignore
+    }
+
+    // Try by assetId field
+    try{
+      const q = query(collection(db,"items"), where("assetId","==",v));
+      const snap = await getDocs(q);
+      if(!snap.empty){
+        const first = snap.docs[0];
+        addToHistory(v, "Manual");
+        window.location.href = "item.html?id=" + encodeURIComponent(first.id);
+        return;
+      }
+    }catch(e){
+      console.error(e);
+    }
+
+    manualStatus.textContent = "Device not found by document ID or assetId.";
+  }
+
+  function addToHistory(text, source){
+    const entry = {
+      text,
+      source,
+      time: new Date()
+    };
+    scanHistory.unshift(entry);
+    if(scanHistory.length > 10) scanHistory.pop();
+    renderHistory();
+  }
+
+  function renderHistory(){
+    if(!historyList) return;
+    if(!scanHistory.length){
+      historyList.innerHTML = `<li><span class="code">No scans yet.</span></li>`;
+      return;
+    }
+    historyList.innerHTML = scanHistory.map(e=>{
+      const t = e.time.toLocaleTimeString();
+      return `<li>
+        <span class="code">${escapeHtml(e.text)}</span>
+        <span class="meta">${escapeHtml(e.source)} • ${t}</span>
+      </li>`;
+    }).join("");
+  }
+
+  function addGlow(){
+    const reader = document.getElementById("reader");
+    if(!reader) return;
+    reader.classList.add("scan-glow");
+    setTimeout(()=>reader.classList.remove("scan-glow"), 600);
+  }
+
+  function playBeep(){
+    try{
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if(!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.stop(ctx.currentTime + 0.15);
+    }catch(e){
+      console.warn("Beep failed", e);
+    }
+  }
+
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g,c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
+  }
+</script>
+
+</body>
+</html>
