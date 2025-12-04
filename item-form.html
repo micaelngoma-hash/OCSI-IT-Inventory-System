@@ -75,9 +75,10 @@
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
-      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses</span></a>
+      <a class="active" href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses &amp; Compliance</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
@@ -222,62 +223,39 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, addDoc, collection, serverTimestamp }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signOut }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    doc, getDoc, setDoc, addDoc, collection, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7",
-    measurementId: "G-CM3P9CRX1K"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth = getAuth(app);
-
-  const EDIT_ROLES = ["admin","it"];
-  const who   = document.getElementById("who");
-  const form  = document.getElementById("deviceForm");
-  const formTitle = document.getElementById("formTitle");
+  const who         = document.getElementById("who");
+  const form        = document.getElementById("deviceForm");
+  const formTitle   = document.getElementById("formTitle");
   const editWarning = document.getElementById("editWarning");
 
-  const params = new URLSearchParams(location.search);
-  const itemId = params.get("id");
+  const EDIT_ROLES  = ["admin","it"];
+  const params      = new URLSearchParams(location.search);
+  const itemId      = params.get("id");
 
-  let currentRole = "viewer";
+  let currentRole   = "viewer";
 
-  onAuthStateChanged(auth, async user => {
-    if(!user){
-      location.href="login.html";
-      return;
-    }
-    const uSnap = await getDoc(doc(db,"users",user.uid));
-    const data  = uSnap.exists()? uSnap.data() : {};
-    currentRole = data.role || "viewer";
+  watchAuth({
+    allowedRoles:["admin","it","viewer"],
+    whoEl: who,
+    onReady: async (_user, role)=>{
+      currentRole = role;
 
-    const badge = currentRole==="admin" ? "badge-admin"
-                 : currentRole==="it" ? "badge-it" : "badge-viewer";
+      if(!EDIT_ROLES.includes(currentRole)){
+        editWarning.textContent = "Read-only: viewers cannot save changes.";
+        form.querySelector("button[type='submit']").disabled = true;
+      }
 
-    who.innerHTML = `${user.email} <span class="badge ${badge}">${currentRole}</span>`;
-
-    if(!EDIT_ROLES.includes(currentRole)){
-      editWarning.textContent = "Read-only: viewers cannot save changes.";
-      form.querySelector("button[type='submit']").disabled = true;
-      // but still load data if id present
-    }
-
-    if(itemId){
-      formTitle.textContent = "Edit Device";
-      await loadItem(itemId);
-    } else {
-      formTitle.textContent = "New Device";
+      if(itemId){
+        formTitle.textContent = "Edit Device";
+        await loadItem(itemId);
+      }else{
+        formTitle.textContent = "New Device";
+      }
     }
   });
 
@@ -285,10 +263,17 @@
     const snap = await getDoc(doc(db,"items",id));
     if(!snap.exists()) return;
     const d = snap.data();
-    const setVal = (id, v) => { const el=document.getElementById(id); if(!el) return;
-      if(el.type==="checkbox") el.checked = !!v;
-      else if(el.type==="date" && v) el.value = v.substring(0,10);
-      else el.value = v || "";
+
+    const setVal = (id, v) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(el.type === "checkbox"){
+        el.checked = !!v;
+      }else if(el.type === "date" && v){
+        el.value = String(v).substring(0,10);
+      }else{
+        el.value = v || "";
+      }
     };
 
     setVal("assetId", d.assetId);
@@ -318,48 +303,41 @@
     setVal("notes", d.notes);
   }
 
-  form.addEventListener("submit", async (e)=>{
+  form.addEventListener("submit", async e=>{
     e.preventDefault();
     if(!EDIT_ROLES.includes(currentRole)){
       alert("You do not have permission to save devices.");
       return;
     }
-    const fd = new FormData(form);
+
+    const fd   = new FormData(form);
     const data = Object.fromEntries(fd.entries());
 
     // checkbox
     data.replacementAlert = form.replacementAlert.checked;
 
-    // normalise dates as ISO yyyy-mm-dd strings
-    const dateFields = [
-      "purchaseDate","installationDate","warrantyEndDate",
-      "replacementDate","removedDate"
-    ];
-    dateFields.forEach(f=>{
+    // normalise date fields as plain strings
+    ["purchaseDate","installationDate","warrantyEndDate",
+     "replacementDate","removedDate"].forEach(f=>{
       if(!data[f]) data[f] = "";
     });
 
     data.updatedAt = serverTimestamp();
-    if(!itemId){
-      data.createdAt = serverTimestamp();
-    }
+    if(!itemId) data.createdAt = serverTimestamp();
 
     try{
       if(itemId){
         await setDoc(doc(db,"items",itemId), data, { merge:true });
       }else{
-        await addDoc(collection(db,"items"), data);
+        await addDoc(collection(db,"items"), data);   // <-- creates items collection if missing
       }
       alert("Device saved.");
-      location.href="inventory-list.html";
+      location.href = "inventory-list.html";
     }catch(err){
       console.error(err);
-      alert("Error saving device: "+err.message);
+      alert("Error saving device: " + err.message);
     }
   });
-
-  // simple logout hook if you later wire it to a button
-  window.doLogout = () => signOut(auth);
 </script>
 
 </body>
