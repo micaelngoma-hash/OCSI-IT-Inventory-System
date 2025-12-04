@@ -3,190 +3,291 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OCSI IT Inventory – Software Licenses & Compliance</title>
+<title>Software Licenses & Compliance</title>
 
 <style>
-  :root{ --bg:#0f172a; --bg2:#0b1020; --brand:#1a73e8; --border:#e5e7eb; }
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
+  /* TOP BAR */
   .topbar{
-    background:var(--bg);color:white;padding:12px 16px;
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
 
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-  .sidebar{background:var(--bg2);padding:14px;color:white;}
+  /* PAGE LAYOUT */
+  .layout{
+    display:grid;grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .icon{width:18px;text-align:center;opacity:.8;}
 
-  .content{padding:26px;max-width:1300px;width:100%;margin:0 auto;}
+  .content{
+    padding:18px;max-width:1250px;margin:0 auto;width:100%;
+  }
+  h1{margin:0 0 4px;font-size:1.45rem;}
+  .subtitle{color:#94a3b8;font-size:.9rem;margin-bottom:12px;}
 
-  h1{margin:0 0 20px;font-size:1.6rem;}
-  h2{margin:20px 0 10px;font-size:1.2rem;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
 
+  /* TABLE + BUTTONS */
+  .toolbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:12px;flex-wrap:wrap;gap:10px;
+  }
   .btn{
-    padding:6px 12px;border-radius:8px;
-    background:var(--brand);color:white;
-    border:none;text-decoration:none;cursor:pointer;
-    font-size:.85rem;
+    padding:6px 12px;border-radius:999px;border:none;cursor:pointer;
+    font-size:.85rem;font-weight:500;
+    display:flex;align-items:center;gap:6px;
+    text-decoration:none;
   }
-  .btn-small{padding:4px 8px;font-size:.75rem;}
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
 
-  table{
-    width:100%;border-collapse:collapse;
-    background:white;border-radius:10px;overflow:hidden;
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
   }
+  table{width:100%;border-collapse:collapse;min-width:900px;}
   th,td{
-    padding:10px;border-bottom:1px solid #f1f5f9;
+    padding:8px 10px;border-bottom:1px solid #f1f5f9;
     font-size:.88rem;text-align:left;
   }
   th{background:#f8fafc;font-weight:600;color:#475569;}
 
-  .pill{
-    padding:2px 8px;border-radius:999px;font-size:.75rem;
-    display:inline-block;
-  }
+  tr:hover td{background:#f9fafb;}
+
+  .pill{padding:2px 8px;border-radius:999px;font-size:.75rem;}
   .pill-green{background:#dcfce7;color:#166534;}
-  .pill-red{background:#fee2e2;color:#b91c1c;}
-  .pill-yellow{background:#fef9c3;color:#b45309;}
-  .pill-blue{background:#dbeafe;color:#1d4ed8;}
+  .pill-warn{background:#ffedd5;color:#c2410c;}
+  .pill-bad{background:#fee2e2;color:#b91c1c;}
+  .pill-neutral{background:#e5e7eb;color:#374151;}
 
-  .separator{margin:30px 0;border-top:2px solid #e5e7eb;}
 </style>
-
 </head>
 <body>
 
+<!-- TOP BAR -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Software Licenses & Compliance</div>
-  <div id="who" style="font-size:.85rem;opacity:.8;">Checking session…</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
+<!-- MAIN LAYOUT -->
 <div class="layout">
-  <aside class="sidebar" id="sidebar-root"></aside>
 
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
   <main class="content">
 
     <h1>Software Licenses</h1>
+    <p class="subtitle">Overview of all tracked licenses, usage, expiry, and compliance alerts.</p>
 
-    <!-- PRODUCT LIST -->
-    <h2>Software Products</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Vendor</th>
-          <th>Category</th>
-          <th>Total Licenses</th>
-          <th>Seats Used</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="products-body">
-        <tr><td colspan="6">Loading software…</td></tr>
-      </tbody>
-    </table>
+    <div class="toolbar">
+      <div></div>
+      <button id="addBtn" class="btn btn-primary">➕ New License</button>
+    </div>
 
-    <div class="separator"></div>
-
-    <!-- LICENSE POOLS -->
-    <h2>License Pools</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Software</th>
-          <th>Key / Code</th>
-          <th>Total Seats</th>
-          <th>Used</th>
-          <th>Expiry</th>
-          <th>Compliance</th>
-          <th>Assign</th>
-        </tr>
-      </thead>
-      <tbody id="licenses-body">
-        <tr><td colspan="7">Loading licenses…</td></tr>
-      </tbody>
-    </table>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Software</th>
+            <th>Total Seats</th>
+            <th>Assigned</th>
+            <th>Status</th>
+            <th>Expiry</th>
+            <th style="width:120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="6">Loading licenses…</td></tr>
+        </tbody>
+      </table>
+    </div>
 
   </main>
+
 </div>
 
-<script src="sidebar.js"></script>
-
+<!-- FIREBASE LOGIC -->
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import {
-    collection, getDocs, doc, getDoc
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import { 
+    getFirestore, collection, doc, getDocs, deleteDoc 
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { 
+    getAuth, onAuthStateChanged 
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-  const who         = document.getElementById("who");
-  const bodyProd    = document.getElementById("products-body");
-  const bodyLic     = document.getElementById("licenses-body");
+  /* FIREBASE CONFIG */
+  const firebaseConfig = {
+    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
+    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
+    projectId: "ocsi-it-iventory-system",
+    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
+    messagingSenderId: "941219752022",
+    appId: "1:941219752022:web:f3214e808d36a4a53833f7"
+  };
 
-  watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl: who,
-    onReady: loadAll
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const auth = getAuth(app);
+
+  const ALLOWED = ["admin","it","viewer"];
+  const EDIT = ["admin","it"];
+
+  const whoEl = document.getElementById("who");
+  const addBtn = document.getElementById("addBtn");
+  const tbody = document.getElementById("tbody");
+
+  let currentRole = "viewer";
+
+  /* AUTH CHECK */
+  onAuthStateChanged(auth, async user=>{
+    if(!user){ location.href="login.html"; return; }
+
+    const userRef = doc(db,"users",user.uid);
+    const snap = await getDocs(collection(db,"users"));
+    const usrSnap = await (await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"))
+      .getDoc(userRef);
+
+    let role = usrSnap.exists()? (usrSnap.data().role || "viewer") : "viewer";
+    currentRole = role;
+
+    if(!ALLOWED.includes(role)){
+      alert("Access denied.");
+      location.href="index.html";
+      return;
+    }
+
+    const badge = role==="admin"?"badge-admin":role==="it"?"badge-it":"badge-viewer";
+    whoEl.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
+
+    if(!EDIT.includes(role)) addBtn.style.display="none";
+    else addBtn.onclick = ()=>location.href="software-license-form.html";
+
+    loadLicenses();
   });
 
-  function fmt(d){
-    if(!d) return "—";
-    if(d.toDate) d = d.toDate();
-    return d.toISOString().slice(0,10);
+  /* MAIN DATA LOAD */
+  async function loadLicenses(){
+    const snap = await getDocs(collection(db,"software_license"));
+    const rows=[];
+    snap.forEach(ds=> rows.push({id:ds.id, ...ds.data()}));
+    render(rows);
   }
 
-  async function loadAll(){
-    const prodSnap = await getDocs(collection(db,"software_product"));
-    const licSnap  = await getDocs(collection(db,"software_license"));
+  function render(rows){
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="6">No licenses found.</td></tr>`;
+      return;
+    }
 
-    const products = {};
-    prodSnap.forEach(p=> products[p.id] = { id:p.id, ...p.data() });
+    tbody.innerHTML = rows.map(l=>{
+      const used = Number(l.assignedSeats||0);
+      const total = Number(l.totalSeats||0);
 
-    // RENDER PRODUCTS
-    bodyProd.innerHTML = Object.values(products).map(p=>{
-      const totalLic = Object.values(products).filter(x=>x.productId===p.id).length;
+      /* STATUS PILL */
+      let status = "OK";
+      let pillClass = "pill-green";
+
+      const exp = parseDate(l.expiryDate);
+      const now = new Date();
+      const soon = new Date(now.getTime()+30*86400*1000);
+
+      if(total && used>total){
+        status = "Over-assigned";
+        pillClass = "pill-bad";
+      }
+      else if(exp && exp<now){
+        status = "Expired";
+        pillClass = "pill-bad";
+      }
+      else if(exp && exp<soon){
+        status = "Expiring soon";
+        pillClass = "pill-warn";
+      }
+
+      const expiryText = exp ? exp.toISOString().substring(0,10) : "–";
+
+      const viewUrl = `software-license_details.html?id=${l.id}`;
+      const editUrl = `software-license-form.html?id=${l.id}`;
+
+      const actions = EDIT.includes(currentRole)
+        ? `
+          <a class="btn btn-ghost" style="padding:3px 8px;font-size:.8rem;" href="${editUrl}">Edit</a>
+          <button class="btn btn-ghost" style="padding:3px 8px;font-size:.8rem;color:#b91c1c;"
+            onclick="deleteLicense('${l.id}')">Delete</button>`
+        : `<a class="btn btn-ghost" style="padding:3px 8px;font-size:.8rem;" href="${viewUrl}">View</a>`;
+
       return `
         <tr>
-          <td>${p.name}</td>
-          <td>${p.vendor||"—"}</td>
-          <td>${p.category||"—"}</td>
-          <td>${p.totalLicenses||0}</td>
-          <td>${p.usedSeats||0}</td>
-          <td>
-            <a href="assign-license.html?product=${p.id}" class="btn-small">Edit</a>
-          </td>
+          <td>${escapeHtml(l.softwareName||"–")}</td>
+          <td>${total}</td>
+          <td>${used}</td>
+          <td><span class="pill ${pillClass}">${status}</span></td>
+          <td>${expiryText}</td>
+          <td>${actions}</td>
         </tr>
       `;
     }).join("");
-
-    // RENDER LICENSE POOLS
-    bodyLic.innerHTML = "";
-
-    licSnap.forEach(lic=>{
-      const l = lic.data();
-      const product = products[l.productId] || {name:"(deleted)"};
-
-      const isOver  = Number(l.assignedSeats||0) > Number(l.totalSeats||0);
-      const expSoon = l.expiryDate?.toDate() <= new Date(Date.now()+30*864e5);
-
-      let compliance = `<span class="pill pill-green">OK</span>`;
-      if(isOver) compliance = `<span class="pill pill-red">Over-used</span>`;
-      else if(expSoon) compliance = `<span class="pill pill-yellow">Expiring</span>`;
-
-      bodyLic.innerHTML += `
-        <tr>
-          <td>${product.name}</td>
-          <td>${l.licenseKey||"—"}</td>
-          <td>${l.totalSeats||0}</td>
-          <td>${l.assignedSeats||0}</td>
-          <td>${fmt(l.expiryDate)}</td>
-          <td>${compliance}</td>
-          <td>
-            <a href="assign-license.html?license=${lic.id}" class="btn-small">Assign</a>
-          </td>
-        </tr>
-      `;
-    });
-
   }
+
+  /* DELETE */
+  window.deleteLicense = async function(id){
+    if(!confirm("Delete this license?")) return;
+    await deleteDoc(doc(db,"software_license",id));
+    alert("License deleted.");
+    loadLicenses();
+  }
+
+  function parseDate(v){
+    if(!v) return null;
+    if(typeof v==="string") return new Date(v);
+    if(v.toDate) return v.toDate();
+    return null;
+  }
+
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>\"']/g, c=>({
+      "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    }[c]));
+  }
+
 </script>
 
 </body>
