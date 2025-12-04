@@ -3,193 +3,400 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Audits & Logs</title>
+<title>OCSI IT Inventory – Audits</title>
 <style>
   :root{
     --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
   .topbar{
+    position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
-    padding:12px 16px;display:flex;justify-content:space-between;align-items:center;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
-  .content{padding:22px;max-width:1100px;margin:0 auto;}
 
-  h1{margin:0 0 6px;font-size:1.4rem;}
-  .subtitle{color:#64748b;font-size:.9rem;margin-bottom:16px;}
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
 
-  .card{
-    background:white;border-radius:12px;
-    padding:16px;border:1px solid var(--border);
-    margin-bottom:18px;
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1200px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:white;border:1px solid var(--border);
+    border-radius:999px;padding:4px 10px;
+    max-width:320px;width:100%;
+  }
+  .search-box input{
+    border:none;outline:none;font-size:.88rem;width:100%;
   }
 
   .filters{
-    display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
   }
-  select,input{
-    padding:6px 9px;border-radius:8px;border:1px solid var(--border);font-size:.85rem;
-  }
-  .btn{
-    border:none;cursor:pointer;
-    padding:6px 11px;border-radius:999px;
-    font-size:.83rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:6px;
-    background:var(--brand);color:white;
+  select{
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);
+    font-size:.85rem;
+    background:white;
   }
 
-  .table-wrap{border-radius:12px;border:1px solid var(--border);overflow:auto;margin-top:6px;}
-  table{border-collapse:collapse;width:100%;min-width:780px;font-size:.84rem;}
-  th,td{padding:7px 9px;border-bottom:1px solid #f1f5f9;text-align:left;}
-  th{background:#f8fafc;font-weight:600;color:#475569;}
+  .card{
+    background:white;border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .card h2{
+    margin:0 0 8px;font-size:1.05rem;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:900px;
+  }
+  th,td{
+    padding:8px 10px;
+    border-bottom:1px solid #f1f5f9;
+    font-size:.85rem;
+    text-align:left;
+  }
+  th{
+    background:#f8fafc;
+    font-weight:600;
+    color:#475569;
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  tr:hover td{background:#f9fafb;}
 
   .pill{
-    display:inline-flex;padding:2px 8px;border-radius:999px;font-size:.75rem;
+    display:inline-flex;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:.75rem;
   }
-  .pill-create{background:#dcfce7;color:#166534;}
-  .pill-update{background:#dbeafe;color:#1d4ed8;}
-  .pill-delete{background:#fee2e2;color:#b91c1c;}
+  .pill-blue{background:#dbeafe;color:#1d4ed8;}
+  .pill-green{background:#dcfce7;color:#166534;}
+  .pill-red{background:#fee2e2;color:#b91c1c;}
+  .pill-gray{background:#e5e7eb;color:#374151;}
+
+  .status-bar{
+    font-size:.82rem;
+    margin-top:4px;
+    min-height:18px;
+    color:#6b7280;
+  }
+
+  .side-list{
+    margin:6px 0 0;
+    padding-left:18px;
+    font-size:.82rem;
+    color:#6b7280;
+  }
+  .side-list li{margin-bottom:3px;}
+
+  .badge-small{
+    display:inline-flex;
+    align-items:center;
+    padding:2px 6px;
+    border-radius:999px;
+    font-size:.7rem;
+    background:#e5e7eb;
+    color:#374151;
+  }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Audits & Logs</div>
+  <div><strong>OCSI IT Inventory</strong> – Audits</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar" id="sidebar-root"></aside>
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
+      <a class="active" href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
 
   <main class="content">
-    <h1>Audit Trail</h1>
+    <h1>Audit Log</h1>
     <p class="subtitle">
-      View who changed what and when across the inventory and software system.
+      Read-only history of important actions in the inventory system: who did what, where, and when.
     </p>
 
     <section class="card">
-      <div class="filters">
-        <select id="fAction">
-          <option value="">All actions</option>
-          <option value="create">Created</option>
-          <option value="update">Updated</option>
-          <option value="delete">Deleted</option>
-        </select>
-        <select id="fEntity">
-          <option value="">All entities</option>
-          <option value="item">Items</option>
-          <option value="software_license">Software Licenses</option>
-          <option value="software_product">Software Products</option>
-        </select>
-        <input id="fUser" placeholder="Filter by user email…" />
-        <button id="refreshBtn" class="btn" type="button">🔄 Refresh</button>
+      <div class="toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input id="search" placeholder="Search user, target, details…"/>
+        </div>
+        <div class="filters">
+          <select id="actionFilter">
+            <option value="">All actions</option>
+            <option value="create">Created</option>
+            <option value="update">Updated</option>
+            <option value="delete">Deleted</option>
+            <option value="login">Login</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
       </div>
+      <p class="muted">
+        Showing the most recent audit events from Firestore collection <code>audits</code>.
+      </p>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Time</th>
-              <th>Action</th>
-              <th>Entity</th>
-              <th>Entity ID</th>
+              <th style="width:160px;">Timestamp</th>
               <th>User</th>
+              <th>Action</th>
+              <th>Target</th>
+              <th>Target Type</th>
               <th>Details</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6">Loading audit logs…</td></tr>
+            <tr><td colspan="6">Loading audit events…</td></tr>
           </tbody>
         </table>
       </div>
+
+      <div class="status-bar" id="statusBar"></div>
     </section>
 
+    <section class="card">
+      <h2>What’s logged?</h2>
+      <p class="muted">
+        This page is read-only and is meant to help IT staff trace configuration changes or asset updates.
+      </p>
+      <ul class="side-list">
+        <li>Typical events: device create/update/delete, user role updates, license changes, logins.</li>
+        <li>Each event should contain: <code>timestamp</code>, <code>userEmail</code>, <code>action</code>, <code>targetType</code>, <code>targetId</code>, and optional <code>details</code>.</li>
+        <li>If you don’t see anything here, make sure your Cloud Functions or frontend writes to the <code>audits</code> collection.</li>
+      </ul>
+    </section>
   </main>
 </div>
 
-<script src="sidebar.js"></script>
-
 <script type="module">
-import { db, watchAuth } from "./firebase.js";
-import {
-  collection, getDocs, orderBy, query
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    collection, getDocs, query, orderBy, limit
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const whoEl     = document.getElementById("who");
-const fAction   = document.getElementById("fAction");
-const fEntity   = document.getElementById("fEntity");
-const fUser     = document.getElementById("fUser");
-const refreshBtn= document.getElementById("refreshBtn");
-const tbody     = document.getElementById("tbody");
+  const whoEl      = document.getElementById("who");
+  const tbody      = document.getElementById("tbody");
+  const statusBar  = document.getElementById("statusBar");
+  const searchEl   = document.getElementById("search");
+  const actionFilter = document.getElementById("actionFilter");
 
-let allLogs = [];
+  let allAudits = [];
 
-watchAuth({
-  allowedRoles:["admin","it","viewer"], // everyone can see logs
-  whoEl,
-  onReady: loadLogs
-});
-
-async function loadLogs(){
-  const qRef = query(collection(db,"audits"), orderBy("timestamp","desc"));
-  const snap = await getDocs(qRef);
-  allLogs = [];
-  snap.forEach(d=>{
-    allLogs.push({ id:d.id, ...d.data() });
-  });
-  render();
-}
-
-function render(){
-  const act = fAction.value;
-  const ent = fEntity.value;
-  const userTerm = (fUser.value || "").toLowerCase();
-
-  const rows = allLogs.filter(log=>{
-    if(act && log.action!==act) return false;
-    if(ent && log.entityType!==ent) return false;
-    if(userTerm && !(log.userEmail||"").toLowerCase().includes(userTerm)) return false;
-    return true;
+  // Only admin & IT see audits; change allowedRoles if you want viewers too.
+  watchAuth({
+    allowedRoles:["admin","it"],
+    whoEl,
+    onReady: async ()=>{
+      await loadAudits();
+      searchEl.addEventListener("input", render);
+      actionFilter.addEventListener("change", render);
+    }
   });
 
-  if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="6">No audit events match the current filters.</td></tr>`;
-    return;
+  function setStatus(msg){
+    statusBar.textContent = msg || "";
   }
 
-  tbody.innerHTML = rows.slice(0,200).map(l=>{
-    const ts = l.timestamp?.toDate ? l.timestamp.toDate() : (l.timestamp ? new Date(l.timestamp) : null);
-    const timeStr = ts ? ts.toISOString().replace("T"," ").slice(0,19) : "–";
-    const actLabel = l.action || "unknown";
-    const pillClass =
-      actLabel==="create" ? "pill-create" :
-      actLabel==="update" ? "pill-update" :
-      actLabel==="delete" ? "pill-delete" : "";
+  function toDate(val){
+    if(!val) return null;
+    try{
+      if(val.toDate) return val.toDate();
+      return new Date(val);
+    }catch{
+      return null;
+    }
+  }
 
-    return `
-      <tr>
-        <td>${timeStr}</td>
-        <td><span class="pill ${pillClass}">${escapeHtml(actLabel)}</span></td>
-        <td>${escapeHtml(l.entityType || "")}</td>
-        <td>${escapeHtml(l.entityId || "")}</td>
-        <td>${escapeHtml(l.userEmail || "")}</td>
-        <td>${escapeHtml(l.details || "")}</td>
-      </tr>`;
-  }).join("");
-}
+  function formatDate(val){
+    const d = toDate(val);
+    if(!d || isNaN(d.getTime())) return "";
+    // Compact local string
+    return d.toLocaleString();
+  }
 
-function escapeHtml(s){
-  return String(s||"").replace(/[&<>"']/g,c=>(
-    { "&":"&amp;","<":"&lt;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-  ));
-}
+  async function loadAudits(){
+    try{
+      setStatus("Loading audit entries…");
 
-fAction.addEventListener("change", render);
-fEntity.addEventListener("change", render);
-fUser.addEventListener("input", render);
-refreshBtn.addEventListener("click", loadLogs);
+      // Most recent 200 events – adjust limit if you want more/less
+      const q = query(
+        collection(db,"audits"),
+        orderBy("timestamp","desc"),
+        limit(200)
+      );
+      const snap = await getDocs(q);
+
+      allAudits = [];
+      snap.forEach(ds=>{
+        allAudits.push({
+          id: ds.id,
+          ...ds.data()
+        });
+      });
+
+      if(!allAudits.length){
+        tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
+        setStatus("No audit entries in collection \"audits\" yet.");
+        return;
+      }
+
+      render();
+      setStatus(`Loaded ${allAudits.length} audit events (latest first).`);
+    }catch(err){
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="6">Failed to load audits.</td></tr>`;
+      setStatus("Error loading audits: " + err.message);
+    }
+  }
+
+  function render(){
+    if(!allAudits.length){
+      tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
+      return;
+    }
+
+    const term = (searchEl.value || "").toLowerCase();
+    const actionVal = actionFilter.value;
+
+    const rows = allAudits.filter(ev=>{
+      const action = (ev.action || "").toLowerCase();
+      if(actionVal){
+        if(actionVal === "other"){
+          if(action === "create" || action === "update" || action === "delete" || action === "login") {
+            return false;
+          }
+        }else if(action !== actionVal){
+          return false;
+        }
+      }
+
+      if(!term) return true;
+
+      const hay = [
+        ev.userEmail,
+        ev.userId,
+        ev.targetId,
+        ev.targetType,
+        ev.details,
+        ev.action
+      ].join(" ").toLowerCase();
+
+      return hay.includes(term);
+    });
+
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="6">No audit events match your filters.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(ev=>{
+      const ts = formatDate(ev.timestamp);
+      const email = ev.userEmail || "(unknown user)";
+      const action = (ev.action || "other").toLowerCase();
+      const targetType = ev.targetType || "";
+      const targetId   = ev.targetId || "";
+      const details    = ev.details || "";
+
+      let pillClass = "pill-gray";
+      if(action === "create") pillClass = "pill-green";
+      else if(action === "update") pillClass = "pill-blue";
+      else if(action === "delete") pillClass = "pill-red";
+      else if(action === "login") pillClass = "pill-blue";
+
+      const targetLabel = targetId
+        ? `${escapeHtml(targetId)}`
+        : "";
+
+      return `
+        <tr>
+          <td>${escapeHtml(ts)}</td>
+          <td>${escapeHtml(email)}</td>
+          <td><span class="pill ${pillClass}">${escapeHtml(action)}</span></td>
+          <td>${targetLabel}</td>
+          <td>${escapeHtml(targetType)}</td>
+          <td>${escapeHtml(details)}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g,c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
+  }
 </script>
 
 </body>
