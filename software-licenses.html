@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Software Licenses & Compliance</title>
+<title>Software Licenses &amp; Compliance</title>
 
 <style>
   :root{
@@ -13,7 +13,6 @@
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
-  /* TOP BAR */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -21,7 +20,6 @@
     display:flex;justify-content:space-between;align-items:center;
   }
 
-  /* PAGE LAYOUT */
   .layout{
     display:grid;grid-template-columns:240px 1fr;
     min-height:calc(100vh - 52px);
@@ -49,7 +47,6 @@
   .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
   .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
 
-  /* TABLE + BUTTONS */
   .toolbar{
     display:flex;justify-content:space-between;align-items:center;
     margin-bottom:12px;flex-wrap:wrap;gap:10px;
@@ -73,7 +70,6 @@
     font-size:.88rem;text-align:left;
   }
   th{background:#f8fafc;font-weight:600;color:#475569;}
-
   tr:hover td{background:#f9fafb;}
 
   .pill{padding:2px 8px;border-radius:999px;font-size:.75rem;}
@@ -81,26 +77,21 @@
   .pill-warn{background:#ffedd5;color:#c2410c;}
   .pill-bad{background:#fee2e2;color:#b91c1c;}
   .pill-neutral{background:#e5e7eb;color:#374151;}
-
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Software Licenses & Compliance</div>
+  <div><strong>OCSI IT Inventory</strong> – Software Licenses &amp; Compliance</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
-<!-- MAIN LAYOUT -->
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
       <a href="software-dashboard.html"><span class="icon">💻</span><span>Software Dashboard</span></a>
-      <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Licenses & Compliance</span></a>
+      <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Licenses &amp; Compliance</span></a>
       <a href="inventory-list.html"><span class="icon">📋</span><span>Inventory List</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
@@ -110,9 +101,7 @@
     </nav>
   </aside>
 
-  <!-- CONTENT -->
   <main class="content">
-
     <h1>Software Licenses</h1>
     <p class="subtitle">Overview of all tracked licenses, usage, expiry, and compliance alerts.</p>
 
@@ -138,76 +127,42 @@
         </tbody>
       </table>
     </div>
-
   </main>
-
 </div>
 
-<!-- FIREBASE LOGIC -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import { 
-    getFirestore, collection, doc, getDocs, deleteDoc 
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    collection, doc, getDocs, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-  import { 
-    getAuth, onAuthStateChanged 
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-  /* FIREBASE CONFIG */
-  const firebaseConfig = {
-    apiKey: "AIzaSyCnf-hKBJXqEkmwwdM29RWwvZjSAmTMGSE",
-    authDomain: "ocsi-it-iventory-system.firebaseapp.com",
-    projectId: "ocsi-it-iventory-system",
-    storageBucket: "ocsi-it-iventory-system.firebasestorage.app",
-    messagingSenderId: "941219752022",
-    appId: "1:941219752022:web:f3214e808d36a4a53833f7"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
-  const auth = getAuth(app);
-
-  const ALLOWED = ["admin","it","viewer"];
-  const EDIT = ["admin","it"];
 
   const whoEl = document.getElementById("who");
   const addBtn = document.getElementById("addBtn");
-  const tbody = document.getElementById("tbody");
+  const tbody  = document.getElementById("tbody");
 
-  let currentRole = "viewer";
+  const EDIT_ROLES = ["admin","it"];
+  let currentRole  = "viewer";
 
-  /* AUTH CHECK */
-  onAuthStateChanged(auth, async user=>{
-    if(!user){ location.href="login.html"; return; }
+  watchAuth({
+    allowedRoles:["admin","it","viewer"],
+    whoEl,
+    onReady: (_user, role)=>{
+      currentRole = role;
 
-    const userRef = doc(db,"users",user.uid);
-    const snap = await getDocs(collection(db,"users"));
-    const usrSnap = await (await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"))
-      .getDoc(userRef);
+      if(!EDIT_ROLES.includes(role)){
+        addBtn.style.display = "none";
+      }else{
+        addBtn.onclick = ()=> location.href = "software-license-form.html";
+      }
 
-    let role = usrSnap.exists()? (usrSnap.data().role || "viewer") : "viewer";
-    currentRole = role;
-
-    if(!ALLOWED.includes(role)){
-      alert("Access denied.");
-      location.href="index.html";
-      return;
+      loadLicenses();
     }
-
-    const badge = role==="admin"?"badge-admin":role==="it"?"badge-it":"badge-viewer";
-    whoEl.innerHTML = `${user.email} <span class="badge ${badge}">${role}</span>`;
-
-    if(!EDIT.includes(role)) addBtn.style.display="none";
-    else addBtn.onclick = ()=>location.href="software-license-form.html";
-
-    loadLicenses();
   });
 
-  /* MAIN DATA LOAD */
   async function loadLicenses(){
     const snap = await getDocs(collection(db,"software_license"));
-    const rows=[];
-    snap.forEach(ds=> rows.push({id:ds.id, ...ds.data()}));
+    const rows = [];
+    snap.forEach(ds => rows.push({ id: ds.id, ...ds.data() }));
     render(rows);
   }
 
@@ -218,26 +173,23 @@
     }
 
     tbody.innerHTML = rows.map(l=>{
-      const used = Number(l.assignedSeats||0);
-      const total = Number(l.totalSeats||0);
+      const used  = Number(l.assignedSeats || 0);
+      const total = Number(l.totalSeats || 0);
 
-      /* STATUS PILL */
-      let status = "OK";
+      let status    = "OK";
       let pillClass = "pill-green";
 
       const exp = parseDate(l.expiryDate);
       const now = new Date();
-      const soon = new Date(now.getTime()+30*86400*1000);
+      const soon = new Date(now.getTime() + 30*24*60*60*1000);
 
-      if(total && used>total){
+      if(total && used > total){
         status = "Over-assigned";
         pillClass = "pill-bad";
-      }
-      else if(exp && exp<now){
+      }else if(exp && exp < now){
         status = "Expired";
         pillClass = "pill-bad";
-      }
-      else if(exp && exp<soon){
+      }else if(exp && exp < soon){
         status = "Expiring soon";
         pillClass = "pill-warn";
       }
@@ -247,7 +199,7 @@
       const viewUrl = `software-license_details.html?id=${l.id}`;
       const editUrl = `software-license-form.html?id=${l.id}`;
 
-      const actions = EDIT.includes(currentRole)
+      const actions = EDIT_ROLES.includes(currentRole)
         ? `
           <a class="btn btn-ghost" style="padding:3px 8px;font-size:.8rem;" href="${editUrl}">Edit</a>
           <button class="btn btn-ghost" style="padding:3px 8px;font-size:.8rem;color:#b91c1c;"
@@ -256,38 +208,40 @@
 
       return `
         <tr>
-          <td>${escapeHtml(l.softwareName||"–")}</td>
+          <td>${escapeHtml(l.softwareName || "–")}</td>
           <td>${total}</td>
           <td>${used}</td>
           <td><span class="pill ${pillClass}">${status}</span></td>
           <td>${expiryText}</td>
           <td>${actions}</td>
-        </tr>
-      `;
+        </tr>`;
     }).join("");
   }
 
-  /* DELETE */
+  // make delete available from inline onclick
   window.deleteLicense = async function(id){
+    if(!EDIT_ROLES.includes(currentRole)){
+      alert("You do not have permission to delete licenses.");
+      return;
+    }
     if(!confirm("Delete this license?")) return;
-    await deleteDoc(doc(db,"software_license",id));
+    await deleteDoc(doc(db,"software_license",id));   // <-- creates collection on first write elsewhere
     alert("License deleted.");
     loadLicenses();
-  }
+  };
 
   function parseDate(v){
     if(!v) return null;
-    if(typeof v==="string") return new Date(v);
-    if(v.toDate) return v.toDate();
+    if(typeof v === "string") return new Date(v);
+    if(v.toDate) return v.toDate(); // Firestore Timestamp
     return null;
   }
 
   function escapeHtml(s){
-    return String(s||"").replace(/[&<>\"']/g, c=>({
+    return String(s || "").replace(/[&<>"']/g, c => ({
       "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
     }[c]));
   }
-
 </script>
 
 </body>
