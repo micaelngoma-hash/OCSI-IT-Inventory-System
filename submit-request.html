@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI Help Request – Submit a Ticket</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+
+  .content{
+    max-width:720px;
+    margin:26px auto;
+    padding:0 16px 40px;
+  }
+  h1{margin:0 0 4px;font-size:1.6rem;}
+  .subtitle{color:#64748b;font-size:.9rem;margin-bottom:16px;}
+
+  .card{
+    background:white;border-radius:14px;
+    border:1px solid var(--border);
+    padding:18px 18px 16px;
+  }
+
+  .field-label{
+    font-size:.82rem;
+    font-weight:600;
+    margin-top:10px;
+    margin-bottom:3px;
+  }
+  .field-label span.req{
+    color:#ef4444;
+  }
+  .field-input,
+  .field-select,
+  .field-textarea{
+    width:100%;
+    padding:7px 10px;
+    border-radius:9px;
+    border:1px solid #cbd5e1;
+    font-size:.9rem;
+    font-family:inherit;
+  }
+  .field-textarea{
+    min-height:80px;
+    resize:vertical;
+  }
+
+  .inline-two{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+  @media(max-width:640px){
+    .inline-two{grid-template-columns:1fr;}
+  }
+
+  .btn{
+    border:none;cursor:pointer;
+    padding:8px 16px;border-radius:999px;
+    font-size:.9rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:7px;
+    text-decoration:none;
+  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .status-bar{
+    font-size:.85rem;
+    margin-top:8px;
+    min-height:18px;
+    color:#64748b;
+  }
+  .status-ok{color:#15803d;}
+  .status-error{color:#b91c1c;}
+
+  .small-note{
+    font-size:.78rem;
+    color:#9ca3af;
+    margin-top:6px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><strong>OCSI Help Request</strong> – Submit a Ticket</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<main class="content">
+  <h1>Submit a Request</h1>
+  <p class="subtitle">
+    Use this form for any request to IT, Maintenance, Front Office, or the Nurse.
+    You’ll receive a reply by email once it has been updated.
+  </p>
+
+  <section class="card">
+    <div class="field-label">Your name</div>
+    <input id="requesterName" class="field-input" placeholder="Will auto-fill from your account" disabled>
+
+    <div class="field-label">Your email</div>
+    <input id="requesterEmail" class="field-input" placeholder="Will auto-fill from your account" disabled>
+
+    <div class="field-label">Which team should handle this? <span class="req">*</span></div>
+    <select id="groupInput" class="field-select">
+      <option value="it">IT – computers, network, accounts…</option>
+      <option value="maintenance">Maintenance – facilities, furniture, repairs…</option>
+      <option value="front-office">Front Office – general office requests…</option>
+      <option value="nurse">Nurse – medical / health-related</option>
+    </select>
+
+    <div class="field-label">Summary <span class="req">*</span></div>
+    <input id="summaryInput" class="field-input" maxlength="120"
+           placeholder="Short title (e.g. Projector not working in Room 204)">
+
+    <div class="field-label">Description <span class="req">*</span></div>
+    <textarea id="descriptionInput" class="field-textarea"
+      placeholder="Please describe the issue or request. Include room / location, device, and any other helpful details."></textarea>
+
+    <div class="inline-two">
+      <div>
+        <div class="field-label">Location</div>
+        <input id="locationInput" class="field-input" placeholder="Room / area (e.g. ES 204, Gym)">
+      </div>
+      <div>
+        <div class="field-label">Requested completion date</div>
+        <input id="dueDateInput" class="field-input" type="date">
+      </div>
+    </div>
+
+    <div class="inline-two">
+      <div>
+        <div class="field-label">Priority</div>
+        <select id="priorityInput" class="field-select">
+          <option value="medium" selected>Normal</option>
+          <option value="high">High – blocks teaching / safety</option>
+          <option value="low">Low – nice to have</option>
+        </select>
+      </div>
+      <div>
+        <div class="field-label">Urgency (1–5)</div>
+        <select id="urgencyInput" class="field-select">
+          <option value="1">1 – Not urgent</option>
+          <option value="2">2</option>
+          <option value="3" selected>3 – Normal</option>
+          <option value="4">4</option>
+          <option value="5">5 – Very urgent</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;">
+      <button id="submitBtn" class="btn btn-primary" type="button">
+        📨 Submit request
+      </button>
+      <button id="resetBtn" class="btn btn-ghost" type="button">
+        Clear form
+      </button>
+    </div>
+
+    <div id="statusBar" class="status-bar"></div>
+    <div class="small-note">
+      Your request is logged in the internal ticket system and routed to the selected group.
+    </div>
+  </section>
+</main>
+
+<script type="module">
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    collection, addDoc, serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const whoEl            = document.getElementById("who");
+  const requesterNameEl  = document.getElementById("requesterName");
+  const requesterEmailEl = document.getElementById("requesterEmail");
+
+  const groupInput       = document.getElementById("groupInput");
+  const summaryInput     = document.getElementById("summaryInput");
+  const descriptionInput = document.getElementById("descriptionInput");
+  const locationInput    = document.getElementById("locationInput");
+  const dueDateInput     = document.getElementById("dueDateInput");
+  const priorityInput    = document.getElementById("priorityInput");
+  const urgencyInput     = document.getElementById("urgencyInput");
+
+  const submitBtn        = document.getElementById("submitBtn");
+  const resetBtn         = document.getElementById("resetBtn");
+  const statusBar        = document.getElementById("statusBar");
+
+  let currentUser = null;
+
+  // Allow any authenticated role (admin, it, viewer, staff, etc.)
+  watchAuth({
+    allowedRoles:["admin","it","viewer","staff"],
+    whoEl,
+    onReady: (user, _role)=>{
+      currentUser = user;
+      requesterNameEl.value  = user?.displayName || "";
+      requesterEmailEl.value = user?.email || "";
+    }
+  });
+
+  submitBtn.addEventListener("click", submitRequest);
+  resetBtn.addEventListener("click", clearForm);
+
+  function setStatus(msg, type=""){
+    statusBar.textContent = msg;
+    statusBar.className = "status-bar" + (type ? " " + type : "");
+  }
+
+  function clearForm(){
+    groupInput.value       = "it";
+    summaryInput.value     = "";
+    descriptionInput.value = "";
+    locationInput.value    = "";
+    dueDateInput.value     = "";
+    priorityInput.value    = "medium";
+    urgencyInput.value     = "3";
+    setStatus("");
+  }
+
+  async function submitRequest(){
+    const summary = summaryInput.value.trim();
+    const description = descriptionInput.value.trim();
+
+    if(!summary || !description){
+      setStatus("Please fill in the summary and description.", "status-error");
+      return;
+    }
+
+    submitBtn.disabled = true;
+    setStatus("Submitting your request…");
+
+    const data = {
+      summary,
+      description,
+      group: groupInput.value,             // it / maintenance / front-office / nurse
+      priority: priorityInput.value,       // low / medium / high
+      status: "open",                      // always open on create
+      location: locationInput.value.trim(),
+      requestedCompletionDate: dueDateInput.value || "",
+      urgency: Number(urgencyInput.value || 3),
+      requesterEmail: currentUser?.email || "",
+      requesterName: currentUser?.displayName || "",
+      source: "self-service",
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    try{
+      const ref = await addDoc(collection(db,"tickets"), data);
+      setStatus(`Request submitted! Reference: #${ref.id.slice(0,8)}`, "status-ok");
+      // Optional: clear the form after success
+      clearForm();
+    }catch(err){
+      console.error(err);
+      setStatus("There was a problem submitting your request: " + err.message, "status-error");
+    }finally{
+      submitBtn.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>
