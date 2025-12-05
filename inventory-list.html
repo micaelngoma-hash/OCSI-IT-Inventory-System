@@ -76,6 +76,15 @@
   .btn-primary{background:var(--brand);color:white;}
   .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
 
+  /* small badge inside buttons */
+  .btn-badge{
+    font-size:.7rem;
+    padding:1px 6px;
+    border-radius:999px;
+    background:rgba(59,130,246,.12);
+    color:#1d4ed8;
+  }
+
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -141,8 +150,23 @@
           <option value="retired">Retired</option>
           <option value="repair">Under repair</option>
         </select>
+
+        <!-- New Device -->
         <button id="addBtn" class="btn btn-primary" type="button">
           ➕ New Device
+          <span class="btn-badge">Admin / IT</span>
+        </button>
+
+        <!-- Import CSV -->
+        <button id="importBtn" class="btn btn-ghost" type="button">
+          📤 Import CSV
+          <span class="btn-badge">Admin / IT</span>
+        </button>
+
+        <!-- Export CSV -->
+        <button id="exportBtn" class="btn btn-ghost" type="button">
+          ⬇️ Export CSV
+          <span class="btn-badge">Admin / IT</span>
         </button>
       </div>
     </div>
@@ -180,6 +204,8 @@
   const searchInput  = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
   const addBtn       = document.getElementById("addBtn");
+  const importBtn    = document.getElementById("importBtn");
+  const exportBtn    = document.getElementById("exportBtn");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole  = "viewer";
@@ -191,12 +217,20 @@
     onReady: async (_user, role)=>{
       currentRole = role;
 
-      // New Device button
+      // Role-based visibility for action buttons
       if(!EDIT_ROLES.includes(role)){
-        addBtn.style.display = "none";
+        addBtn.style.display    = "none";
+        importBtn.style.display = "none";
+        exportBtn.style.display = "none";
       }else{
         addBtn.addEventListener("click", () => {
           window.location.href = "item-form.html";
+        });
+        importBtn.addEventListener("click", () => {
+          window.location.href = "import-excel.html";
+        });
+        exportBtn.addEventListener("click", () => {
+          window.location.href = "export.html";
         });
       }
 
