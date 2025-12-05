@@ -76,15 +76,6 @@
   .btn-primary{background:var(--brand);color:white;}
   .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
 
-  /* small badge inside buttons */
-  .btn-badge{
-    font-size:.7rem;
-    padding:1px 6px;
-    border-radius:999px;
-    background:rgba(59,130,246,.12);
-    color:#1d4ed8;
-  }
-
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -124,8 +115,8 @@
       <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
       <a class="active" href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
-      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <a href="import-devices.html"><span class="icon">📤</span><span>Import CSV</span></a>
+      <a href="export-devices.html"><span class="icon">⬇️</span><span>Export Devices</span></a>
+      <a href="import-devices.html"><span class="icon">📤</span><span>Import Devices CSV</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
@@ -151,12 +142,12 @@
           <option value="repair">Under repair</option>
         </select>
         
-        <!-- Export CSV -->
+        <!-- Export Devices CSV -->
         <button id="exportBtn" class="btn btn-ghost" type="button">
           ⬇️ Export CSV
         </button>
 
-        <!-- Import CSV -->
+        <!-- Import Devices CSV -->
         <button id="importBtn" class="btn btn-ghost" type="button">
           📤 Import CSV
         </button>
@@ -228,7 +219,7 @@
           window.location.href = "import-devices.html";
         });
         exportBtn.addEventListener("click", () => {
-          window.location.href = "export.html";
+          window.location.href = "export-devices.html";
         });
       }
 
