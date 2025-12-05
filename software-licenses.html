@@ -51,6 +51,14 @@
     display:flex;justify-content:space-between;align-items:center;
     margin-bottom:12px;flex-wrap:wrap;gap:10px;
   }
+  .toolbar-left{
+    display:flex;align-items:center;gap:8px;
+    font-size:.8rem;color:#64748b;
+  }
+  .toolbar-right{
+    display:flex;gap:8px;flex-wrap:wrap;
+  }
+
   .btn{
     padding:6px 12px;border-radius:999px;border:none;cursor:pointer;
     font-size:.85rem;font-weight:500;
@@ -93,10 +101,11 @@
       <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
       <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
-      <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <a href="import-excel.html"><span class="icon">📤</span><span>Import CSV</span></a>
+      <a href="export-software.html"><span class="icon">⬇️</span><span>Export Software</span></a>
+      <a href="import-excel.html"><span class="icon">📤</span><span>Import Devices CSV</span></a>
+      <a href="import-licenses.html"><span class="icon">📤</span><span>Import Licenses CSV</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-        <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
@@ -106,8 +115,21 @@
     <p class="subtitle">Overview of all tracked licenses, usage, expiry, and compliance alerts.</p>
 
     <div class="toolbar">
-      <div></div>
-      <button id="addBtn" class="btn btn-primary">➕ New License</button>
+      <div class="toolbar-left">
+        <span>Page actions:</span>
+        <span id="roleBadgeMini" class="badge badge-viewer" style="display:none;"></span>
+      </div>
+      <div class="toolbar-right">
+        <button id="exportLicBtn" class="btn btn-ghost" type="button">
+          ⬇️ Export Licenses CSV
+        </button>
+        <button id="importLicBtn" class="btn btn-ghost" type="button">
+          📤 Import Licenses CSV
+        </button>
+        <button id="addBtn" class="btn btn-primary" type="button">
+          ➕ New License
+        </button>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -136,9 +158,12 @@
     collection, doc, getDocs, deleteDoc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl = document.getElementById("who");
-  const addBtn = document.getElementById("addBtn");
-  const tbody  = document.getElementById("tbody");
+  const whoEl          = document.getElementById("who");
+  const addBtn         = document.getElementById("addBtn");
+  const importLicBtn   = document.getElementById("importLicBtn");
+  const exportLicBtn   = document.getElementById("exportLicBtn");
+  const roleBadgeMini  = document.getElementById("roleBadgeMini");
+  const tbody          = document.getElementById("tbody");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole  = "viewer";
@@ -149,10 +174,25 @@
     onReady: (_user, role)=>{
       currentRole = role;
 
+      // Mini role badge beside buttons
+      const badgeClass = role === "admin"
+        ? "badge-admin"
+        : role === "it"
+          ? "badge-it"
+          : "badge-viewer";
+      roleBadgeMini.className = "badge " + badgeClass;
+      roleBadgeMini.textContent = role;
+      roleBadgeMini.style.display = "inline-block";
+
       if(!EDIT_ROLES.includes(role)){
-        addBtn.style.display = "none";
+        // View-only: hide buttons
+        addBtn.style.display       = "none";
+        importLicBtn.style.display = "none";
+        exportLicBtn.style.display = "none";
       }else{
-        addBtn.onclick = ()=> location.href = "software-license-form.html";
+        addBtn.onclick       = ()=> location.href = "software-license-form.html";
+        importLicBtn.onclick = ()=> location.href = "import-licenses.html";
+        exportLicBtn.onclick = ()=> location.href = "export-software.html";
       }
 
       loadLicenses();
@@ -179,18 +219,18 @@
       let status    = "OK";
       let pillClass = "pill-green";
 
-      const exp = parseDate(l.expiryDate);
-      const now = new Date();
+      const exp  = parseDate(l.expiryDate);
+      const now  = new Date();
       const soon = new Date(now.getTime() + 30*24*60*60*1000);
 
       if(total && used > total){
-        status = "Over-assigned";
+        status    = "Over-assigned";
         pillClass = "pill-bad";
       }else if(exp && exp < now){
-        status = "Expired";
+        status    = "Expired";
         pillClass = "pill-bad";
       }else if(exp && exp < soon){
-        status = "Expiring soon";
+        status    = "Expiring soon";
         pillClass = "pill-warn";
       }
 
@@ -225,7 +265,7 @@
       return;
     }
     if(!confirm("Delete this license?")) return;
-    await deleteDoc(doc(db,"software_license",id));   // <-- creates collection on first write elsewhere
+    await deleteDoc(doc(db,"software_license",id));
     alert("License deleted.");
     loadLicenses();
   };
