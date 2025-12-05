@@ -232,7 +232,10 @@
       <ul class="side-list">
         <li>Typical events: device create/update/delete, user role updates, license changes, logins.</li>
         <li>Each event should contain: <code>timestamp</code>, <code>userEmail</code>, <code>action</code>, <code>targetType</code>, <code>targetId</code>, and optional <code>details</code>.</li>
-        <li>If you don’t see anything here, make sure your Cloud Functions or frontend writes to the <code>audits</code> collection.</li>
+        <li>
+          If you don’t see anything here, make sure your Cloud Functions or frontend writes
+          to the <code>audits</code> collection and that Firestore rules allow your role to read it.
+        </li>
       </ul>
     </section>
   </main>
@@ -244,15 +247,15 @@
     collection, getDocs, query, orderBy, limit
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl      = document.getElementById("who");
-  const tbody      = document.getElementById("tbody");
-  const statusBar  = document.getElementById("statusBar");
-  const searchEl   = document.getElementById("search");
+  const whoEl        = document.getElementById("who");
+  const tbody        = document.getElementById("tbody");
+  const statusBar    = document.getElementById("statusBar");
+  const searchEl     = document.getElementById("search");
   const actionFilter = document.getElementById("actionFilter");
 
   let allAudits = [];
 
-  // Only admin & IT see audits; change allowedRoles if you want viewers too.
+  // Only admin & IT see audits; add "viewer" here if you want everyone to see logs.
   watchAuth({
     allowedRoles:["admin","it"],
     whoEl,
@@ -270,8 +273,10 @@
   function toDate(val){
     if(!val) return null;
     try{
-      if(val.toDate) return val.toDate();
-      return new Date(val);
+      if(typeof val.toDate === "function") return val.toDate(); // Firestore Timestamp
+      if(typeof val === "number") return new Date(val);
+      if(typeof val === "string") return new Date(val);
+      return null;
     }catch{
       return null;
     }
@@ -306,16 +311,17 @@
 
       if(!allAudits.length){
         tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
-        setStatus("No audit entries in collection \"audits\" yet.");
+        setStatus('No audit entries in collection "audits" yet.');
+        console.info('[Audits] Collection "audits" is empty.');
         return;
       }
 
       render();
       setStatus(`Loaded ${allAudits.length} audit events (latest first).`);
     }catch(err){
-      console.error(err);
+      console.error('[Audits] Error loading audits:', err);
       tbody.innerHTML = `<tr><td colspan="6">Failed to load audits.</td></tr>`;
-      setStatus("Error loading audits: " + err.message);
+      setStatus("Error loading audits: " + (err.message || err));
     }
   }
 
@@ -325,14 +331,16 @@
       return;
     }
 
-    const term = (searchEl.value || "").toLowerCase();
+    const term      = (searchEl.value || "").toLowerCase();
     const actionVal = actionFilter.value;
 
     const rows = allAudits.filter(ev=>{
-      const action = (ev.action || "").toLowerCase();
+      const action = (ev.action || "other").toLowerCase();
+
+      // Filter by action
       if(actionVal){
         if(actionVal === "other"){
-          if(action === "create" || action === "update" || action === "delete" || action === "login") {
+          if(["create","update","delete","login"].includes(action)) {
             return false;
           }
         }else if(action !== actionVal){
@@ -360,22 +368,20 @@
     }
 
     tbody.innerHTML = rows.map(ev=>{
-      const ts = formatDate(ev.timestamp);
-      const email = ev.userEmail || "(unknown user)";
-      const action = (ev.action || "other").toLowerCase();
+      const ts         = formatDate(ev.timestamp);
+      const email      = ev.userEmail || "(unknown user)";
+      const action     = (ev.action || "other").toLowerCase();
       const targetType = ev.targetType || "";
       const targetId   = ev.targetId || "";
       const details    = ev.details || "";
 
       let pillClass = "pill-gray";
-      if(action === "create") pillClass = "pill-green";
+      if(action === "create")  pillClass = "pill-green";
       else if(action === "update") pillClass = "pill-blue";
       else if(action === "delete") pillClass = "pill-red";
-      else if(action === "login") pillClass = "pill-blue";
+      else if(action === "login")  pillClass = "pill-blue";
 
-      const targetLabel = targetId
-        ? `${escapeHtml(targetId)}`
-        : "";
+      const targetLabel = targetId ? escapeHtml(targetId) : "";
 
       return `
         <tr>
