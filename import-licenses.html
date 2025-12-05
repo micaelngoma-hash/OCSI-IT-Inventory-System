@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory – Import Software Licenses CSV</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{padding:22px;max-width:1000px;margin:0 auto;width:100%;}
+
+  h1{margin:0 0 6px;font-size:1.4rem;}
+  .subtitle{color:#64748b;font-size:.9rem;margin-bottom:16px;}
+
+  .card{
+    background:white;border-radius:12px;
+    padding:16px;border:1px solid var(--border);
+    margin-bottom:20px;
+  }
+  .label{font-size:.86rem;font-weight:600;margin-bottom:4px;}
+  .hint{font-size:.8rem;color:#6b7280;margin-bottom:8px;}
+  input[type="file"]{margin-top:8px;}
+
+  .btn{
+    border:none;cursor:pointer;
+    padding:7px 13px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--brand);color:white;margin-top:10px;
+  }
+  .btn[disabled]{opacity:.5;cursor:not-allowed;}
+
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.83rem;}
+  th,td{padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:left;}
+  th{background:#f8fafc;}
+
+  .log{
+    font-family:monospace;font-size:.78rem;
+    background:#0b1020;color:#e5e7eb;
+    padding:8px;border-radius:8px;
+    max-height:220px;overflow:auto;margin-top:10px;
+  }
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><strong>OCSI IT Inventory</strong> – Import Software Licenses CSV</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
+      <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="export-software.html"><span class="icon">⬇️</span><span>Export Software</span></a>
+      <a class="active" href="import-licenses.html"><span class="icon">📤</span><span>Import Licenses CSV</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <h1>Bulk Import – Software Licenses</h1>
+    <p class="subtitle">
+      Upload a CSV exported from your license tracking sheet and push records into Firestore
+      (<code>software_license</code> collection).
+    </p>
+
+    <section class="card">
+      <div class="label">1. Prepare your CSV</div>
+      <p class="hint">
+        You can either use your own sheet or download our template below.  
+        Recommended headers:
+        <code>
+          softwareName,licenseKey,totalSeats,assignedSeats,expiryDate,vendor,notes
+        </code>
+      </p>
+      <!-- Template download button -->
+      <button id="templateBtn" class="btn" type="button">📥 Download licenses CSV template</button>
+
+      <div class="label" style="margin-top:14px;">2. Upload file</div>
+      <input type="file" id="fileInput" accept=".csv"/>
+      <button id="parseBtn" class="btn" type="button">📂 Load Preview</button>
+      <p id="fileInfo" class="hint"></p>
+    </section>
+
+    <section class="card" id="previewCard" style="display:none;">
+      <div class="label">Preview (first 10 rows)</div>
+      <p class="hint">
+        Only known columns are imported. Unknown columns are ignored.
+        You can safely test with a small file first.
+      </p>
+      <table>
+        <thead id="previewHead"></thead>
+        <tbody id="previewBody"></tbody>
+      </table>
+      <p class="hint" id="rowCount"></p>
+      <button id="importBtn" class="btn" type="button">⬆️ Import licenses into Firestore</button>
+    </section>
+
+    <section class="card">
+      <div class="label">Import Log</div>
+      <div id="log" class="log">Waiting…</div>
+    </section>
+
+  </main>
+</div>
+
+<script type="module">
+import { db, watchAuth } from "./firebase.js";
+import {
+  collection, addDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const whoEl       = document.getElementById("who");
+const fileInput   = document.getElementById("fileInput");
+const parseBtn    = document.getElementById("parseBtn");
+const previewCard = document.getElementById("previewCard");
+const previewHead = document.getElementById("previewHead");
+const previewBody = document.getElementById("previewBody");
+const rowCountEl  = document.getElementById("rowCount");
+const importBtn   = document.getElementById("importBtn");
+const logEl       = document.getElementById("log");
+const fileInfo    = document.getElementById("fileInfo");
+const templateBtn = document.getElementById("templateBtn");
+
+let parsedRows = [];
+let headers = [];
+
+// Only admin / IT can use this page
+watchAuth({
+  allowedRoles:["admin","it"],
+  whoEl,
+  onReady: ()=>{}
+});
+
+function log(msg){
+  const time = new Date().toISOString().slice(11,19);
+  logEl.textContent += `\n[${time}] ${msg}`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+/* ---------- TEMPLATE DOWNLOAD ---------- */
+templateBtn.onclick = ()=>{
+  const headerLine = [
+    "softwareName",
+    "licenseKey",
+    "totalSeats",
+    "assignedSeats",
+    "expiryDate",
+    "vendor",
+    "notes"
+  ].join(",");
+
+  // Optional example row (matches your export structure)
+  const exampleLine = [
+    "Microsoft 365 A3",
+    "AAAAA-BBBBB-CCCCC-DDDDD",
+    "200",
+    "150",
+    "2026-03-31",
+    "Microsoft",
+    "Main staff & faculty license pool"
+  ].join(",");
+
+  const csvContent = headerLine + "\n" + exampleLine + "\n";
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ocsi-software-licenses-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  log("License template CSV downloaded.");
+};
+
+/* ---------- CSV PARSE / PREVIEW ---------- */
+parseBtn.onclick = ()=>{
+  const file = fileInput.files?.[0];
+  if(!file){ alert("Please select a CSV file first.");return; }
+  fileInfo.textContent = `Selected: ${file.name} (${Math.round(file.size/1024)} KB)`;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const text = e.target.result;
+    parseCsv(text);
+  };
+  reader.readAsText(file);
+};
+
+function parseCsv(text){
+  const lines = text.split(/\r?\n/).filter(l=>l.trim().length>0);
+  if(lines.length<2){
+    alert("CSV seems empty or missing rows.");
+    return;
+  }
+  headers = lines[0].split(",").map(h=>h.trim());
+  parsedRows = lines.slice(1).map(line=>{
+    const cols = line.split(",");
+    const obj = {};
+    headers.forEach((h,i)=>{ obj[h] = (cols[i]||"").trim(); });
+    return obj;
+  });
+
+  // build preview (first 10 rows)
+  previewHead.innerHTML = "<tr>"+headers.map(h=>`<th>${escapeHtml(h)}</th>`).join("")+"</tr>";
+  const first10 = parsedRows.slice(0,10);
+  previewBody.innerHTML = first10.map(row=>{
+    return "<tr>"+headers.map(h=>`<td>${escapeHtml(row[h]||"")}</td>`).join("")+"</tr>";
+  }).join("");
+
+  rowCountEl.textContent = `Rows detected: ${parsedRows.length}. Only the first 10 shown above.`;
+  previewCard.style.display = "block";
+  log("CSV parsed successfully.");
+}
+
+/* ---------- FIRESTORE IMPORT (software_license) ---------- */
+function mapRowToLicense(row){
+  return {
+    softwareName:  row.softwareName  || row.SoftwareName  || "",
+    licenseKey:    row.licenseKey    || row.LicenseKey    || "",
+    totalSeats:    Number(row.totalSeats    || row.TotalSeats    || 0) || 0,
+    assignedSeats: Number(row.assignedSeats || row.AssignedSeats || 0) || 0,
+    expiryDate:    row.expiryDate    || row.ExpiryDate    || "",
+    vendor:        row.vendor        || row.Vendor        || "",
+    notes:         row.notes         || row.Notes         || "",
+    createdAt:     serverTimestamp()
+  };
+}
+
+importBtn.onclick = async ()=>{
+  if(!parsedRows.length){
+    alert("No rows parsed yet.");
+    return;
+  }
+  if(!confirm(`Import ${parsedRows.length} license rows into Firestore?`)) return;
+
+  importBtn.disabled = true;
+  log("Starting import into Firestore (software_license)…");
+
+  let success = 0, fail = 0;
+  for(const row of parsedRows){
+    const docData = mapRowToLicense(row);
+    try{
+      await addDoc(collection(db,"software_license"), docData);
+      success++;
+    }catch(e){
+      fail++;
+      log("Error: "+(e.message||e));
+    }
+  }
+  log(`Import finished. Success: ${success}, Failed: ${fail}`);
+  importBtn.disabled = false;
+};
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g,c=>(
+    { "&":"&amp;","<":"&lt;","">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+  ));
+}
+</script>
+</body>
+</html>
