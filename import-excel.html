@@ -62,9 +62,7 @@
   table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.83rem;}
   th,td{padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:left;}
   th{background:#f8fafc;}
-  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.75rem;}
-  .pill-ok{background:#dcfce7;color:#166534;}
-  .pill-warn{background:#ffedd5;color:#c2410c;}
+
   .log{
     font-family:monospace;font-size:.78rem;
     background:#0b1020;color:#e5e7eb;
@@ -72,7 +70,6 @@
     max-height:220px;overflow:auto;margin-top:10px;
   }
 
-  /* badges for user role (used by firebase.js / watchAuth) */
   .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
   .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
   .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
@@ -87,7 +84,7 @@
 </div>
 
 <div class="layout">
-  <!-- EMBEDDED SIDEBAR -->
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
@@ -97,7 +94,6 @@
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="export.html"><span class="icon">⬇️</span><span>Export</span></a>
-      <!-- NEW: Import CSV entry on sidebar -->
       <a class="active" href="import-excel.html"><span class="icon">📤</span><span>Import CSV</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
@@ -114,14 +110,18 @@
     <section class="card">
       <div class="label">1. Prepare your CSV</div>
       <p class="hint">
-        Export your Excel as <strong>CSV (UTF-8)</strong>. Recommended headers:
+        You can either use your own sheet or download our template below.  
+        Required headers:
         <code>
           assetId,deviceName,assetType,status,assignedTo,department,location,
           buildingFloor,ipAddress,macAddress,purchaseDate,warrantyEndDate,
           replacementDate,replacementAlert,notes
         </code>
       </p>
-      <div class="label">2. Upload file</div>
+      <!-- NEW: template download button -->
+      <button id="templateBtn" class="btn" type="button">📥 Download CSV template</button>
+
+      <div class="label" style="margin-top:14px;">2. Upload file</div>
       <input type="file" id="fileInput" accept=".csv"/>
       <button id="parseBtn" class="btn" type="button">📂 Load Preview</button>
       <p id="fileInfo" class="hint"></p>
@@ -165,6 +165,7 @@ const rowCountEl  = document.getElementById("rowCount");
 const importBtn   = document.getElementById("importBtn");
 const logEl       = document.getElementById("log");
 const fileInfo    = document.getElementById("fileInfo");
+const templateBtn = document.getElementById("templateBtn");
 
 let parsedRows = [];
 let headers = [];
@@ -182,6 +183,67 @@ function log(msg){
   logEl.scrollTop = logEl.scrollHeight;
 }
 
+/* ---------- TEMPLATE DOWNLOAD ---------- */
+templateBtn.onclick = ()=>{
+  const headerLine = [
+    "assetId",
+    "deviceName",
+    "assetType",
+    "status",
+    "assignedTo",
+    "department",
+    "location",
+    "buildingFloor",
+    "ipAddress",
+    "macAddress",
+    "purchaseDate",
+    "installationDate",
+    "vendor",
+    "warrantyEndDate",
+    "replacementDate",
+    "replacementAlert",
+    "removedDate",
+    "notes"
+  ].join(",");
+
+  // optional example row
+  const exampleLine = [
+    "OCSI-LAP-001",
+    "Teacher Laptop – Room 204",
+    "Laptop",
+    "in-use",
+    "John Doe",
+    "IT",
+    "Main Campus",
+    "Bldg A – 2F",
+    "192.168.10.25",
+    "AA:BB:CC:DD:EE:FF",
+    "2023-04-01",
+    "2023-04-10",
+    "Apple Store Japan",
+    "2026-04-01",
+    "2027-04-01",
+    "yes",
+    "",
+    "Primary teacher MacBook"
+  ].join(",");
+
+  const csvContent = headerLine + "\n" + exampleLine + "\n";
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url  = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "ocsi-inventory-template.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  log("Template CSV downloaded.");
+};
+
+/* ---------- CSV PARSE / PREVIEW ---------- */
 parseBtn.onclick = ()=>{
   const file = fileInput.files?.[0];
   if(!file){ alert("Please select a CSV file first.");return; }
@@ -220,28 +282,28 @@ function parseCsv(text){
   log("CSV parsed successfully.");
 }
 
+/* ---------- FIRESTORE IMPORT ---------- */
 function mapRowToItem(row){
-  // Mapping aligned with your device schema
   return {
-    assetId:         row.assetId || row.AssetID || "",
-    deviceName:      row.deviceName || row.DeviceName || "",
-    assetType:       row.assetType || row.Type || "",
-    status:          row.status || "in-use",
-    assignedTo:      row.assignedTo || "",
-    department:      row.department || "",
-    location:        row.location || "",
-    buildingFloor:   row.buildingFloor || "",
-    ipAddress:       row.ipAddress || "",
-    macAddress:      row.macAddress || "",
-    purchaseDate:    row.purchaseDate || "",
-    installationDate:row.installationDate || "",
-    vendor:          row.vendor || "",
-    warrantyEndDate: row.warrantyEndDate || "",
-    replacementDate: row.replacementDate || "",
-    replacementAlert:(row.replacementAlert||"").toLowerCase()==="yes",
-    removedDate:     row.removedDate || "",
-    notes:           row.notes || "",
-    createdAt:       serverTimestamp()
+    assetId:          row.assetId || row.AssetID || "",
+    deviceName:       row.deviceName || row.DeviceName || "",
+    assetType:        row.assetType || row.Type || "",
+    status:           row.status || "in-use",
+    assignedTo:       row.assignedTo || "",
+    department:       row.department || "",
+    location:         row.location || "",
+    buildingFloor:    row.buildingFloor || "",
+    ipAddress:        row.ipAddress || "",
+    macAddress:       row.macAddress || "",
+    purchaseDate:     row.purchaseDate || "",
+    installationDate: row.installationDate || "",
+    vendor:           row.vendor || "",
+    warrantyEndDate:  row.warrantyEndDate || "",
+    replacementDate:  row.replacementDate || "",
+    replacementAlert: (row.replacementAlert||"").toLowerCase()==="yes",
+    removedDate:      row.removedDate || "",
+    notes:            row.notes || "",
+    createdAt:        serverTimestamp()
   };
 }
 
