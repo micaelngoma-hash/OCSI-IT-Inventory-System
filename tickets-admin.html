@@ -46,8 +46,9 @@
     }
     .hero-right{
       display:flex;
-      align-items:center;
-      gap:14px;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
     }
     .hero-email{
       font-size:.85rem;
@@ -56,10 +57,10 @@
     .btn-hero{
       border:none;
       border-radius:999px;
-      padding:8px 14px;
-      font-size:.88rem;
+      padding:6px 12px;
+      font-size:.8rem;
       font-weight:500;
-      background:rgba(255,255,255,.12);
+      background:rgba(255,255,255,.18);
       color:white;
       cursor:pointer;
     }
@@ -197,7 +198,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:750px;
+      min-width:820px;
       font-size:.85rem;
     }
     th,td{
@@ -282,6 +283,29 @@
       font-size:.8rem;
       color:#94a3b8;
     }
+
+    .group-members-box{
+      max-height:150px;
+    }
+    .group-member-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:6px;
+      padding:4px 0;
+      border-bottom:1px dashed #e5e7eb;
+      font-size:.8rem;
+    }
+    .group-member-row:last-child{
+      border-bottom:none;
+    }
+    .tag-pill{
+      border-radius:999px;
+      border:1px solid #cbd5e1;
+      padding:2px 8px;
+      font-size:.75rem;
+      background:#f9fafb;
+    }
   </style>
 </head>
 <body>
@@ -294,10 +318,8 @@
       </nav>
     </div>
     <div class="hero-right">
-      <button class="btn-hero" type="button" onclick="location.href='index.html'">
-        ← Back to inventory
-      </button>
       <div id="who" class="hero-email">Checking session…</div>
+      <button id="logoutBtn" class="btn-hero" type="button">Logout</button>
     </div>
   </header>
 
@@ -305,7 +327,7 @@
     <section class="card-shell">
       <h1>Tickets (Admin view)</h1>
       <p class="subtitle">
-        View and manage all service requests from staff. Update status, change group, and reply to the requester.
+        View and manage all service requests from staff. Update status, change group, assign tickets, and reply to the requester.
       </p>
 
       <div class="toolbar">
@@ -348,18 +370,19 @@
                   <th>Group</th>
                   <th>Priority</th>
                   <th>Status</th>
+                  <th>Assignee</th>
                   <th>Requester</th>
                   <th>Created</th>
                 </tr>
               </thead>
               <tbody id="ticketsBody">
-                <tr><td colspan="7">Loading…</td></tr>
+                <tr><td colspan="8">Loading…</td></tr>
               </tbody>
             </table>
           </div>
         </section>
 
-        <!-- RIGHT: details + form + conversation -->
+        <!-- RIGHT: details + form + conversation + group members -->
         <section class="panel">
           <h2>Ticket details &amp; replies</h2>
           <p class="muted" id="detailsHint">
@@ -414,6 +437,14 @@
               <option value="5">5 – Very urgent</option>
             </select>
 
+            <div class="field-label">Assignee</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+              <input id="assigneeDisplay" class="field-input" placeholder="Unassigned" disabled />
+              <button id="assignToMeBtn" class="btn btn-ghost" type="button">
+                ✅ Assign to me
+              </button>
+            </div>
+
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
               <button id="saveTicketBtn" class="btn btn-primary" type="button">
                 💾 Save ticket
@@ -439,19 +470,51 @@
               💬 Add reply
             </button>
           </div>
+
+          <!-- GROUP NOTIFICATION MEMBERS -->
+          <div style="margin-top:14px;">
+            <div class="field-label">Group notification members</div>
+            <div class="muted" id="groupMembersHint">
+              Members receive notifications when a ticket is created for their group and can assign tickets to themselves.
+            </div>
+
+            <div class="field-label">Group</div>
+            <select id="groupManageSelect" class="field-select">
+              <option value="it">IT</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="front-office">Front Office</option>
+              <option value="nurse">Nurse</option>
+            </select>
+
+            <div id="groupMembersList" class="comment-list group-members-box">
+              <div class="comment-muted">No members for this group yet.</div>
+            </div>
+
+            <div class="field-label" style="margin-top:6px;">Add member by email</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <input id="groupMemberEmail" class="field-input" placeholder="user@ocsi.org"/>
+              <button id="addGroupMemberBtn" class="btn btn-ghost" type="button">
+                + Add
+              </button>
+            </div>
+            <div id="groupMembersStatus" class="status-bar"></div>
+          </div>
         </section>
       </div>
     </section>
   </main>
 
   <script type="module">
-    import { db, watchAuth } from "./firebase.js";
+    import { auth, watchAuth } from "./firebase.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
-      collection, doc, addDoc, getDocs, updateDoc,
-      serverTimestamp, query, orderBy, limit
+      collection, doc, addDoc, getDocs, updateDoc, setDoc,
+      serverTimestamp, query, orderBy, limit,
+      arrayUnion, arrayRemove
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const whoEl         = document.getElementById("who");
+    const logoutBtn     = document.getElementById("logoutBtn");
     const ticketsBody   = document.getElementById("ticketsBody");
     const listStatus    = document.getElementById("listStatus");
     const detailsHint   = document.getElementById("detailsHint");
@@ -470,6 +533,8 @@
     const locationInput    = document.getElementById("locationInput");
     const dueDateInput     = document.getElementById("dueDateInput");
     const urgencyInput     = document.getElementById("urgencyInput");
+    const assigneeDisplay  = document.getElementById("assigneeDisplay");
+    const assignToMeBtn    = document.getElementById("assignToMeBtn");
     const saveTicketBtn    = document.getElementById("saveTicketBtn");
     const clearFormBtn     = document.getElementById("clearFormBtn");
     const formStatus       = document.getElementById("formStatus");
@@ -479,10 +544,18 @@
     const replyInput       = document.getElementById("replyInput");
     const addReplyBtn      = document.getElementById("addReplyBtn");
 
+    // Group members management
+    const groupManageSelect   = document.getElementById("groupManageSelect");
+    const groupMembersList    = document.getElementById("groupMembersList");
+    const groupMemberEmail    = document.getElementById("groupMemberEmail");
+    const addGroupMemberBtn   = document.getElementById("addGroupMemberBtn");
+    const groupMembersStatus  = document.getElementById("groupMembersStatus");
+
     let currentUser = null;
     let currentRole = "viewer";
     let allTickets  = [];
     let selectedTicketId = null;
+    let groupConfigs = {}; // slug -> {id, members:[]}
 
     const AGENT_ROLES = ["admin","it"];
 
@@ -499,12 +572,24 @@
           return;
         }
 
-        // New ticket should go through the same submit page as staff
+        logoutBtn.addEventListener("click", async ()=>{
+          try{
+            await signOut(auth);
+          }catch(e){
+            console.error(e);
+          }
+          window.location.href = "login.html";
+        });
+
+        // New tickets should be created from the public submit page
         newTicketBtn.addEventListener("click", ()=>{
           window.location.href = "submit-request.html";
         });
 
-        await loadTickets();
+        await Promise.all([
+          loadTickets(),
+          loadGroupConfigs()
+        ]);
 
         searchEl.addEventListener("input", renderTickets);
         groupFilterEl.addEventListener("change", renderTickets);
@@ -514,6 +599,11 @@
         clearFormBtn.addEventListener("click", startNewTicket);
         saveTicketBtn.addEventListener("click", saveTicket);
         addReplyBtn.addEventListener("click", addReply);
+        assignToMeBtn.addEventListener("click", assignToMe);
+
+        groupManageSelect.addEventListener("change", refreshGroupMembersUI);
+        addGroupMemberBtn.addEventListener("click", addGroupMember);
+        groupMembersList.addEventListener("click", onGroupMemberListClick);
       }
     });
 
@@ -533,7 +623,7 @@
 
         if(!allTickets.length){
           ticketsBody.innerHTML =
-            `<tr><td colspan="7">No tickets in the system yet.</td></tr>`;
+            `<tr><td colspan="8">No tickets in the system yet.</td></tr>`;
           listStatus.textContent = "No tickets in collection \"tickets\" yet.";
           return;
         }
@@ -543,7 +633,7 @@
       }catch(err){
         console.error(err);
         ticketsBody.innerHTML =
-          `<tr><td colspan="7">Failed to load tickets.</td></tr>`;
+          `<tr><td colspan="8">Failed to load tickets.</td></tr>`;
         listStatus.textContent = "Error loading tickets: " + err.message;
       }
     }
@@ -551,8 +641,7 @@
     function renderTickets(){
       if(!allTickets.length){
         ticketsBody.innerHTML =
-          `<tr><td colspan="7">No tickets found.</td></tr>`;
-        return;
+          `<tr><td colspan="8">No tickets found.</td></tr>`;
       }
 
       const term  = (searchEl.value || "").toLowerCase();
@@ -563,12 +652,8 @@
         const g = canonicalGroup(t.group);
         const st = (t.status || "open").toLowerCase();
 
-        // group filter (slug comparison)
         if(gFilt && g !== gFilt) return false;
 
-        // status filter:
-        // "open"  -> anything NOT closed
-        // "closed"-> only closed
         if(sFilt === "open" && st === "closed") return false;
         if(sFilt === "closed" && st !== "closed") return false;
 
@@ -580,6 +665,8 @@
           groupToLabel(g),
           t.requesterName,
           t.requesterEmail,
+          t.assigneeName,
+          t.assigneeEmail,
           t.location
         ].join(" ").toLowerCase();
 
@@ -588,7 +675,7 @@
 
       if(!rows.length){
         ticketsBody.innerHTML =
-          `<tr><td colspan="7">No tickets match your filters.</td></tr>`;
+          `<tr><td colspan="8">No tickets match your filters.</td></tr>`;
         return;
       }
 
@@ -598,6 +685,7 @@
         const g         = canonicalGroup(t.group);
         const st        = (t.status || "open").toLowerCase();
         const priority  = capitalize(t.priority || "medium");
+        const assignee  = t.assigneeName || t.assigneeEmail || "";
 
         return `
           <tr data-id="${t.id}">
@@ -606,6 +694,7 @@
             <td>${escapeHtml(groupToLabel(g))}</td>
             <td>${escapeHtml(priority)}</td>
             <td>${statusPill(st)}</td>
+            <td>${escapeHtml(assignee)}</td>
             <td>${escapeHtml(requester)}</td>
             <td>${escapeHtml(created)}</td>
           </tr>`;
@@ -619,7 +708,6 @@
       const ticket = allTickets.find(t=>t.id === id);
       if(!ticket) return;
       selectTicket(ticket);
-      // for smaller screens, scroll details into view
       detailsHint.scrollIntoView({behavior:"smooth",block:"start"});
     }
 
@@ -642,8 +730,15 @@
       dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
       urgencyInput.value     = String(t.urgency || 3);
 
+      assigneeDisplay.value  = t.assigneeName || t.assigneeEmail || "";
+
       formStatus.textContent = "";
       replyInput.value       = "";
+
+      // sync group-member panel to this ticket's group
+      groupManageSelect.value = canonicalGroup(t.group) || "it";
+      refreshGroupMembersUI();
+
       loadComments(t.id);
     }
 
@@ -658,10 +753,12 @@
       locationInput.value     = "";
       dueDateInput.value      = "";
       urgencyInput.value      = "3";
+      assigneeDisplay.value   = "";
       formStatus.textContent  = "";
       replyInput.value        = "";
       commentsList.innerHTML  =
         `<div class="comment-muted">No conversation yet – this will appear after the ticket is created.</div>`;
+      // keep groupManageSelect where it is (or set to default)
     }
 
     async function saveTicket(){
@@ -680,7 +777,7 @@
         description,
         group: groupInput.value, // slug
         priority: priorityInput.value,
-        status: statusInput.value,         // open/in-progress/resolved/closed
+        status: statusInput.value,
         location: (locationInput.value || "").trim(),
         requestedDate: dueDateInput.value || "",
         urgency: Number(urgencyInput.value || 3),
@@ -691,7 +788,7 @@
       if(!selectedTicketId){
         data.requesterUid   = currentUser?.uid || "";
         data.requesterEmail = currentUser?.email || "";
-        data.requesterName  = currentUser?.displayName || "";
+        data.requesterName  = currentUser?.displayName || currentUser?.email || "";
       }
 
       try{
@@ -703,6 +800,9 @@
           const ref = await addDoc(collection(db,"tickets"), data);
           selectedTicketId = ref.id;
           formStatus.textContent = "Ticket created.";
+
+          // enqueue notification for this group (Cloud Function / email worker)
+          await enqueueGroupNotification(ref.id, data.group || "it");
         }
 
         await loadTickets();
@@ -711,6 +811,34 @@
       }catch(err){
         console.error(err);
         formStatus.textContent = "Error saving ticket: " + err.message;
+      }
+    }
+
+    async function assignToMe(){
+      if(!selectedTicketId){
+        alert("Select a ticket first.");
+        return;
+      }
+      if(!currentUser){
+        alert("Not signed in.");
+        return;
+      }
+      try{
+        formStatus.textContent = "Assigning ticket to you…";
+        await updateDoc(doc(db,"tickets",selectedTicketId),{
+          assigneeUid: currentUser.uid,
+          assigneeEmail: currentUser.email || "",
+          assigneeName: currentUser.displayName || currentUser.email || "",
+          status: statusInput.value === "closed" ? "closed" : "in-progress",
+          updatedAt: serverTimestamp()
+        });
+        await loadTickets();
+        const t = allTickets.find(t=>t.id === selectedTicketId);
+        if(t) selectTicket(t);
+        formStatus.textContent = "Ticket assigned to you.";
+      }catch(err){
+        console.error(err);
+        formStatus.textContent = "Failed to assign ticket: " + err.message;
       }
     }
 
@@ -781,16 +909,115 @@
       }
     }
 
+    /* ---------- GROUP MEMBERS MANAGEMENT ---------- */
+
+    async function loadGroupConfigs(){
+      try{
+        const snap = await getDocs(collection(db,"ticket_groups"));
+        groupConfigs = {};
+        snap.forEach(ds=>{
+          const slug = canonicalGroup(ds.id);
+          const data = ds.data() || {};
+          groupConfigs[slug] = {
+            id: ds.id,
+            members: data.members || []
+          };
+        });
+      }catch(err){
+        console.error("Failed to load ticket_groups:", err);
+      }
+      refreshGroupMembersUI();
+    }
+
+    function refreshGroupMembersUI(){
+      const slug = groupManageSelect.value;
+      const cfg = groupConfigs[slug] || { members:[] };
+
+      if(!cfg.members.length){
+        groupMembersList.innerHTML =
+          `<div class="comment-muted">No members for this group yet.</div>`;
+        return;
+      }
+
+      groupMembersList.innerHTML = cfg.members.map(email=>`
+        <div class="group-member-row">
+          <span>${escapeHtml(email)}</span>
+          <button type="button" class="btn-hero btn-remove-member"
+                  data-email="${escapeHtml(email)}"
+                  style="background:none;border:1px solid #fecaca;color:#b91c1c;padding:2px 8px;">
+            ✕ Remove
+          </button>
+        </div>
+      `).join("");
+    }
+
+    async function addGroupMember(){
+      const slug = groupManageSelect.value;
+      const email = (groupMemberEmail.value || "").trim().toLowerCase();
+      if(!slug || !email){
+        groupMembersStatus.textContent = "Enter an email to add.";
+        return;
+      }
+      groupMembersStatus.textContent = "Saving…";
+      const ref = doc(db,"ticket_groups",slug);
+      try{
+        await setDoc(ref,{
+          name: groupToLabel(slug),
+          members: arrayUnion(email)
+        },{merge:true});
+        groupMemberEmail.value = "";
+        await loadGroupConfigs();
+        groupMembersStatus.textContent = "Member added.";
+      }catch(err){
+        console.error(err);
+        groupMembersStatus.textContent = "Failed to add member: " + err.message;
+      }
+    }
+
+    function onGroupMemberListClick(e){
+      const btn = e.target.closest(".btn-remove-member");
+      if(!btn) return;
+      const email = btn.getAttribute("data-email");
+      if(!email) return;
+      if(!confirm(`Remove ${email} from this group?`)) return;
+      removeGroupMember(email);
+    }
+
+    async function removeGroupMember(email){
+      const slug = groupManageSelect.value;
+      const ref = doc(db,"ticket_groups",slug);
+      groupMembersStatus.textContent = "Removing…";
+      try{
+        await setDoc(ref,{
+          members: arrayRemove(email)
+        },{merge:true});
+        await loadGroupConfigs();
+        groupMembersStatus.textContent = "Member removed.";
+      }catch(err){
+        console.error(err);
+        groupMembersStatus.textContent = "Failed to remove member: " + err.message;
+      }
+    }
+
+    async function enqueueGroupNotification(ticketId, groupSlug){
+      try{
+        await addDoc(collection(db,"ticket_notifications"),{
+          ticketId,
+          group: groupSlug,
+          type: "new-ticket",
+          createdAt: serverTimestamp()
+        });
+      }catch(err){
+        console.error("Failed to enqueue notification:", err);
+      }
+    }
+
     /* ---------- helpers ---------- */
 
     function canonicalGroup(g){
       const s = (g || "").toLowerCase();
       if(["it","maintenance","front-office","nurse"].includes(s)) return s;
-      // legacy support if older docs stored labels
-      if(s === "it") return "it";
-      if(s === "maintenance") return "maintenance";
       if(s === "front office") return "front-office";
-      if(s === "nurse") return "nurse";
       return s || "it";
     }
 
@@ -806,9 +1033,9 @@
 
     function statusPill(status){
       const s = (status || "open").toLowerCase();
-      if(s === "closed")   return `<span class="pill pill-closed">Closed</span>`;
-      if(s === "resolved") return `<span class="pill pill-resolved">Resolved</span>`;
-      if(s === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
+      if(s === "closed")     return `<span class="pill pill-closed">Closed</span>`;
+      if(s === "resolved")   return `<span class="pill pill-resolved">Resolved</span>`;
+      if(s === "in-progress")return `<span class="pill pill-progress">In progress</span>`;
       return `<span class="pill pill-open">Open</span>`;
     }
 
