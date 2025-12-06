@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OCSI Service Request – Tickets</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OCSI Service Request – Submit a Ticket</title>
   <style>
     :root{
       --red1:#c53030;
@@ -27,30 +27,99 @@
       align-items:center;
       justify-content:space-between;
     }
-    .hero-left{
-      display:flex;
-      align-items:center;
-      gap:22px;
-    }
     .hero-title{
       font-size:1.8rem;
       font-weight:600;
     }
-    .hero-menu a{
-      color:white;
-      text-decoration:none;
-      font-size:.92rem;
-      opacity:.9;
-      margin-right:14px;
-    }
-    .hero-right{
+    .hero-nav{
       display:flex;
       align-items:center;
-      gap:14px;
+      gap:12px;
     }
-    .hero-email{
-      font-size:.85rem;
+    .hero-nav a{
+      color:white;
+      text-decoration:none;
+      font-size:.9rem;
       opacity:.9;
+    }
+    .hero-btn{
+      border:none;
+      border-radius:999px;
+      padding:8px 14px;
+      font-size:.9rem;
+      font-weight:500;
+      background:rgba(255,255,255,.12);
+      color:white;
+      cursor:pointer;
+    }
+
+    .main{
+      display:flex;
+      justify-content:center;
+      padding:40px 16px;
+    }
+    .card{
+      background:white;
+      border-radius:12px;
+      border:1px solid var(--border);
+      max-width:640px;
+      width:100%;
+      padding:20px 22px;
+      box-shadow:0 10px 30px rgba(15,23,42,.06);
+    }
+    h2{
+      margin:0 0 4px;
+      font-size:1.25rem;
+    }
+    .subtitle{
+      margin:0 0 18px;
+      font-size:.9rem;
+      color:#4a5568;
+    }
+
+    .field{
+      margin-bottom:14px;
+    }
+    .label{
+      font-size:.85rem;
+      font-weight:600;
+      margin-bottom:4px;
+    }
+    .hint{
+      font-size:.78rem;
+      color:#718096;
+      margin-bottom:4px;
+    }
+    input,select,textarea{
+      width:100%;
+      border-radius:8px;
+      border:1px solid #cbd5e1;
+      font-size:.9rem;
+      padding:7px 9px;
+      font-family:inherit;
+      resize:vertical;
+    }
+    textarea{
+      min-height:110px;
+    }
+
+    .row{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .row > .field{
+      flex:1;
+      min-width:0;
+    }
+
+    .btn-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-top:12px;
+      gap:10px;
+      flex-wrap:wrap;
     }
     .btn-primary{
       border:none;
@@ -58,348 +127,209 @@
       padding:8px 16px;
       font-size:.9rem;
       font-weight:600;
-      background:#0b7285;
+      background:var(--brand);
       color:white;
       cursor:pointer;
     }
-
-    .wrap{
-      display:flex;
-      justify-content:center;
-      padding:34px 16px;
+    .btn-primary[disabled]{
+      opacity:.6;
+      cursor:not-allowed;
     }
-    .card{
-      background:white;
-      border-radius:12px;
-      border:1px solid var(--border);
-      max-width:900px;
-      width:100%;
-      padding:18px 18px 14px;
-      box-shadow:0 10px 30px rgba(15,23,42,.06);
-    }
-
-    .toolbar{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:10px;
-    }
-    .select{
-      position:relative;
-    }
-    select{
-      border-radius:8px;
-      border:1px solid var(--border);
-      padding:7px 30px 7px 9px;
-      font-size:.88rem;
-      background:white;
-    }
-
-    .search-box{
-      flex:1;
-      min-width:180px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:white;
-      border-radius:999px;
-      border:1px solid var(--border);
-      padding:4px 10px;
-    }
-    .search-box input{
+    .btn-link{
+      background:none;
       border:none;
-      outline:none;
-      width:100%;
-      font-size:.88rem;
-      background:transparent;
+      padding:0;
+      font-size:.85rem;
+      color:#3182ce;
+      cursor:pointer;
+      text-decoration:underline;
     }
 
-    .small-text{
-      font-size:.8rem;
-      color:#718096;
-      margin:4px 0 8px;
-      text-align:center;
-    }
-
-    .table-wrap{
-      border-radius:10px;
-      border:1px solid var(--border);
-      overflow:auto;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:700px;
-      font-size:.86rem;
-    }
-    th,td{
-      padding:8px 10px;
-      border-bottom:1px solid #f1f5f9;
-      text-align:left;
-    }
-    th{
-      background:#f8fafc;
-      color:#4b5563;
-      font-weight:600;
-    }
-    tr:hover td{background:#f9fafb;}
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:.75rem;
-    }
-    .pill-open{background:#ebf8ff;color:#2b6cb0;}
-    .pill-closed{background:#e6fffa;color:#2c7a7b;}
-
-    .status-bar{
-      font-size:.8rem;
-      color:#718096;
-      margin-top:4px;
-      text-align:left;
+    .status{
+      font-size:.82rem;
+      color:#4a5568;
       min-height:18px;
     }
   </style>
 </head>
 <body>
   <header class="hero">
-    <div class="hero-left">
-      <div class="hero-title">OCSI Service Request</div>
-      <nav class="hero-menu">
-        <a href="tickets.html" style="font-weight:600;text-decoration:underline;">Home</a>
-      </nav>
-    </div>
-    <div class="hero-right">
-      <button id="submitBtn" class="btn-primary">+ Submit a ticket</button>
-      <div id="who" class="hero-email">Checking session…</div>
+    <div class="hero-title">OCSI Service Request</div>
+    <div class="hero-nav">
+      <a href="tickets.html">My tickets</a>
+      <span id="who" style="font-size:.85rem;opacity:.9;">Checking session…</span>
     </div>
   </header>
 
-  <main class="wrap">
+  <main class="main">
     <section class="card">
-      <div class="toolbar">
-        <div class="select">
-          <select id="statusFilter">
-            <option value="open">Open Tickets</option>
-            <option value="closed">Closed Tickets</option>
-            <option value="">All Tickets</option>
+      <h2>Submit a ticket</h2>
+      <p class="subtitle">
+        Use this form to request help from IT, Maintenance, Front Office, or the Nurse.
+        You’ll receive updates by email and on your ticket dashboard.
+      </p>
+
+      <form id="ticketForm">
+        <div class="row">
+          <div class="field">
+            <div class="label">Your name</div>
+            <input id="requesterName" type="text" required />
+          </div>
+          <div class="field">
+            <div class="label">Work email</div>
+            <input id="requesterEmail" type="email" required />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Group</div>
+          <div class="hint">Who should handle this request?</div>
+          <select id="group" required>
+            <option value="">Select a group…</option>
+            <option value="IT">IT</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Front Office">Front Office</option>
+            <option value="Nurse">Nurse</option>
           </select>
         </div>
 
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, description, assignee…" />
+        <div class="field">
+          <div class="label">Summary</div>
+          <div class="hint">Short title for your request.</div>
+          <input id="summary" type="text" maxlength="150" required />
         </div>
-      </div>
 
-      <p class="small-text" id="viewHint">
-        Loading tickets…
-      </p>
+        <div class="field">
+          <div class="label">Description</div>
+          <div class="hint">
+            Describe the issue or request. Include room number, device ID, or any important details.
+          </div>
+          <textarea id="description" required></textarea>
+        </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:70px;">ID</th>
-              <th>Summary</th>
-              <th>Description</th>
-              <th>Group</th>
-              <th>Status</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6">Loading tickets…</td></tr>
-          </tbody>
-        </table>
-      </div>
+        <div class="row">
+          <div class="field">
+            <div class="label">Priority</div>
+            <select id="priority">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="field">
+            <div class="label">Requested completion date (optional)</div>
+            <input id="requestedDate" type="date" />
+          </div>
+        </div>
 
-      <div class="status-bar" id="statusBar"></div>
+        <div class="btn-row">
+          <button class="btn-link" type="button" onclick="location.href='tickets.html'">
+            ← Back to my tickets
+          </button>
+          <div>
+            <div class="status" id="statusMsg"></div>
+            <button id="submitBtn" class="btn-primary" type="submit">
+              Submit ticket
+            </button>
+          </div>
+        </div>
+      </form>
     </section>
   </main>
 
   <script type="module">
     import { db, watchAuth } from "./firebase.js";
     import {
-      collection, getDocs, query, where, orderBy
+      collection, addDoc, serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    const whoEl        = document.getElementById("who");
-    const submitBtn    = document.getElementById("submitBtn");
-    const statusFilter = document.getElementById("statusFilter");
-    const searchInput  = document.getElementById("search");
-    const tbody        = document.getElementById("tbody");
-    const statusBar    = document.getElementById("statusBar");
-    const viewHint     = document.getElementById("viewHint");
+    const whoEl          = document.getElementById("who");
+    const form           = document.getElementById("ticketForm");
+    const requesterName  = document.getElementById("requesterName");
+    const requesterEmail = document.getElementById("requesterEmail");
+    const groupEl        = document.getElementById("group");
+    const summaryEl      = document.getElementById("summary");
+    const descriptionEl  = document.getElementById("description");
+    const priorityEl     = document.getElementById("priority");
+    const requestedDate  = document.getElementById("requestedDate");
+    const submitBtn      = document.getElementById("submitBtn");
+    const statusMsg      = document.getElementById("statusMsg");
 
     let currentUser = null;
     let currentRole = "viewer";
-    let allTickets  = [];
-
-    const AGENT_ROLES = ["admin","it"]; // extend later if needed
 
     watchAuth({
       allowedRoles:["admin","it","viewer"],
       whoEl,
-      onReady: async (user, role)=>{
+      onReady:(user, role)=>{
         currentUser = user;
         currentRole = role;
 
-        if(!user){
-          alert("Please sign in to view your tickets.");
-          return;
+        // Prefill form with known values
+        if(user?.displayName){
+          requesterName.value = user.displayName;
         }
-
-        submitBtn.addEventListener("click", ()=>{
-          window.location.href = "submit-request.html";
-        });
-
-        await loadTickets();
-        statusFilter.addEventListener("change", render);
-        searchInput.addEventListener("input", render);
+        if(user?.email){
+          requesterEmail.value = user.email;
+        }
       }
     });
 
     function setStatus(msg){
-      statusBar.textContent = msg || "";
+      statusMsg.textContent = msg || "";
     }
 
-    async function loadTickets(){
-      if(!currentUser) return;
+    form.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      if(!currentUser){
+        alert("You must be signed in to submit a ticket.");
+        return;
+      }
 
-      setStatus("Loading tickets…");
-      viewHint.textContent = "Loading tickets…";
+      const name  = requesterName.value.trim();
+      const email = requesterEmail.value.trim();
+      const group = groupEl.value;
+      const summary = summaryEl.value.trim();
+      const description = descriptionEl.value.trim();
+      const priority = priorityEl.value || "medium";
+      const reqDate = requestedDate.value || "";
+
+      if(!name || !email || !group || !summary || !description){
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      setStatus("Submitting ticket…");
 
       try{
-        let q;
-        if(AGENT_ROLES.includes(currentRole)){
-          // Agents see all tickets
-          q = query(
-            collection(db,"tickets"),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Agent view: showing all tickets in the system (filter by open/closed above).";
-        }else{
-          // Requesters see *only their own* tickets
-          q = query(
-            collection(db,"tickets"),
-            where("requesterUid","==",currentUser.uid),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Requester view: showing tickets you submitted. Use the button above to create a new ticket.";
-        }
-
-        const snap = await getDocs(q);
-        allTickets = [];
-        snap.forEach(ds=>{
-          allTickets.push({
-            id: ds.id,
-            ...ds.data()
-          });
+        const docRef = await addDoc(collection(db, "tickets"), {
+          requesterUid:   currentUser.uid,
+          requesterEmail: email,
+          requesterName:  name,
+          group,
+          summary,
+          description,
+          priority,
+          requestedDate:  reqDate,
+          status:         "open",
+          createdAt:      serverTimestamp(),
+          updatedAt:      serverTimestamp()
         });
 
-        if(!allTickets.length){
-          tbody.innerHTML =
-            `<tr><td colspan="6">You have no tickets at the moment. Press “Submit a ticket” to create one.</td></tr>`;
-          setStatus("");
-          return;
-        }
-
-        render();
-        setStatus(`Loaded ${allTickets.length} ticket(s).`);
+        setStatus("Ticket submitted successfully.");
+        // Optional: redirect after short delay
+        setTimeout(()=>{
+          window.location.href = "tickets.html";
+        }, 800);
       }catch(err){
         console.error(err);
-        tbody.innerHTML =
-          `<tr><td colspan="6">Failed to load tickets.</td></tr>`;
-        setStatus("Error loading tickets: " + err.message);
+        alert("Failed to submit ticket: " + err.message);
+        setStatus("Something went wrong. Please try again.");
+      }finally{
+        submitBtn.disabled = false;
       }
-    }
-
-    function render(){
-      if(!allTickets.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets found.</td></tr>`;
-        return;
-      }
-
-      const statusVal = statusFilter.value; // "open" | "closed" | ""
-      const term = (searchInput.value || "").toLowerCase();
-
-      const rows = allTickets.filter(t=>{
-        if(statusVal && (t.status || "open") !== statusVal) return false;
-
-        if(!term) return true;
-
-        const hay = [
-          t.summary,
-          t.description,
-          t.group,
-          t.assigneeName,
-          t.requesterName,
-          t.requesterEmail
-        ].join(" ").toLowerCase();
-
-        return hay.includes(term);
-      });
-
-      if(!rows.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets match your filters.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = rows.map((t,idx)=>{
-        const status = (t.status || "open").toLowerCase();
-        const pillClass = status === "closed" ? "pill-closed" : "pill-open";
-        const statusLabel = status === "closed" ? "Closed" : "Open";
-
-        const createdOrUpdated = t.updatedAt || t.createdAt;
-        const ts = formatDate(createdOrUpdated);
-
-        const shortDesc = (t.description || "").length > 80
-          ? t.description.slice(0,77) + "…"
-          : (t.description || "");
-
-        return `
-          <tr>
-            <td>${escapeHtml(String(t.id).slice(-4))}</td>
-            <td>${escapeHtml(t.summary || "")}</td>
-            <td>${escapeHtml(shortDesc)}</td>
-            <td>${escapeHtml(t.group || "")}</td>
-            <td><span class="pill ${pillClass}">${statusLabel}</span></td>
-            <td>${escapeHtml(ts)}</td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function toDate(val){
-      if(!val) return null;
-      try{
-        if(val.toDate) return val.toDate();
-        return new Date(val);
-      }catch{
-        return null;
-      }
-    }
-
-    function formatDate(val){
-      const d = toDate(val);
-      if(!d || isNaN(d.getTime())) return "";
-      return d.toLocaleString(); // local format "2025/12/06 08:15"
-    }
-
-    function escapeHtml(s){
-      if(!s) return "";
-      return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-      ));
-    }
+    });
   </script>
 </body>
 </html>
