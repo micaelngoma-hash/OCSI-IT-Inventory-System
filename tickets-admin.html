@@ -19,7 +19,7 @@
       color:#1a202c;
     }
 
-    /* HERO HEADER (same style as other two pages) */
+    /* HERO HEADER */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -237,6 +237,16 @@
       resize:vertical;
     }
 
+    .field-readonly{
+      width:100%;
+      padding:7px 9px;
+      border-radius:8px;
+      border:1px solid #e5e7eb;
+      font-size:.9rem;
+      background:#f9fafb;
+      white-space:pre-wrap;
+    }
+
     .status-bar{
       font-size:.8rem;
       margin-top:6px;
@@ -274,7 +284,7 @@
       color:#94a3b8;
     }
 
-    /* QUICK BAR on top of details */
+    /* QUICK BAR */
     .quick-bar{
       display:flex;
       flex-wrap:wrap;
@@ -296,7 +306,7 @@
       align-items:center;
     }
 
-    /* CONVERSATION + GROUP MEMBERS horizontal row */
+    /* COLLAB ROW */
     .collab-row{
       display:flex;
       flex-wrap:wrap;
@@ -345,7 +355,7 @@
     <section class="card-shell">
       <h1>Tickets (Admin view)</h1>
       <p class="subtitle">
-        View and manage all service requests from staff. Update status, change group, assign tickets, and reply to the requester.
+        View all service requests from staff. You can update the ticket status, assign it to yourself, and reply in the conversation thread.
       </p>
 
       <div class="toolbar">
@@ -375,23 +385,19 @@
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
 
-      <!-- TOP PANEL: details + assignee + conversation + add members -->
-      <section class="panel">
+      <!-- DETAILS PANEL: hidden until a ticket is selected -->
+      <section class="panel" id="detailsPanel" style="display:none;">
         <h2>Ticket details &amp; collaboration</h2>
         <p class="muted" id="detailsHint">
-          Select a ticket in the list below to view details and add a reply, or click “New ticket”.
+          Select a ticket in the list below to view details, update the status, and reply.
         </p>
 
         <!-- QUICK UPDATE BAR -->
         <div class="quick-bar">
           <div class="quick-field">
             <div class="quick-label">Group</div>
-            <select id="groupInput" class="field-select">
-              <option value="it">IT</option>
-              <option value="maintenance">Maintenance</option>
-              <option value="front-office">Front Office</option>
-              <option value="nurse">Nurse</option>
-            </select>
+            <!-- read-only display -->
+            <div id="groupDisplay" class="field-readonly"></div>
           </div>
           <div class="quick-field">
             <div class="quick-label">Status</div>
@@ -404,11 +410,7 @@
           </div>
           <div class="quick-field">
             <div class="quick-label">Priority</div>
-            <select id="priorityInput" class="field-select">
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
+            <div id="priorityDisplay" class="field-readonly"></div>
           </div>
           <div class="quick-field">
             <div class="quick-label">Assignee</div>
@@ -421,37 +423,29 @@
           </div>
         </div>
 
-        <!-- CORE TICKET FIELDS -->
+        <!-- READ-ONLY TICKET CONTENT -->
         <div>
-          <div class="field-label">Summary <span style="color:#ef4444">*</span></div>
-          <input id="summaryInput" class="field-input"
-                 placeholder="Short description (e.g. Printer not working)"/>
+          <div class="field-label">Summary</div>
+          <div id="summaryDisplay" class="field-readonly"></div>
 
-          <div class="field-label">Description <span style="color:#ef4444">*</span></div>
-          <textarea id="descriptionInput" class="field-textarea"
-            placeholder="Describe the issue, include room number, device ID, etc."></textarea>
+          <div class="field-label">Description</div>
+          <div id="descriptionDisplay" class="field-readonly"></div>
 
           <div class="field-label">Location</div>
-          <input id="locationInput" class="field-input" placeholder="Room / building (optional)"/>
+          <div id="locationDisplay" class="field-readonly"></div>
 
           <div class="field-label">Requested completion date</div>
-          <input id="dueDateInput" type="date" class="field-input"/>
+          <div id="dueDateDisplay" class="field-readonly"></div>
 
-          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
-          <select id="urgencyInput" class="field-select">
-            <option value="1">1 – Low</option>
-            <option value="2">2</option>
-            <option value="3" selected>3 – Normal</option>
-            <option value="4">4</option>
-            <option value="5">5 – Very urgent</option>
-          </select>
+          <div class="field-label">Urgency (1 – 5)</div>
+          <div id="urgencyDisplay" class="field-readonly"></div>
 
           <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="saveTicketBtn" class="btn btn-primary" type="button">
-              💾 Save ticket
+            <button id="saveStatusBtn" class="btn btn-primary" type="button">
+              💾 Save status
             </button>
-            <button id="clearFormBtn" class="btn btn-ghost" type="button">
-              ✨ New blank form
+            <button id="clearSelectionBtn" class="btn btn-ghost" type="button">
+              ✖ Clear selection
             </button>
           </div>
           <div id="formStatus" class="status-bar"></div>
@@ -505,7 +499,7 @@
         </div>
       </section>
 
-      <!-- BOTTOM PANEL: ticket list -->
+      <!-- TICKET LIST (always visible) -->
       <section class="panel">
         <h2>Ticket list</h2>
         <div class="table-wrap">
@@ -544,6 +538,8 @@
     const logoutBtn     = document.getElementById("logoutBtn");
     const ticketsBody   = document.getElementById("ticketsBody");
     const listStatus    = document.getElementById("listStatus");
+
+    const detailsPanel  = document.getElementById("detailsPanel");
     const detailsHint   = document.getElementById("detailsHint");
 
     const searchEl      = document.getElementById("search");
@@ -551,20 +547,22 @@
     const statusFilterEl= document.getElementById("statusFilter");
     const newTicketBtn  = document.getElementById("newTicketBtn");
 
-    // Form fields
-    const summaryInput     = document.getElementById("summaryInput");
-    const descriptionInput = document.getElementById("descriptionInput");
-    const groupInput       = document.getElementById("groupInput");
-    const priorityInput    = document.getElementById("priorityInput");
+    // quick bar / displays
+    const groupDisplay     = document.getElementById("groupDisplay");
     const statusInput      = document.getElementById("statusInput");
-    const locationInput    = document.getElementById("locationInput");
-    const dueDateInput     = document.getElementById("dueDateInput");
-    const urgencyInput     = document.getElementById("urgencyInput");
+    const priorityDisplay  = document.getElementById("priorityDisplay");
     const assigneeDisplay  = document.getElementById("assigneeDisplay");
     const assignToMeBtn    = document.getElementById("assignToMeBtn");
-    const saveTicketBtn    = document.getElementById("saveTicketBtn");
-    const clearFormBtn     = document.getElementById("clearFormBtn");
-    const formStatus       = document.getElementById("formStatus");
+
+    // read-only content
+    const summaryDisplay    = document.getElementById("summaryDisplay");
+    const descriptionDisplay= document.getElementById("descriptionDisplay");
+    const locationDisplay   = document.getElementById("locationDisplay");
+    const dueDateDisplay    = document.getElementById("dueDateDisplay");
+    const urgencyDisplay    = document.getElementById("urgencyDisplay");
+    const saveStatusBtn     = document.getElementById("saveStatusBtn");
+    const clearSelectionBtn = document.getElementById("clearSelectionBtn");
+    const formStatus        = document.getElementById("formStatus");
 
     // Conversation
     const commentsList     = document.getElementById("commentsList");
@@ -582,6 +580,7 @@
     let currentRole = "viewer";
     let allTickets  = [];
     let selectedTicketId = null;
+    let selectedTicket   = null;
     let groupConfigs = {}; // slug -> {id, members:[]}
 
     const AGENT_ROLES = ["admin","it"];
@@ -618,8 +617,8 @@
         statusFilterEl.addEventListener("change", renderTickets);
 
         ticketsBody.addEventListener("click", onRowClick);
-        clearFormBtn.addEventListener("click", startNewTicket);
-        saveTicketBtn.addEventListener("click", saveTicket);
+        clearSelectionBtn.addEventListener("click", clearSelection);
+        saveStatusBtn.addEventListener("click", saveStatusOnly);
         addReplyBtn.addEventListener("click", addReply);
         assignToMeBtn.addEventListener("click", assignToMe);
 
@@ -664,6 +663,7 @@
       if(!allTickets.length){
         ticketsBody.innerHTML =
           `<tr><td colspan="8">No tickets found.</td></tr>`;
+        return;
       }
 
       const term  = (searchEl.value || "").toLowerCase();
@@ -729,104 +729,69 @@
       const ticket = allTickets.find(t=>t.id === id);
       if(!ticket) return;
       selectTicket(ticket);
-      detailsHint.scrollIntoView({behavior:"smooth",block:"start"});
+      detailsPanel.scrollIntoView({behavior:"smooth",block:"start"});
     }
 
     function selectTicket(t){
       selectedTicketId = t.id;
+      selectedTicket   = t;
+
       const requester = t.requesterName || t.requesterEmail || "Unknown requester";
       detailsHint.textContent =
         `Ticket ${t.id.slice(0,8)} – ${requester}`;
+      detailsPanel.style.display = "block";
 
-      summaryInput.value     = t.summary || "";
-      descriptionInput.value = t.description || "";
-      groupInput.value       = canonicalGroup(t.group) || "it";
-      priorityInput.value    = t.priority || "medium";
-
+      const g  = canonicalGroup(t.group);
       const st = (t.status || "open").toLowerCase();
-      statusInput.value      = ["open","in-progress","resolved","closed"].includes(st)
+
+      groupDisplay.textContent    = groupToLabel(g) || "";
+      statusInput.value           = ["open","in-progress","resolved","closed"].includes(st)
         ? st : "open";
+      priorityDisplay.textContent = capitalize(t.priority || "medium");
+      assigneeDisplay.value       = t.assigneeName || t.assigneeEmail || "";
 
-      locationInput.value    = t.location || "";
-      dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
-      urgencyInput.value     = String(t.urgency || 3);
-
-      assigneeDisplay.value  = t.assigneeName || t.assigneeEmail || "";
+      summaryDisplay.textContent     = t.summary || "";
+      descriptionDisplay.textContent = t.description || "";
+      locationDisplay.textContent    = t.location || "";
+      dueDateDisplay.textContent     = t.requestedDate || t.requestedCompletionDate || "";
+      urgencyDisplay.textContent     = String(t.urgency || "") || "—";
 
       formStatus.textContent = "";
       replyInput.value       = "";
 
-      groupManageSelect.value = canonicalGroup(t.group) || "it";
+      groupManageSelect.value = g || "it";
       refreshGroupMembersUI();
 
       loadComments(t.id);
     }
 
-    function startNewTicket(){
-      selectedTicketId        = null;
-      detailsHint.textContent = "Creating a new ticket.";
-      summaryInput.value      = "";
-      descriptionInput.value  = "";
-      groupInput.value        = "it";
-      priorityInput.value     = "medium";
-      statusInput.value       = "open";
-      locationInput.value     = "";
-      dueDateInput.value      = "";
-      urgencyInput.value      = "3";
-      assigneeDisplay.value   = "";
-      formStatus.textContent  = "";
-      replyInput.value        = "";
-      commentsList.innerHTML  =
-        `<div class="comment-muted">No conversation yet – this will appear after the ticket is created.</div>`;
+    function clearSelection(){
+      selectedTicketId = null;
+      selectedTicket   = null;
+      detailsPanel.style.display = "none";
+      commentsList.innerHTML =
+        `<div class="comment-muted">No ticket selected.</div>`;
     }
 
-    async function saveTicket(){
-      const summary = summaryInput.value.trim();
-      const description = descriptionInput.value.trim();
-
-      if(!summary || !description){
-        formStatus.textContent = "Summary and description are required.";
+    async function saveStatusOnly(){
+      if(!selectedTicketId){
+        formStatus.textContent = "Select a ticket first.";
         return;
       }
-
-      formStatus.textContent = "Saving ticket…";
-
-      const data = {
-        summary,
-        description,
-        group: groupInput.value,
-        priority: priorityInput.value,
-        status: statusInput.value,
-        location: (locationInput.value || "").trim(),
-        requestedDate: dueDateInput.value || "",
-        urgency: Number(urgencyInput.value || 3),
-        updatedAt: serverTimestamp()
-      };
-
-      if(!selectedTicketId){
-        data.requesterUid   = currentUser?.uid || "";
-        data.requesterEmail = currentUser?.email || "";
-        data.requesterName  = currentUser?.displayName || currentUser?.email || "";
-      }
-
+      const newStatus = statusInput.value || "open";
+      formStatus.textContent = "Updating status…";
       try{
-        if(selectedTicketId){
-          await updateDoc(doc(db,"tickets",selectedTicketId), data);
-          formStatus.textContent = "Ticket updated.";
-        }else{
-          data.createdAt = serverTimestamp();
-          const ref = await addDoc(collection(db,"tickets"), data);
-          selectedTicketId = ref.id;
-          formStatus.textContent = "Ticket created.";
-          await enqueueGroupNotification(ref.id, data.group || "it");
-        }
-
+        await updateDoc(doc(db,"tickets",selectedTicketId),{
+          status: newStatus,
+          updatedAt: serverTimestamp()
+        });
         await loadTickets();
         const t = allTickets.find(t=>t.id === selectedTicketId);
         if(t) selectTicket(t);
+        formStatus.textContent = "Status updated.";
       }catch(err){
         console.error(err);
-        formStatus.textContent = "Error saving ticket: " + err.message;
+        formStatus.textContent = "Failed to update status: " + err.message;
       }
     }
 
@@ -895,7 +860,7 @@
 
     async function addReply(){
       if(!selectedTicketId){
-        alert("Select a ticket or create one before adding a reply.");
+        alert("Select a ticket before adding a reply.");
         return;
       }
       const msg = replyInput.value.trim();
@@ -1034,6 +999,7 @@
       const s = (g || "").toLowerCase();
       if(["it","maintenance","front-office","nurse"].includes(s)) return s;
       if(s === "front office") return "front-office";
+      if(s === "it" || s === "it " ) return "it";
       return s || "it";
     }
 
@@ -1074,7 +1040,7 @@
     function escapeHtml(s){
       if(!s) return "";
       return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;",">":"&quot;","'":"&#39;" }[c]
+        { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
       ));
     }
   </script>
