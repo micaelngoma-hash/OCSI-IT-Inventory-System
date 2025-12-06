@@ -220,6 +220,8 @@
       font-size:.75rem;
     }
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
+    .pill-progress{background:#fef3c7;color:#92400e;}
+    .pill-resolved{background:#dcfce7;color:#166534;}
     .pill-closed{background:#e6fffa;color:#2c7a7b;}
 
     /* FORM + COMMENTS */
@@ -315,10 +317,10 @@
         <div class="filters">
           <select id="groupFilter">
             <option value="">All groups</option>
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
+            <option value="it">IT</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="front-office">Front Office</option>
+            <option value="nurse">Nurse</option>
           </select>
           <select id="statusFilter">
             <option value="">All statuses</option>
@@ -376,10 +378,10 @@
 
             <div class="field-label">Group</div>
             <select id="groupInput" class="field-select">
-              <option value="IT">IT</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Front Office">Front Office</option>
-              <option value="Nurse">Nurse</option>
+              <option value="it">IT</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="front-office">Front Office</option>
+              <option value="nurse">Nurse</option>
             </select>
 
             <div class="field-label">Priority</div>
@@ -392,6 +394,8 @@
             <div class="field-label">Status</div>
             <select id="statusInput" class="field-select">
               <option value="open">Open</option>
+              <option value="in-progress">In progress</option>
+              <option value="resolved">Resolved</option>
               <option value="closed">Closed</option>
             </select>
 
@@ -483,7 +487,7 @@
     const AGENT_ROLES = ["admin","it"];
 
     watchAuth({
-      allowedRoles:["admin","it","viewer"],
+      allowedRoles:["admin","it","viewer","staff"],
       whoEl,
       onReady: async (user, role)=>{
         currentUser = user;
@@ -495,6 +499,11 @@
           return;
         }
 
+        // New ticket should go through the same submit page as staff
+        newTicketBtn.addEventListener("click", ()=>{
+          window.location.href = "submit-request.html";
+        });
+
         await loadTickets();
 
         searchEl.addEventListener("input", renderTickets);
@@ -502,9 +511,8 @@
         statusFilterEl.addEventListener("change", renderTickets);
 
         ticketsBody.addEventListener("click", onRowClick);
-        newTicketBtn.addEventListener("click", startNewTicket);
-        saveTicketBtn.addEventListener("click", saveTicket);
         clearFormBtn.addEventListener("click", startNewTicket);
+        saveTicketBtn.addEventListener("click", saveTicket);
         addReplyBtn.addEventListener("click", addReply);
       }
     });
@@ -549,20 +557,27 @@
 
       const term  = (searchEl.value || "").toLowerCase();
       const gFilt = groupFilterEl.value;
-      const sFilt = statusFilterEl.value;
+      const sFilt = statusFilterEl.value; // "open" | "closed" | ""
 
       const rows = allTickets.filter(t=>{
-        const groupVal  = t.group || "";
-        const statusVal = (t.status || "open").toLowerCase();
+        const g = canonicalGroup(t.group);
+        const st = (t.status || "open").toLowerCase();
 
-        if(gFilt && groupVal !== gFilt) return false;
-        if(sFilt && statusVal !== sFilt) return false;
+        // group filter (slug comparison)
+        if(gFilt && g !== gFilt) return false;
+
+        // status filter:
+        // "open"  -> anything NOT closed
+        // "closed"-> only closed
+        if(sFilt === "open" && st === "closed") return false;
+        if(sFilt === "closed" && st !== "closed") return false;
 
         if(!term) return true;
 
         const hay = [
           t.summary,
           t.description,
+          groupToLabel(g),
           t.requesterName,
           t.requesterEmail,
           t.location
@@ -580,17 +595,17 @@
       ticketsBody.innerHTML = rows.map((t,idx)=>{
         const created   = formatDate(t.createdAt);
         const requester = t.requesterName || t.requesterEmail || "Unknown";
-        const groupLbl  = t.group || "IT";
-        const status    = (t.status || "open").toLowerCase();
+        const g         = canonicalGroup(t.group);
+        const st        = (t.status || "open").toLowerCase();
         const priority  = capitalize(t.priority || "medium");
 
         return `
           <tr data-id="${t.id}">
             <td>${idx+1}</td>
             <td>${escapeHtml(t.summary || "")}</td>
-            <td>${escapeHtml(groupLbl)}</td>
+            <td>${escapeHtml(groupToLabel(g))}</td>
             <td>${escapeHtml(priority)}</td>
-            <td>${statusPill(status)}</td>
+            <td>${statusPill(st)}</td>
             <td>${escapeHtml(requester)}</td>
             <td>${escapeHtml(created)}</td>
           </tr>`;
@@ -604,20 +619,24 @@
       const ticket = allTickets.find(t=>t.id === id);
       if(!ticket) return;
       selectTicket(ticket);
+      // for smaller screens, scroll details into view
+      detailsHint.scrollIntoView({behavior:"smooth",block:"start"});
     }
 
     function selectTicket(t){
       selectedTicketId = t.id;
+      const requester = t.requesterName || t.requesterEmail || "Unknown requester";
       detailsHint.textContent =
-        `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail || "Unknown requester"}`;
+        `Ticket ${t.id.slice(0,8)} – ${requester}`;
 
       summaryInput.value     = t.summary || "";
       descriptionInput.value = t.description || "";
-      groupInput.value       = t.group || "IT";
+      groupInput.value       = canonicalGroup(t.group) || "it";
       priorityInput.value    = t.priority || "medium";
 
       const st = (t.status || "open").toLowerCase();
-      statusInput.value      = st === "closed" ? "closed" : "open";
+      statusInput.value      = ["open","in-progress","resolved","closed"].includes(st)
+        ? st : "open";
 
       locationInput.value    = t.location || "";
       dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
@@ -633,7 +652,7 @@
       detailsHint.textContent = "Creating a new ticket.";
       summaryInput.value      = "";
       descriptionInput.value  = "";
-      groupInput.value        = "IT";
+      groupInput.value        = "it";
       priorityInput.value     = "medium";
       statusInput.value       = "open";
       locationInput.value     = "";
@@ -659,9 +678,9 @@
       const data = {
         summary,
         description,
-        group: groupInput.value,
+        group: groupInput.value, // slug
         priority: priorityInput.value,
-        status: statusInput.value,         // "open" or "closed"
+        status: statusInput.value,         // open/in-progress/resolved/closed
         location: (locationInput.value || "").trim(),
         requestedDate: dueDateInput.value || "",
         urgency: Number(urgencyInput.value || 3),
@@ -764,11 +783,33 @@
 
     /* ---------- helpers ---------- */
 
+    function canonicalGroup(g){
+      const s = (g || "").toLowerCase();
+      if(["it","maintenance","front-office","nurse"].includes(s)) return s;
+      // legacy support if older docs stored labels
+      if(s === "it") return "it";
+      if(s === "maintenance") return "maintenance";
+      if(s === "front office") return "front-office";
+      if(s === "nurse") return "nurse";
+      return s || "it";
+    }
+
+    function groupToLabel(slug){
+      switch((slug || "").toLowerCase()){
+        case "it": return "IT";
+        case "maintenance": return "Maintenance";
+        case "front-office": return "Front Office";
+        case "nurse": return "Nurse";
+        default: return slug || "";
+      }
+    }
+
     function statusPill(status){
-      const s = status === "closed" ? "closed" : "open";
-      const cls = s === "closed" ? "pill-closed" : "pill-open";
-      const label = s === "closed" ? "Closed" : "Open";
-      return `<span class="pill ${cls}">${label}</span>`;
+      const s = (status || "open").toLowerCase();
+      if(s === "closed")   return `<span class="pill pill-closed">Closed</span>`;
+      if(s === "resolved") return `<span class="pill pill-resolved">Resolved</span>`;
+      if(s === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
+      return `<span class="pill pill-open">Open</span>`;
     }
 
     function formatDate(val){
