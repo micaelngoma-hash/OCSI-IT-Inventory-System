@@ -159,22 +159,12 @@
       margin:4px 0 10px;
     }
 
-    /* SPLIT LAYOUT */
-    .split{
-      display:grid;
-      grid-template-columns:1.5fr 1.15fr;
-      gap:16px;
-      margin-top:4px;
-    }
-    @media(max-width:1000px){
-      .split{grid-template-columns:1fr;}
-    }
-
     .panel{
       border-radius:10px;
       border:1px solid var(--border);
       padding:12px 14px 10px;
       background:#ffffff;
+      margin-bottom:14px;
     }
     .panel h2{
       margin:0 0 6px;
@@ -306,9 +296,21 @@
       align-items:center;
     }
 
+    /* CONVERSATION + GROUP MEMBERS horizontal row */
+    .collab-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:10px;
+    }
+    .collab-col{
+      flex:1;
+      min-width:260px;
+    }
+
     /* GROUP MEMBERS */
     .group-members-box{
-      max-height:150px;
+      max-height:180px;
     }
     .group-member-row{
       display:flex;
@@ -373,115 +375,92 @@
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
 
-      <div class="split">
-        <!-- LEFT: ticket list -->
-        <section class="panel">
-          <h2>Ticket list</h2>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:55px;">#</th>
-                  <th>Summary</th>
-                  <th>Group</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Assignee</th>
-                  <th>Requester</th>
-                  <th>Created</th>
-                </tr>
-              </thead>
-              <tbody id="ticketsBody">
-                <tr><td colspan="8">Loading…</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
+      <!-- TOP PANEL: details + assignee + conversation + add members -->
+      <section class="panel">
+        <h2>Ticket details &amp; collaboration</h2>
+        <p class="muted" id="detailsHint">
+          Select a ticket in the list below to view details and add a reply, or click “New ticket”.
+        </p>
 
-        <!-- RIGHT: details + replies + group config -->
-        <section class="panel">
-          <h2>Ticket details &amp; replies</h2>
-          <p class="muted" id="detailsHint">
-            Select a ticket on the left to view details and add a reply, or click “New ticket”.
-          </p>
-
-          <!-- QUICK UPDATE BAR -->
-          <div class="quick-bar">
-            <div class="quick-field">
-              <div class="quick-label">Group</div>
-              <select id="groupInput" class="field-select">
-                <option value="it">IT</option>
-                <option value="maintenance">Maintenance</option>
-                <option value="front-office">Front Office</option>
-                <option value="nurse">Nurse</option>
-              </select>
-            </div>
-            <div class="quick-field">
-              <div class="quick-label">Status</div>
-              <select id="statusInput" class="field-select">
-                <option value="open">Open</option>
-                <option value="in-progress">In progress</option>
-                <option value="resolved">Resolved</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-            <div class="quick-field">
-              <div class="quick-label">Priority</div>
-              <select id="priorityInput" class="field-select">
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-            <div class="quick-field">
-              <div class="quick-label">Assignee</div>
-              <div class="quick-assignee">
-                <input id="assigneeDisplay" class="field-input" placeholder="Unassigned" disabled />
-                <button id="assignToMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
-                  ✅ Me
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- FORM BODY -->
-          <div>
-            <div class="field-label">Summary <span style="color:#ef4444">*</span></div>
-            <input id="summaryInput" class="field-input"
-                   placeholder="Short description (e.g. Printer not working)"/>
-
-            <div class="field-label">Description <span style="color:#ef4444">*</span></div>
-            <textarea id="descriptionInput" class="field-textarea"
-              placeholder="Describe the issue, include room number, device ID, etc."></textarea>
-
-            <div class="field-label">Location</div>
-            <input id="locationInput" class="field-input" placeholder="Room / building (optional)"/>
-
-            <div class="field-label">Requested completion date</div>
-            <input id="dueDateInput" type="date" class="field-input"/>
-
-            <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
-            <select id="urgencyInput" class="field-select">
-              <option value="1">1 – Low</option>
-              <option value="2">2</option>
-              <option value="3" selected>3 – Normal</option>
-              <option value="4">4</option>
-              <option value="5">5 – Very urgent</option>
+        <!-- QUICK UPDATE BAR -->
+        <div class="quick-bar">
+          <div class="quick-field">
+            <div class="quick-label">Group</div>
+            <select id="groupInput" class="field-select">
+              <option value="it">IT</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="front-office">Front Office</option>
+              <option value="nurse">Nurse</option>
             </select>
-
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-              <button id="saveTicketBtn" class="btn btn-primary" type="button">
-                💾 Save ticket
-              </button>
-              <button id="clearFormBtn" class="btn btn-ghost" type="button">
-                ✨ New blank form
+          </div>
+          <div class="quick-field">
+            <div class="quick-label">Status</div>
+            <select id="statusInput" class="field-select">
+              <option value="open">Open</option>
+              <option value="in-progress">In progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <div class="quick-field">
+            <div class="quick-label">Priority</div>
+            <select id="priorityInput" class="field-select">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="quick-field">
+            <div class="quick-label">Assignee</div>
+            <div class="quick-assignee">
+              <input id="assigneeDisplay" class="field-input" placeholder="Unassigned" disabled />
+              <button id="assignToMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+                ✅ Me
               </button>
             </div>
-            <div id="formStatus" class="status-bar"></div>
           </div>
+        </div>
 
-          <!-- CONVERSATION -->
-          <div style="margin-top:12px;">
+        <!-- CORE TICKET FIELDS -->
+        <div>
+          <div class="field-label">Summary <span style="color:#ef4444">*</span></div>
+          <input id="summaryInput" class="field-input"
+                 placeholder="Short description (e.g. Printer not working)"/>
+
+          <div class="field-label">Description <span style="color:#ef4444">*</span></div>
+          <textarea id="descriptionInput" class="field-textarea"
+            placeholder="Describe the issue, include room number, device ID, etc."></textarea>
+
+          <div class="field-label">Location</div>
+          <input id="locationInput" class="field-input" placeholder="Room / building (optional)"/>
+
+          <div class="field-label">Requested completion date</div>
+          <input id="dueDateInput" type="date" class="field-input"/>
+
+          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
+          <select id="urgencyInput" class="field-select">
+            <option value="1">1 – Low</option>
+            <option value="2">2</option>
+            <option value="3" selected>3 – Normal</option>
+            <option value="4">4</option>
+            <option value="5">5 – Very urgent</option>
+          </select>
+
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="saveTicketBtn" class="btn btn-primary" type="button">
+              💾 Save ticket
+            </button>
+            <button id="clearFormBtn" class="btn btn-ghost" type="button">
+              ✨ New blank form
+            </button>
+          </div>
+          <div id="formStatus" class="status-bar"></div>
+        </div>
+
+        <!-- HORIZONTAL: Conversation + Group members -->
+        <div class="collab-row">
+          <!-- Conversation -->
+          <div class="collab-col">
             <div class="field-label">Conversation</div>
             <div id="commentsList" class="comment-list">
               <div class="comment-muted">No ticket selected yet.</div>
@@ -495,14 +474,13 @@
             </button>
           </div>
 
-          <!-- GROUP NOTIFICATION MEMBERS -->
-          <div style="margin-top:14px;border-top:1px solid #e5e7eb;padding-top:8px;">
+          <!-- Group members -->
+          <div class="collab-col">
             <div class="field-label">Group notification members</div>
             <div class="muted" id="groupMembersHint">
               Members receive notifications when a ticket is created for their group and can assign tickets to themselves.
             </div>
 
-            <!-- Horizontal bar for group + add member -->
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
               <select id="groupManageSelect" class="field-select" style="max-width:180px;">
                 <option value="it">IT</option>
@@ -524,13 +502,36 @@
             </div>
             <div id="groupMembersStatus" class="status-bar"></div>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <!-- BOTTOM PANEL: ticket list -->
+      <section class="panel">
+        <h2>Ticket list</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:55px;">#</th>
+                <th>Summary</th>
+                <th>Group</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Requester</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsBody">
+              <tr><td colspan="8">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   </main>
 
   <script type="module">
-    /* IMPORTANT: now importing db as well – this fixes tickets not loading */
     import { db, auth, watchAuth } from "./firebase.js";
     import { signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
@@ -603,7 +604,6 @@
           window.location.href = "login.html";
         });
 
-        // New tickets come from the public page
         newTicketBtn.addEventListener("click", ()=>{
           window.location.href = "submit-request.html";
         });
@@ -1074,7 +1074,7 @@
     function escapeHtml(s){
       if(!s) return "";
       return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+        { "&":"&amp;","<":"&lt;",">":"&quot;","'":"&#39;" }[c]
       ));
     }
   </script>
