@@ -184,12 +184,13 @@
         <div class="field">
           <div class="label">Group</div>
           <div class="hint">Who should handle this request?</div>
+          <!-- store lowercase slugs in Firestore -->
           <select id="group" required>
             <option value="">Select a group…</option>
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
+            <option value="it">IT</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="front-office">Front Office</option>
+            <option value="nurse">Nurse</option>
           </select>
         </div>
 
@@ -259,7 +260,7 @@
     let currentRole = "viewer";
 
     watchAuth({
-      allowedRoles:["admin","it","viewer"],
+      allowedRoles:["admin","it","viewer","staff"],
       whoEl,
       onReady:(user, role)=>{
         currentUser = user;
@@ -303,11 +304,11 @@
       setStatus("Submitting ticket…");
 
       try{
-        const docRef = await addDoc(collection(db, "tickets"), {
+        await addDoc(collection(db, "tickets"), {
           requesterUid:   currentUser.uid,
           requesterEmail: email,
           requesterName:  name,
-          group,
+          group, // lowercase slug
           summary,
           description,
           priority,
