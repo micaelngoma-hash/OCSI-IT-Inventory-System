@@ -19,6 +19,7 @@
       color:#1a202c;
     }
 
+    /* HERO HEADER (same style as other two pages) */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -45,24 +46,31 @@
     }
     .hero-right{
       display:flex;
-      align-items:center;
-      gap:10px;
+      align-items:flex-end;
+      gap:12px;
+    }
+    .hero-user{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:4px;
     }
     .hero-email{
       font-size:.85rem;
       opacity:.9;
     }
-    .btn-hero{
+    .btn-hero-small{
       border:none;
       border-radius:999px;
-      padding:6px 12px;
-      font-size:.82rem;
+      padding:4px 10px;
+      font-size:.8rem;
       font-weight:500;
-      background:rgba(255,255,255,.12);
+      background:rgba(255,255,255,.16);
       color:white;
       cursor:pointer;
     }
 
+    /* MAIN LAYOUT */
     .wrap{
       display:flex;
       justify-content:center;
@@ -74,7 +82,7 @@
       border:1px solid var(--border);
       max-width:1100px;
       width:100%;
-      padding:18px 18px 18px;
+      padding:18px 18px 14px;
       box-shadow:0 10px 30px rgba(15,23,42,.06);
     }
 
@@ -119,6 +127,7 @@
       display:flex;
       gap:8px;
       flex-wrap:wrap;
+      align-items:center;
     }
     select{
       padding:6px 8px;
@@ -161,7 +170,7 @@
       border:1px solid var(--border);
       padding:12px 14px 10px;
       background:#ffffff;
-      margin-bottom:14px;
+      margin-bottom:12px;
     }
     .panel h2{
       margin:0 0 6px;
@@ -176,6 +185,7 @@
       margin-bottom:8px;
     }
 
+    /* TABLE */
     .table-wrap{
       border-radius:10px;
       border:1px solid var(--border);
@@ -184,7 +194,7 @@
     table{
       width:100%;
       border-collapse:collapse;
-      min-width:800px;
+      min-width:750px;
       font-size:.85rem;
     }
     th,td{
@@ -209,10 +219,32 @@
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
     .pill-closed{background:#e6fffa;color:#2c7a7b;}
 
+    /* TICKET EDIT BLOCK (hidden until ticket selected) */
+    .hidden{display:none;}
+
+    .ticket-edit{
+      border-radius:8px;
+      border:1px solid #e5e7eb;
+      padding:10px 10px 8px;
+      background:#fdfefe;
+      margin-bottom:10px;
+    }
+
+    .ticket-top-grid{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:10px;
+      margin-bottom:10px;
+    }
+    @media(max-width:900px){
+      .ticket-top-grid{
+        grid-template-columns:repeat(2,minmax(0,1fr));
+      }
+    }
+
     .field-label{
       font-size:.8rem;
       font-weight:600;
-      margin-top:6px;
       margin-bottom:3px;
     }
     .field-input,
@@ -267,51 +299,41 @@
       color:#94a3b8;
     }
 
-    .row-inline{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-    .row-inline > div{
-      flex:1;
-      min-width:140px;
-    }
-
-    .hidden{
-      display:none;
-    }
-
-    /* group members */
+    /* GROUP NOTIFICATION MEMBERS */
     .group-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:10px;
-      margin-top:8px;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:12px;
+    }
+    @media(max-width:800px){
+      .group-grid{
+        grid-template-columns:1fr;
+      }
     }
     .group-card{
       border:1px solid #e5e7eb;
       border-radius:8px;
-      padding:8px 10px;
-      font-size:.82rem;
+      padding:10px 10px 8px;
       background:#f9fafb;
     }
     .group-card h3{
       margin:0 0 4px;
-      font-size:.9rem;
+      font-size:.95rem;
     }
     .group-card textarea{
       width:100%;
-      min-height:60px;
-      font-size:.82rem;
-      padding:6px 8px;
-      border-radius:6px;
+      min-height:70px;
+      border-radius:8px;
       border:1px solid #cbd5e1;
+      font-size:.86rem;
+      padding:6px 8px;
       resize:vertical;
       font-family:inherit;
     }
   </style>
 </head>
 <body>
+  <!-- HERO -->
   <header class="hero">
     <div class="hero-left">
       <div class="hero-title">OCSI Service Request</div>
@@ -320,11 +342,10 @@
       </nav>
     </div>
     <div class="hero-right">
-      <button class="btn-hero" type="button" onclick="location.href='index.html'">
-        ← Back to inventory
-      </button>
-      <div id="who" class="hero-email">Checking session…</div>
-      <button id="logoutBtn" class="btn-hero" type="button">Logout</button>
+      <div class="hero-user">
+        <div id="who" class="hero-email">Checking session…</div>
+        <button id="logoutBtn" class="btn-hero-small" type="button">Log out</button>
+      </div>
     </div>
   </header>
 
@@ -335,6 +356,7 @@
         View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
       </p>
 
+      <!-- TOP TOOLBAR -->
       <div class="toolbar">
         <div class="search-box">
           <span>🔍</span>
@@ -362,7 +384,7 @@
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
 
-      <!-- TICKET LIST (top) -->
+      <!-- TICKET LIST -->
       <section class="panel">
         <h2>Ticket list</h2>
         <div class="table-wrap">
@@ -386,20 +408,26 @@
         </div>
       </section>
 
-      <p id="detailsPlaceholder" class="small-text">
+      <p class="small-text">
         Click a ticket in the list above to see details, update status, and reply.
       </p>
 
-      <!-- DETAILS & REPLIES (always visible, but edit fields hidden until a ticket is selected) -->
+      <!-- DETAILS & REPLIES -->
       <section class="panel">
         <h2>Ticket details &amp; replies</h2>
         <p class="muted" id="detailsHint">
           No ticket selected yet.
         </p>
 
-        <!-- EDIT BLOCK: HIDDEN until a ticket is selected -->
-        <div id="ticketEditBlock" class="hidden">
-          <div class="row-inline">
+        <!-- This placeholder text stays until a ticket is selected -->
+        <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
+          Select a ticket above to view its details.
+        </div>
+
+        <!-- Ticket edit / info block (HIDDEN until a ticket is selected) -->
+        <div id="ticketEditBlock" class="ticket-edit hidden">
+          <!-- Row: group / status / priority / assignee -->
+          <div class="ticket-top-grid">
             <div>
               <div class="field-label">Group</div>
               <select id="groupInput" class="field-select">
@@ -426,34 +454,36 @@
             </div>
             <div>
               <div class="field-label">Assignee</div>
-              <div class="row-inline">
-                <div style="flex:1;">
-                  <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-                </div>
-                <div style="flex:0 0 auto;">
-                  <button id="assignMeBtn" class="btn btn-ghost" type="button">☑ Me</button>
-                </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
+                <button id="assignMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+                  ✅ Me
+                </button>
               </div>
             </div>
           </div>
 
+          <!-- Read-only info fields; admin mainly updates status/group/assignee -->
           <div class="field-label">Summary</div>
-          <input id="summaryInput" class="field-input" readonly />
+          <input id="summaryInput" class="field-input" readonly
+                 placeholder="Short description (e.g. Printer not working)"/>
 
           <div class="field-label">Description</div>
-          <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
+          <textarea id="descriptionInput" class="field-textarea" readonly
+            placeholder="Describe the issue, include room number, device ID, etc."></textarea>
 
           <div class="field-label">Location</div>
-          <input id="locationInput" class="field-input" readonly />
+          <input id="locationInput" class="field-input" readonly
+                 placeholder="Room / building (optional)"/>
 
           <div class="field-label">Requested completion date</div>
-          <input id="dueDateInput" type="date" class="field-input" readonly />
+          <input id="dueDateInput" type="date" class="field-input" disabled/>
 
           <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
-          <select id="urgencyInput" class="field-select">
+          <select id="urgencyInput" class="field-select" disabled>
             <option value="1">1 – Low</option>
             <option value="2">2</option>
-            <option value="3">3 – Normal</option>
+            <option value="3" selected>3 – Normal</option>
             <option value="4">4</option>
             <option value="5">5 – Very urgent</option>
           </select>
@@ -466,8 +496,8 @@
           <div id="formStatus" class="status-bar"></div>
         </div>
 
-        <!-- CONVERSATION (always visible) -->
-        <div style="margin-top:10px;">
+        <!-- CONVERSATION -->
+        <div>
           <div class="field-label">Conversation</div>
           <div id="commentsList" class="comment-list">
             <div class="comment-muted">No ticket selected yet.</div>
@@ -476,7 +506,7 @@
           <div class="field-label" style="margin-top:8px;">Add reply</div>
           <textarea id="replyInput" class="field-textarea"
             placeholder="Reply to the requester or add an internal note."></textarea>
-          <button id="addReplyBtn" class="btn btn-ghost" type="button">
+          <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
             💬 Add reply
           </button>
         </div>
@@ -489,32 +519,34 @@
           Add staff email addresses for each group. When a ticket is created for a group,
           a notification service (Cloud Function) can use this list to email all members.
         </p>
-        <div class="group-grid" id="groupsContainer">
+
+        <div id="groupsContainer" class="group-grid">
           <!-- Filled by JS -->
         </div>
+
         <div id="groupStatus" class="status-bar"></div>
       </section>
     </section>
   </main>
 
   <script type="module">
-    import { db, auth, watchAuth, logout } from "./firebase.js";
+    import { db, watchAuth } from "./firebase.js";
     import {
-      collection, doc, addDoc, getDocs, updateDoc,
-      serverTimestamp, query, orderBy, limit, setDoc
+      collection, doc, addDoc, getDocs, updateDoc, setDoc,
+      serverTimestamp, query, orderBy, limit
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    const whoEl           = document.getElementById("who");
-    const logoutBtn       = document.getElementById("logoutBtn");
-    const ticketsBody     = document.getElementById("ticketsBody");
-    const listStatus      = document.getElementById("listStatus");
-    const detailsHint     = document.getElementById("detailsHint");
+    const whoEl              = document.getElementById("who");
+    const logoutBtn          = document.getElementById("logoutBtn");
+    const ticketsBody        = document.getElementById("ticketsBody");
+    const listStatus         = document.getElementById("listStatus");
+    const detailsHint        = document.getElementById("detailsHint");
     const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
-    const searchEl        = document.getElementById("search");
-    const groupFilterEl   = document.getElementById("groupFilter");
-    const statusFilterEl  = document.getElementById("statusFilter");
-    const newTicketBtn    = document.getElementById("newTicketBtn");
+    const searchEl      = document.getElementById("search");
+    const groupFilterEl = document.getElementById("groupFilter");
+    const statusFilterEl= document.getElementById("statusFilter");
+    const newTicketBtn  = document.getElementById("newTicketBtn");
 
     // Edit block wrapper (hidden until ticket selected)
     const ticketEditBlock = document.getElementById("ticketEditBlock");
@@ -549,7 +581,10 @@
 
     const AGENT_ROLES = ["admin","it"];
 
-    logoutBtn.addEventListener("click", ()=>logout && logout());
+    // Simple logout: redirect to login page (actual sign-out can be handled there)
+    logoutBtn.addEventListener("click", ()=>{
+      window.location.href = "login.html";
+    });
 
     watchAuth({
       allowedRoles:["admin","it","viewer"],
@@ -593,7 +628,7 @@
       try{
         listStatus.textContent = "Loading tickets…";
 
-        // Simpler query to avoid index issues.
+        // Simple collection read to avoid index issues
         const snap = await getDocs(collection(db,"tickets"));
         allTickets = [];
         snap.forEach(ds=>{
@@ -607,7 +642,7 @@
           return;
         }
 
-        // Sort newest first client-side
+        // newest first
         allTickets.sort((a,b)=>{
           const ta = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
           const tb = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
@@ -698,7 +733,6 @@
         `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail || "Unknown requester"}`;
       detailsPlaceholder.textContent = "";
 
-      // show the edit block now
       ticketEditBlock.classList.remove("hidden");
 
       groupInput.value       = t.group || "IT";
@@ -738,13 +772,13 @@
       if(assigneeVal && assigneeVal.toLowerCase() !== "unassigned"){
         data.assigneeName = assigneeVal;
         if(currentUser?.uid && assigneeVal === (currentUser.displayName || currentUser.email)){
-          data.assigneeUid = currentUser.uid;
+          data.assigneeUid   = currentUser.uid;
           data.assigneeEmail = currentUser.email || "";
         }
       }else{
-        data.assigneeName = "";
-        data.assigneeUid  = "";
-        data.assigneeEmail= "";
+        data.assigneeName  = "";
+        data.assigneeUid   = "";
+        data.assigneeEmail = "";
       }
 
       try{
@@ -922,7 +956,7 @@
     function escapeHtml(s){
       if(!s) return "";
       return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+        { "&":"&amp;","<":"&lt;","">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
       ));
     }
   </script>
