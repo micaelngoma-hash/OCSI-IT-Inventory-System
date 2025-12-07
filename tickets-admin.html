@@ -374,6 +374,7 @@
           <select id="statusFilter">
             <option value="">All statuses</option>
             <option value="open">Open</option>
+            <option value="in-progress">In progress</option>
             <option value="closed">Closed</option>
           </select>
           <button id="newTicketBtn" class="btn btn-primary" type="button">
@@ -439,11 +440,15 @@
             </div>
             <div>
               <div class="field-label">Status</div>
+
+              <!-- ✅ UPDATED: Added "In progress" -->
               <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
+                <option value="in-progress">In progress</option>
                 <option value="closed">Closed</option>
               </select>
             </div>
+
             <div>
               <div class="field-label">Priority</div>
               <select id="priorityInput" class="field-select">
@@ -454,16 +459,24 @@
             </div>
             <div>
               <div class="field-label">Assignee</div>
+
+              <!-- ORIGINAL INPUT + ASSIGN ME + NEW UNASSIGN BUTTON -->
               <div style="display:flex;gap:6px;align-items:center;">
                 <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
                 <button id="assignMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
                   ✅ Me
                 </button>
+
+                <!-- ✅ NEW UNASSIGN BUTTON -->
+                <button id="unassignBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+                  ❌ Unassign
+                </button>
               </div>
+
             </div>
           </div>
 
-          <!-- Read-only info fields; admin mainly updates status/group/assignee -->
+          <!-- Read-only info fields -->
           <div class="field-label">Summary</div>
           <input id="summaryInput" class="field-input" readonly
                  placeholder="Short description (e.g. Printer not working)"/>
@@ -558,6 +571,7 @@ const statusInput       = document.getElementById("statusInput");
 const priorityInput     = document.getElementById("priorityInput");
 const assigneeInput     = document.getElementById("assigneeInput");
 const assignMeBtn       = document.getElementById("assignMeBtn");
+const unassignBtn       = document.getElementById("unassignBtn");  // ✅ NEW
 const summaryInput      = document.getElementById("summaryInput");
 const descriptionInput  = document.getElementById("descriptionInput");
 const locationInput     = document.getElementById("locationInput");
@@ -625,12 +639,17 @@ watchAuth({
       }
     });
 
+    /* ✅ NEW UNASSIGN HANDLER */
+    unassignBtn.addEventListener("click", () => {
+      assigneeInput.value = "Unassigned";
+    });
+
     // hide details by default
     ticketEditBlock.classList.add("hidden");
 
     await Promise.all([
       loadTickets(),
-      loadGroupMembers()   // NEW: replaced multi-card with dropdown system
+      loadGroupMembers()
     ]);
   }
 });
@@ -886,71 +905,6 @@ async function addReply(){
 }
 
 /* ============================
-   SINGLE GROUP CARD + DROPDOWN
-============================ */
-async function loadGroupMembers(){
-  groupsContainer.innerHTML = `
-    <div class="group-card">
-      <h3>Group Notification List</h3>
-
-      <label>Select Group:</label>
-      <select id="groupSelect" class="field-select">
-        <option value="IT">IT</option>
-        <option value="Maintenance">Maintenance</option>
-        <option value="Front Office">Front Office</option>
-        <option value="Nurse">Nurse</option>
-      </select>
-
-      <p class="muted">Comma-separated emails.</p>
-
-      <textarea id="groupEmails"></textarea>
-
-      <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:6px;">Save</button>
-    </div>
-  `;
-
-  const ddl = document.getElementById("groupSelect");
-  const textarea = document.getElementById("groupEmails");
-  const btn = document.getElementById("saveGroupBtn");
-
-  async function loadOne(id){
-    textarea.value = "";
-    try{
-      const snap = await getDocs(collection(db,"ticket_groups"));
-      const map = {};
-      snap.forEach(ds => { map[ds.id] = ds.data(); });
-      if(map[id] && Array.isArray(map[id].emails)){
-        textarea.value = map[id].emails.join(", ");
-      }
-    }catch(err){
-      console.error(err);
-    }
-  }
-
-  ddl.addEventListener("change", () => loadOne(ddl.value));
-  btn.addEventListener("click", () => saveOne(ddl.value, textarea.value));
-
-  await loadOne("IT");
-}
-
-async function saveOne(id,text){
-  const emails = text
-    .split(",")
-    .map(e=>e.trim())
-    .filter(e=>e);
-
-  try{
-    await setDoc(doc(db,"ticket_groups",id),{
-      emails,
-      updatedAt: serverTimestamp()
-    });
-    groupStatus.textContent = `Saved members for ${id}.`;
-  }catch(err){
-    groupStatus.textContent = err.message;
-  }
-}
-
-/* ============================
    HELPERS
 ============================ */
 function statusPill(s){
@@ -985,5 +939,3 @@ function escapeHtml(s){
 
 </body>
 </html>
-
-
