@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+       <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -11,28 +11,19 @@
       --red2:#f56565;
       --brand:#1a73e8;
       --border:#e5e7eb;
+
+      /* Buttons */
+      --btn-bg:#ffffff;
+      --btn-text:#2d3748;
+      --btn-border:#cbd5e1;
+      --btn-hover:#f1f5f9;
+
+      /* Chip system */
       --chip-bg:#edf2f7;
       --chip-text:#2d3748;
-
-      /* NEW BUTTON COLORS */
-      --btn-bg:#f8fafc;
-      --btn-border:#d1d5db;
-      --btn-hover:#e5e7eb;
-
-      --success-bg:#d1fae5;
-      --success-text:#065f46;
-
-      --danger-bg:#fee2e2;
-      --danger-text:#991b1b;
-
-      --primary-bg:#1a73e8;
-      --primary-text:#ffffff;
-      --primary-hover:#1558b0;
     }
 
-    *{
-      box-sizing:border-box;
-    }
+    *{ box-sizing:border-box; }
 
     body{
       margin:0;
@@ -41,9 +32,7 @@
       color:#1a202c;
     }
 
-    /* ============================================================
-       HERO HEADER
-    ============================================================ */
+    /* HERO HEADER */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -94,22 +83,19 @@
       cursor:pointer;
     }
 
-    /* ============================================================
-       MAIN WRAPPER + CARD
-    ============================================================ */
+    /* MAIN */
     .wrap{
       display:flex;
       justify-content:center;
       padding:34px 16px;
     }
-
     .card-shell{
       background:white;
       border-radius:12px;
       border:1px solid var(--border);
       max-width:1100px;
       width:100%;
-      padding:18px;
+      padding:18px 18px 14px;
       box-shadow:0 10px 30px rgba(15,23,42,.06);
     }
 
@@ -120,9 +106,7 @@
       color:#4a5568;
     }
 
-    /* ============================================================
-       TOOLBAR
-    ============================================================ */
+    /* TOOLBAR */
     .toolbar{
       display:flex;
       justify-content:space-between;
@@ -149,69 +133,96 @@
       width:100%;
       background:transparent;
     }
+
     .filters{
       display:flex;
       gap:8px;
       flex-wrap:wrap;
       align-items:center;
     }
+
     select{
       padding:6px 8px;
       border-radius:999px;
       border:1px solid var(--border);
       font-size:.85rem;
       background:white;
+      cursor:pointer;
     }
 
-    /* ============================================================
-       MODERN BUTTONS (NEW)
-    ============================================================ */
+    /* STANDARD BUTTONS */
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:.85rem;
+      font-weight:500;
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      text-decoration:none;
+    }
+    .btn-primary{
+      background:var(--brand);
+      color:white;
+    }
+    .btn-ghost{
+      background:white;
+      border:1px solid #cbd5e1;
+      color:#1a202c;
+    }
+
+    /* ⭐ NEW ADVANCED ACTION BUTTONS */
     .action-btn{
+      padding:6px 14px;
+      border-radius:50px;
       border:1px solid var(--btn-border);
       background:var(--btn-bg);
-      border-radius:10px;
-      padding:7px 14px;
+      color:var(--btn-text);
       font-size:.85rem;
+      font-weight:600;
       cursor:pointer;
-      display:flex;
+      display:inline-flex;
       align-items:center;
-      gap:6px;
-      transition:.18s ease;
+      gap:8px;
+      transition:all .18s ease;
+      box-shadow:0 1px 2px rgba(0,0,0,0.06);
     }
     .action-btn:hover{
       background:var(--btn-hover);
+      transform:translateY(-1px);
+      box-shadow:0 3px 8px rgba(0,0,0,0.09);
     }
 
     .action-btn.success{
-      background:var(--success-bg);
-      color:var(--success-text);
-      border-color:var(--success-text);
+      background:#e6fffa;
+      color:#2c7a7b;
+      border-color:#b2f5ea;
     }
     .action-btn.success:hover{
-      background:#a7f3d0;
+      background:#b2f5ea;
     }
 
     .action-btn.danger{
-      background:var(--danger-bg);
-      color:var(--danger-text);
-      border-color:var(--danger-text);
+      background:#fff5f5;
+      color:#c53030;
+      border-color:#fed7d7;
     }
     .action-btn.danger:hover{
-      background:#fecaca;
+      background:#fed7d7;
     }
 
     .action-btn.primary{
-      background:var(--primary-bg);
-      color:var(--primary-text);
-      border-color:var(--primary-bg);
+      background:#1a73e8;
+      color:white;
+      border-color:#1664c4;
     }
     .action-btn.primary:hover{
-      background:var(--primary-hover);
+      background:#1664c4;
     }
 
-    /* ============================================================
-       PANELS + TABLE
-    ============================================================ */
+    /* PANELS */
     .panel{
       border-radius:10px;
       border:1px solid var(--border);
@@ -226,28 +237,24 @@
       justify-content:space-between;
       align-items:center;
     }
-
     .muted{
       font-size:.8rem;
       color:#718096;
       margin-bottom:8px;
     }
 
-    /* SCROLLABLE TICKET LIST */
-    .ticket-table-scroll{
-      max-height:350px;
-      overflow-y:auto;
+    /* TABLE */
+    .table-wrap{
       border-radius:10px;
       border:1px solid var(--border);
+      overflow:auto;
     }
-
     table{
       width:100%;
       border-collapse:collapse;
       min-width:750px;
       font-size:.85rem;
     }
-
     th,td{
       padding:8px 10px;
       border-bottom:1px solid #f1f5f9;
@@ -260,7 +267,6 @@
     }
     tr:hover td{ background:#f9fafb; }
 
-    /* STATUS PILLS */
     .pill{
       display:inline-flex;
       align-items:center;
@@ -268,36 +274,27 @@
       border-radius:999px;
       font-size:.75rem;
     }
-    .pill-open       { background:#ebf8ff; color:#2b6cb0; }
-    .pill-closed     { background:#e6fffa; color:#2c7a7b; }
-    .pill-progress   { background:#fff3cd; color:#b7791f; }
+    .pill-open{ background:#ebf8ff; color:#2b6cb0; }
+    .pill-closed{ background:#e6fffa; color:#2c7a7b; }
+    .pill-progress{ background:#fff3cd; color:#b7791f; }
 
-    /* ============================================================
-       TICKET EDIT BLOCK
-    ============================================================ */
+    /* FORM FIELDS */
+    .hidden{ display:none; }
+
     .ticket-edit{
       border-radius:8px;
       border:1px solid #e5e7eb;
-      padding:10px;
-      background:#fafafa;
+      padding:10px 10px 8px;
+      background:#fdfefe;
       margin-bottom:10px;
-      position:relative;
     }
 
-    /* ⭐ NEW: Sticky header for editing controls */
     .ticket-top-grid{
       display:grid;
       grid-template-columns:repeat(4,minmax(0,1fr));
       gap:10px;
-
-      position:sticky;
-      top:0;
-      z-index:20;
-      background:white;
-      padding:10px 0 12px;
-      border-bottom:1px solid #e5e7eb;
+      margin-bottom:10px;
     }
-
     @media(max-width:900px){
       .ticket-top-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -317,15 +314,52 @@
       border-radius:8px;
       border:1px solid #cbd5e1;
       font-size:.9rem;
+      font-family:inherit;
     }
     .field-textarea{
       min-height:80px;
       resize:vertical;
     }
 
-    /* ============================================================
-       GROUP EMAIL CHIPS
-    ============================================================ */
+    .status-bar{
+      font-size:.8rem;
+      margin-top:6px;
+      min-height:18px;
+      color:#718096;
+    }
+
+    /* COMMENTS */
+    .comment-list{
+      max-height:220px;
+      overflow:auto;
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:8px 10px;
+      font-size:.82rem;
+      background:#f9fafb;
+      margin-top:2px;
+    }
+    .comment{
+      margin-bottom:6px;
+      padding-bottom:6px;
+      border-bottom:1px dashed #e5e7eb;
+    }
+    .comment:last-child{
+      border-bottom:none;
+      margin-bottom:0;
+      padding-bottom:0;
+    }
+    .comment-meta{
+      font-size:.75rem;
+      color:#6b7280;
+      margin-bottom:2px;
+    }
+    .comment-muted{
+      font-size:.8rem;
+      color:#94a3b8;
+    }
+
+    /* CHIP SYSTEM */
     .chip{
       display:inline-flex;
       align-items:center;
@@ -344,60 +378,11 @@
       font-size:.85rem;
       color:#c53030;
     }
-
-    /* ============================================================
-       MODAL (KEEPING YOUR ORIGINAL STYLE)
-    ============================================================ */
-
-    .modal-overlay{
-      position:fixed;
-      top:0;left:0;
-      width:100%;height:100%;
-      background:rgba(0,0,0,0.45);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:999;
-      opacity:0;
-      pointer-events:none;
-      transition:.2s ease;
-    }
-    .modal-overlay.active{
-      opacity:1;
-      pointer-events:auto;
-    }
-
-    .modal{
-      background:white;
-      border-radius:12px;
-      padding:22px;
-      width:95%;
-      max-width:420px;
-      box-shadow:0 10px 40px rgba(0,0,0,0.18);
-      transform:translateY(20px);
-      transition:.25s ease;
-    }
-    .modal-overlay.active .modal{
-      transform:translateY(0);
-    }
-
-    .modal h3{
-      margin-top:0;
-      font-size:1.2rem;
-    }
-
-    .modal-btn-row{
-      display:flex;
-      justify-content:flex-end;
-      gap:8px;
-      margin-top:16px;
-    }
-
   </style>
 </head>
-<body>
 
-  <!-- HERO -->
+<body>
+ <!-- HERO -->
   <header class="hero">
     <div class="hero-left">
       <div class="hero-title">OCSI Service Request</div>
@@ -405,7 +390,6 @@
         <a href="tickets.html">Requester view</a>
       </nav>
     </div>
-
     <div class="hero-right">
       <div class="hero-user">
         <div id="who" class="hero-email">Checking session…</div>
@@ -414,7 +398,6 @@
     </div>
   </header>
 
-  <!-- MAIN -->
   <main class="wrap">
     <section class="card-shell">
 
@@ -423,7 +406,7 @@
         View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
       </p>
 
-      <!-- TOOLBAR -->
+      <!-- TOP TOOLBAR -->
       <div class="toolbar">
         <div class="search-box">
           <span>🔍</span>
@@ -446,7 +429,7 @@
             <option value="closed">Closed</option>
           </select>
 
-          <button id="newTicketBtn" class="action-btn primary" type="button">
+          <button id="newTicketBtn" class="btn btn-primary" type="button">
             ➕ New ticket
           </button>
         </div>
@@ -454,13 +437,10 @@
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
 
-      <!-- ============================== -->
-      <!-- TICKET LIST (Scrollable Panel) -->
-      <!-- ============================== -->
+      <!-- TICKET LIST -->
       <section class="panel">
         <h2>Ticket list</h2>
-
-        <div class="ticket-table-scroll">
+        <div class="table-wrap">
           <table>
             <thead>
               <tr>
@@ -474,7 +454,6 @@
                 <th>Created</th>
               </tr>
             </thead>
-
             <tbody id="ticketsBody">
               <tr><td colspan="8">Loading…</td></tr>
             </tbody>
@@ -486,25 +465,23 @@
         Click a ticket in the list above to see details, update status, and reply.
       </p>
 
-      <!-- ==================================== -->
-      <!-- TICKET DETAILS + STICKY HEADER BAR -->
-      <!-- ==================================== -->
+      <!-- DETAILS & REPLIES -->
       <section class="panel">
         <h2>Ticket details &amp; replies</h2>
 
-        <p class="muted" id="detailsHint">No ticket selected yet.</p>
+        <p class="muted" id="detailsHint">
+          No ticket selected yet.
+        </p>
 
         <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
           Select a ticket above to view its details.
         </div>
 
-        <!-- EDIT BLOCK (Hidden by Default) -->
+        <!-- TICKET EDIT BLOCK (Hidden until ticket clicked) -->
         <div id="ticketEditBlock" class="ticket-edit hidden">
 
-          <!-- STICKY EDIT HEADER -->
           <div class="ticket-top-grid">
 
-            <!-- GROUP -->
             <div>
               <div class="field-label">Group</div>
               <select id="groupInput" class="field-select">
@@ -515,7 +492,6 @@
               </select>
             </div>
 
-            <!-- STATUS -->
             <div>
               <div class="field-label">Status</div>
               <select id="statusInput" class="field-select">
@@ -525,7 +501,6 @@
               </select>
             </div>
 
-            <!-- PRIORITY -->
             <div>
               <div class="field-label">Priority</div>
               <select id="priorityInput" class="field-select">
@@ -535,38 +510,27 @@
               </select>
             </div>
 
-            <!-- ASSIGNEE -->
             <div>
               <div class="field-label">Assignee</div>
+              <div style="display:flex;gap:6px;align-items:center;">
 
-              <div style="display:flex;gap:8px;align-items:center;">
-                
-                <!-- NEW DROPDOWN (All Users + Unassigned) -->
-                <select id="assigneeDropdown" class="field-select" style="flex:1;">
-                  <option value="">Unassigned</option>
-                </select>
+                <!-- TEXT FIELD -->
+                <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
 
-                <!-- Button to assign self -->
+                <!-- NEW MODERN BUTTONS -->
                 <button id="assignMeBtn" class="action-btn success" type="button">
-                  ✔ Me
+                  <span>✔</span> Me
                 </button>
 
-                <!-- Button to unassign -->
                 <button id="unassignBtn" class="action-btn danger" type="button">
-                  ✖
-                </button>
-
-                <!-- Add new user modal trigger -->
-                <button id="openAddUserModalBtn" class="action-btn" type="button">
-                  ➕
+                  <span>✖</span> Unassign
                 </button>
               </div>
-
             </div>
+
           </div>
 
-          <!-- ================= READ-ONLY FIELDS ================= -->
-
+          <!-- READ ONLY FIELDS -->
           <div class="field-label">Summary</div>
           <input id="summaryInput" class="field-input" readonly/>
 
@@ -579,7 +543,7 @@
           <div class="field-label">Requested completion date</div>
           <input id="dueDateInput" type="date" class="field-input" disabled/>
 
-          <div class="field-label">Urgency (1–5)</div>
+          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
           <select id="urgencyInput" class="field-select" disabled>
             <option value="1">1 – Low</option>
             <option value="2">2</option>
@@ -588,8 +552,8 @@
             <option value="5">5 – Very urgent</option>
           </select>
 
-          <div style="margin-top:10px;">
-            <button id="saveTicketBtn" class="action-btn primary" type="button">
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="saveTicketBtn" class="btn btn-primary" type="button">
               💾 Save ticket
             </button>
           </div>
@@ -598,80 +562,97 @@
 
         </div> <!-- END ticketEditBlock -->
 
-
-        <!-- =========================== -->
-        <!-- Conversation Thread -->
-        <!-- =========================== -->
+        <!-- CONVERSATION SECTION -->
         <div>
           <div class="field-label">Conversation</div>
-
           <div id="commentsList" class="comment-list">
-            <div class="comment-muted">No ticket selected.</div>
+            <div class="comment-muted">No ticket selected yet.</div>
           </div>
 
           <div class="field-label" style="margin-top:8px;">Add reply</div>
-          <textarea id="replyInput" class="field-textarea" placeholder="Reply to the requester..."></textarea>
+          <textarea id="replyInput" class="field-textarea"
+            placeholder="Reply to the requester or add an internal note."></textarea>
 
-          <button id="addReplyBtn" class="action-btn" type="button" style="margin-top:6px;">
+          <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
             💬 Add reply
           </button>
         </div>
 
+      </section> <!-- END Ticket details -->
+<!-- GROUP NOTIFICATION MEMBERS (NEW DROPDOWN + CHIPS) -->
+      <section class="panel">
+        <h2>Group notification members</h2>
+        <p class="muted">
+          Select a group, add/remove email addresses, and save the distribution list.
+        </p>
+
+        <div style="margin-bottom:10px;">
+          <label class="field-label">Select group</label>
+          <select id="groupSelect" class="field-select" style="max-width:250px;">
+            <option value="IT">IT</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Front Office">Front Office</option>
+            <option value="Nurse">Nurse</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="field-label">Group members</div>
+          <div id="emailChipContainer" style="min-height:40px;"></div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
+          <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
+
+          <!-- UPDATED ADVANCED BUTTON -->
+          <button id="addEmailBtn" class="action-btn primary" type="button">
+            <span>➕</span> Add
+          </button>
+        </div>
+
+        <!-- SAVE LIST BUTTON -->
+        <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">
+          💾 Save group list
+        </button>
+
+        <div id="groupStatus" class="status-bar"></div>
       </section>
 
-      <!-- =========================== -->
-      <!-- ADD USER MODAL (Original) -->
-      <!-- =========================== -->
-      <div id="addUserModal" class="modal-overlay">
-        <div class="modal">
-          <h3>Add New User</h3>
+    </section> <!-- END card-shell -->
+  </main>
 
-          <label class="field-label">Name</label>
-          <input id="newUserName" class="field-input" placeholder="Full name"/>
-
-          <label class="field-label" style="margin-top:8px;">Email</label>
-          <input id="newUserEmail" class="field-input" placeholder="email@ocsi.org"/>
-
-          <div class="modal-btn-row">
-            <button id="cancelAddUserBtn" class="action-btn danger">Cancel</button>
-            <button id="confirmAddUserBtn" class="action-btn primary">Add</button>
-          </div>
-        </div>
-      </div>
+<!-- FULL JAVASCRIPT -->
 <script type="module">
-/* -------------------------------------------------------
-   IMPORTS
-------------------------------------------------------- */
 import { db, watchAuth } from "./firebase.js";
 import {
   collection, doc, addDoc, getDocs, updateDoc, setDoc,
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* -------------------------------------------------------
-   DOM ELEMENTS
-------------------------------------------------------- */
-const whoEl          = document.getElementById("who");
-const logoutBtn      = document.getElementById("logoutBtn");
+/* ================ DOM ELEMENTS ================ */
+const whoEl              = document.getElementById("who");
+const logoutBtn          = document.getElementById("logoutBtn");
 
-const ticketsBody    = document.getElementById("ticketsBody");
-const listStatus     = document.getElementById("listStatus");
+const ticketsBody        = document.getElementById("ticketsBody");
+const listStatus         = document.getElementById("listStatus");
 
-const searchEl       = document.getElementById("search");
-const groupFilterEl  = document.getElementById("groupFilter");
-const statusFilterEl = document.getElementById("statusFilter");
-const newTicketBtn   = document.getElementById("newTicketBtn");
+const detailsHint        = document.getElementById("detailsHint");
+const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
+const searchEl        = document.getElementById("search");
+const groupFilterEl   = document.getElementById("groupFilter");
+const statusFilterEl  = document.getElementById("statusFilter");
+const newTicketBtn    = document.getElementById("newTicketBtn");
+
+/* Ticket Edit Elements */
 const ticketEditBlock = document.getElementById("ticketEditBlock");
+const groupInput      = document.getElementById("groupInput");
+const statusInput     = document.getElementById("statusInput");
+const priorityInput   = document.getElementById("priorityInput");
+const assigneeInput   = document.getElementById("assigneeInput");
 
-const groupInput     = document.getElementById("groupInput");
-const statusInput    = document.getElementById("statusInput");
-const priorityInput  = document.getElementById("priorityInput");
-const assigneeDropdown = document.getElementById("assigneeDropdown");
-
-const assignMeBtn    = document.getElementById("assignMeBtn");
-const unassignBtn    = document.getElementById("unassignBtn");
-const openAddUserModalBtn = document.getElementById("openAddUserModalBtn");
+const assignMeBtn     = document.getElementById("assignMeBtn");
+const unassignBtn     = document.getElementById("unassignBtn");
 
 const summaryInput     = document.getElementById("summaryInput");
 const descriptionInput = document.getElementById("descriptionInput");
@@ -679,56 +660,46 @@ const locationInput    = document.getElementById("locationInput");
 const dueDateInput     = document.getElementById("dueDateInput");
 const urgencyInput     = document.getElementById("urgencyInput");
 
-const saveTicketBtn   = document.getElementById("saveTicketBtn");
-const formStatus      = document.getElementById("formStatus");
+const saveTicketBtn    = document.getElementById("saveTicketBtn");
+const formStatus       = document.getElementById("formStatus");
 
-const commentsList    = document.getElementById("commentsList");
-const replyInput      = document.getElementById("replyInput");
-const addReplyBtn     = document.getElementById("addReplyBtn");
+/* Conversation */
+const commentsList = document.getElementById("commentsList");
+const replyInput   = document.getElementById("replyInput");
+const addReplyBtn  = document.getElementById("addReplyBtn");
 
-/* GROUP SYSTEM */
-const groupSelect        = document.getElementById("groupSelect");
-const emailChipContainer = document.getElementById("emailChipContainer");
-const newEmailInput      = document.getElementById("newEmailInput");
-const addEmailBtn        = document.getElementById("addEmailBtn");
-const saveGroupBtn       = document.getElementById("saveGroupBtn");
-const groupStatus        = document.getElementById("groupStatus");
+/* Group Emails System */
+const groupSelect       = document.getElementById("groupSelect");
+const emailChipContainer= document.getElementById("emailChipContainer");
+const newEmailInput     = document.getElementById("newEmailInput");
+const addEmailBtn       = document.getElementById("addEmailBtn");
+const saveGroupBtn      = document.getElementById("saveGroupBtn");
+const groupStatus       = document.getElementById("groupStatus");
 
-/* ADD USER MODAL */
-const addUserModal       = document.getElementById("addUserModal");
-const newUserName        = document.getElementById("newUserName");
-const newUserEmail       = document.getElementById("newUserEmail");
-const cancelAddUserBtn   = document.getElementById("cancelAddUserBtn");
-const confirmAddUserBtn  = document.getElementById("confirmAddUserBtn");
 
-/* -------------------------------------------------------
-   STATE
-------------------------------------------------------- */
+/* ================ STATE ================ */
 let currentUser = null;
 let currentRole = "viewer";
-let allTickets  = [];
+let allTickets = [];
 let selectedTicketId = null;
 
-let allAssignableUsers = []; // Used to populate dropdown
-let groupEmailList = [];
+let groupEmailList = []; // Emails for selected group
 
-const AGENT_ROLES = ["admin","it"];
+const AGENT_ROLES = ["admin", "it"];
 const VALID_STATUSES = ["open","in-progress","closed"];
 
-/* -------------------------------------------------------
-   LOGOUT
-------------------------------------------------------- */
-logoutBtn.addEventListener("click", () => {
+
+/* ================ LOGOUT ================ */
+logoutBtn.addEventListener("click", ()=>{
   window.location.href = "login.html";
 });
 
-/* -------------------------------------------------------
-   AUTH + PAGE INIT
-------------------------------------------------------- */
+
+/* ================ AUTH ================ */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl,
-  onReady: async (user, role) => {
+  onReady: async (user,role)=>{
     currentUser = user;
     currentRole = role;
 
@@ -738,58 +709,48 @@ watchAuth({
       return;
     }
 
-    /* Toolbar actions */
-    newTicketBtn.addEventListener("click", () => window.location.href = "submit-request.html");
+    /* Events */
+    newTicketBtn.addEventListener("click",()=>window.location.href="submit-request.html");
+
     searchEl.addEventListener("input", renderTickets);
     groupFilterEl.addEventListener("change", renderTickets);
     statusFilterEl.addEventListener("change", renderTickets);
-
-    /* Tickets */
     ticketsBody.addEventListener("click", onRowClick);
-    saveTicketBtn.addEventListener("click", saveTicket);
 
-    /* Conversation */
+    saveTicketBtn.addEventListener("click", saveTicket);
     addReplyBtn.addEventListener("click", addReply);
 
-    /* Assignee controls */
-    assignMeBtn.addEventListener("click", () => {
-      assigneeDropdown.value = currentUser.displayName || currentUser.email;
-    });
-    unassignBtn.addEventListener("click", () => {
-      assigneeDropdown.value = "";
+    /* Assign / Unassign */
+    assignMeBtn.addEventListener("click", ()=>{
+      assigneeInput.value = currentUser.displayName || currentUser.email;
     });
 
-    /* Add User Modal */
-    openAddUserModalBtn.addEventListener("click", openAddUserModal);
-    cancelAddUserBtn.addEventListener("click", closeAddUserModal);
-    confirmAddUserBtn.addEventListener("click", confirmAddUser);
+    unassignBtn.addEventListener("click", ()=>{
+      assigneeInput.value = "Unassigned";
+    });
 
-    /* Group system events */
+    /* Group Email Events */
     groupSelect.addEventListener("change", loadSelectedGroup);
     addEmailBtn.addEventListener("click", addEmailToList);
     saveGroupBtn.addEventListener("click", saveGroupEmails);
 
-    /* Hide details block initially */
     ticketEditBlock.classList.add("hidden");
 
-    /* Load data */
     await loadTickets();
-    await loadAssignableUsers();
-    await loadSelectedGroup(); // Loads IT group by default
-
-    renderAssigneeDropdown();
+    await loadSelectedGroup();
   }
 });
 
-/* -------------------------------------------------------
-   LOAD TICKETS
-------------------------------------------------------- */
-async function loadTickets() {
-  try {
-    const snap = await getDocs(collection(db, "tickets"));
-    allTickets = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
 
-    allTickets.sort((a,b) => {
+/* ================ LOAD TICKETS ================ */
+async function loadTickets(){
+  listStatus.textContent = "Loading tickets…";
+
+  try{
+    const snap = await getDocs(collection(db,"tickets"));
+    allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
+
+    allTickets.sort((a,b)=>{
       const ta = a.createdAt?.toMillis?.() ?? 0;
       const tb = b.createdAt?.toMillis?.() ?? 0;
       return tb - ta;
@@ -798,40 +759,37 @@ async function loadTickets() {
     renderTickets();
     listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
 
-  } catch (err) {
+  }catch(err){
     listStatus.textContent = err.message;
   }
 }
 
-/* -------------------------------------------------------
-   RENDER TICKETS TABLE
-------------------------------------------------------- */
-function renderTickets() {
+
+/* ================ RENDER TICKET LIST ================ */
+function renderTickets(){
   const term  = searchEl.value.toLowerCase();
   const gfilt = groupFilterEl.value;
   const sfilt = statusFilterEl.value;
 
-  const rows = allTickets.filter(t => {
+  const rows = allTickets.filter(t=>{
     const group = t.group || "";
     const status = (t.status || "open").toLowerCase();
 
     if (gfilt && group !== gfilt) return false;
     if (sfilt && status !== sfilt) return false;
 
-    if (term) {
+    if (term){
       const hay = [
-        t.summary,t.description,
-        t.requesterName,t.requesterEmail,
-        t.location
+        t.summary, t.description,
+        t.requesterName, t.requesterEmail, t.location
       ].join(" ").toLowerCase();
-
       if (!hay.includes(term)) return false;
     }
 
     return true;
   });
 
-  if (!rows.length) {
+  if (!rows.length){
     ticketsBody.innerHTML = `<tr><td colspan="8">No match.</td></tr>`;
     return;
   }
@@ -840,58 +798,57 @@ function renderTickets() {
     <tr data-id="${t.id}">
       <td>${i+1}</td>
       <td>${escapeHtml(t.summary)}</td>
-      <td>${escapeHtml(t.group || "")}</td>
+      <td>${t.group}</td>
       <td>${capitalize(t.priority || "medium")}</td>
       <td>${statusPill(t.status)}</td>
-      <td>${escapeHtml(t.assigneeName || t.assigneeEmail || "Unassigned")}</td>
-      <td>${escapeHtml(t.requesterName || t.requesterEmail || "")}</td>
+      <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
+      <td>${t.requesterName || t.requesterEmail}</td>
       <td>${formatDate(t.createdAt)}</td>
     </tr>
   `).join("");
 }
 
-/* -------------------------------------------------------
-   SELECT / DESELECT TICKET
-------------------------------------------------------- */
+
+/* ================ ROW CLICK: SHOW/HIDE DETAILS ================ */
 function onRowClick(e){
   const tr = e.target.closest("tr[data-id]");
   if (!tr) return;
 
   const id = tr.getAttribute("data-id");
 
-  // Toggle behavior
-  if (id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")) {
+  if (id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
     hideDetails();
     return;
   }
 
-  const ticket = allTickets.find(x => x.id === id);
+  const ticket = allTickets.find(x=>x.id === id);
   if (ticket) selectTicket(ticket);
 }
 
-function hideDetails() {
+function hideDetails(){
   selectedTicketId = null;
   ticketEditBlock.classList.add("hidden");
-  commentsList.innerHTML = `<div class='comment-muted'>No ticket selected.</div>`;
+  commentsList.innerHTML = `<div class="comment-muted">No ticket selected.</div>`;
   detailsHint.textContent = "No ticket selected.";
   detailsPlaceholder.textContent = "Select a ticket above to view details.";
 }
 
+
+/* ================ LOAD DETAILS ================ */
 function selectTicket(t){
   selectedTicketId = t.id;
 
   detailsHint.textContent =
     `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
+
   detailsPlaceholder.textContent = "";
   ticketEditBlock.classList.remove("hidden");
 
-  /* Load into fields */
-  groupInput.value = t.group || "IT";
-  statusInput.value = VALID_STATUSES.includes(t.status) ? t.status : "open";
+  groupInput.value    = t.group || "IT";
   priorityInput.value = t.priority || "medium";
+  statusInput.value   = VALID_STATUSES.includes(t.status) ? t.status : "open";
 
-  assigneeDropdown.value =
-    t.assigneeName || t.assigneeEmail || "";
+  assigneeInput.value = t.assigneeName || t.assigneeEmail || "Unassigned";
 
   summaryInput.value     = t.summary || "";
   descriptionInput.value = t.description || "";
@@ -905,11 +862,10 @@ function selectTicket(t){
   loadComments(t.id);
 }
 
-/* -------------------------------------------------------
-   SAVE TICKET
-------------------------------------------------------- */
+
+/* ================ SAVE TICKET ================ */
 async function saveTicket(){
-  if (!selectedTicketId) {
+  if (!selectedTicketId){
     formStatus.textContent = "Select a ticket first.";
     return;
   }
@@ -918,74 +874,67 @@ async function saveTicket(){
 
   const payload = {
     group: groupInput.value,
-    status: statusInput.value,
     priority: priorityInput.value,
+    status: statusInput.value,
     urgency: Number(urgencyInput.value || 3),
     updatedAt: serverTimestamp()
   };
 
-  const val = assigneeDropdown.value;
-
-  if (val) {
-    payload.assigneeName = val;
+  const raw = assigneeInput.value.trim();
+  if (raw && raw.toLowerCase() !== "unassigned"){
+    payload.assigneeName = raw;
   } else {
     payload.assigneeName = "";
     payload.assigneeEmail = "";
     payload.assigneeUid = "";
   }
 
-  try {
+  try{
     await updateDoc(doc(db,"tickets",selectedTicketId), payload);
 
     formStatus.textContent = "Saved.";
 
     await loadTickets();
-    await loadAssignableUsers();
-    renderAssigneeDropdown();
-
-    const t = allTickets.find(x => x.id === selectedTicketId);
+    const t = allTickets.find(x=>x.id === selectedTicketId);
     if (t) selectTicket(t);
 
-  } catch (err) {
+  }catch(err){
     formStatus.textContent = err.message;
   }
 }
 
-/* -------------------------------------------------------
-   COMMENTS SYSTEM
-------------------------------------------------------- */
+
+/* ================ COMMENTS ================ */
 async function loadComments(ticketId){
   commentsList.innerHTML = "<div class='comment-muted'>Loading…</div>";
 
-  try {
+  try{
     const q = query(
       collection(db,"tickets",ticketId,"comments"),
       orderBy("createdAt","asc"),
       limit(200)
     );
+
     const snap = await getDocs(q);
+    const arr = snap.docs.map(ds=>({ id: ds.id, ...ds.data() }));
 
-    const arr = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
-
-    if (!arr.length) {
-      commentsList.innerHTML =
-        `<div class="comment-muted">No replies yet.</div>`;
+    if (!arr.length){
+      commentsList.innerHTML = `<div class="comment-muted">No replies yet.</div>`;
       return;
     }
 
     commentsList.innerHTML = arr.map(c=>`
       <div class="comment">
         <div class="comment-meta">
-          ${escapeHtml(c.authorName || c.authorEmail || "Unknown")}
-          • ${formatDate(c.createdAt)}
+          ${escapeHtml(c.authorName || c.authorEmail || "Unknown")} • ${formatDate(c.createdAt)}
         </div>
         <div>${escapeHtml(c.message)}</div>
       </div>
     `).join("");
 
-  } catch (err) {
+  }catch(err){
     commentsList.innerHTML =
-      `<div class='comment-muted'>Failed: ${escapeHtml(err.message)}</div>`;
+      `<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
   }
 }
 
@@ -1000,13 +949,16 @@ async function addReply(){
 
   addReplyBtn.disabled = true;
 
-  try {
-    await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
-      message: msg,
-      authorEmail: currentUser.email,
-      authorName: currentUser.displayName,
-      createdAt: serverTimestamp()
-    });
+  try{
+    await addDoc(
+      collection(db,"tickets",selectedTicketId,"comments"),
+      {
+        message: msg,
+        authorEmail: currentUser.email,
+        authorName: currentUser.displayName,
+        createdAt: serverTimestamp()
+      }
+    );
 
     await updateDoc(doc(db,"tickets",selectedTicketId),{
       updatedAt: serverTimestamp()
@@ -1015,99 +967,22 @@ async function addReply(){
     replyInput.value = "";
     await loadComments(selectedTicketId);
 
-  } catch (err) {
+  }catch(err){
     alert(err.message);
-  } finally {
+  }finally{
     addReplyBtn.disabled = false;
   }
 }
 
-/* -------------------------------------------------------
-   ASSIGNEE SYSTEM
-   (Dropdown-only + Modal)
-------------------------------------------------------- */
-async function loadAssignableUsers(){
-  allAssignableUsers = [];
 
-  try {
-    const snap = await getDocs(collection(db,"ticket_users"));
-    snap.forEach(ds => {
-      const u = ds.data();
-      if (u && u.name && u.email) {
-        allAssignableUsers.push({
-          label: `${u.name} (${u.email})`,
-          value: u.name
-        });
-      }
-    });
+/* ============================================================
+   GROUP EMAIL MANAGEMENT (Dropdown + Chips)
+============================================================ */
 
-  } catch { /* ignore */ }
-
-  // Always include current user
-  allAssignableUsers.push({
-    label: currentUser.displayName || currentUser.email,
-    value: currentUser.displayName || currentUser.email
-  });
-}
-
-function renderAssigneeDropdown(){
-  assigneeDropdown.innerHTML = `<option value="">Unassigned</option>`;
-
-  allAssignableUsers.forEach(u => {
-    assigneeDropdown.innerHTML += `
-      <option value="${escapeHtml(u.value)}">${escapeHtml(u.label)}</option>
-    `;
-  });
-}
-
-/* -------------------------------------------------------
-   ADD USER MODAL
-------------------------------------------------------- */
-function openAddUserModal(){
-  newUserName.value = "";
-  newUserEmail.value = "";
-  addUserModal.classList.add("active");
-}
-
-function closeAddUserModal(){
-  addUserModal.classList.remove("active");
-}
-
-async function confirmAddUser(){
-  const name = newUserName.value.trim();
-  const email = newUserEmail.value.trim();
-
-  if (!name || !email) {
-    alert("Name and email required.");
-    return;
-  }
-
-  try {
-    await addDoc(collection(db,"ticket_users"),{
-      name,
-      email,
-      createdAt: serverTimestamp()
-    });
-
-    // Update dropdown
-    await loadAssignableUsers();
-    renderAssigneeDropdown();
-
-    closeAddUserModal();
-
-  } catch(err) {
-    alert("Failed: " + err.message);
-  }
-}
-
-/* -------------------------------------------------------
-   GROUP EMAILS (Chips)
-------------------------------------------------------- */
 async function loadSelectedGroup(){
   const group = groupSelect.value;
-
   groupEmailList = [];
-  emailChipContainer.innerHTML = "Loading…";
+  emailChipContainer.innerHTML = "Loading...";
 
   try{
     const snap = await getDocs(collection(db,"ticket_groups"));
@@ -1118,13 +993,15 @@ async function loadSelectedGroup(){
       groupEmailList = [...map[group].emails];
     }
 
-  } catch(err) {
+  }catch(err){
     groupStatus.textContent = "Error loading: " + err.message;
   }
 
   renderEmailChips();
 }
 
+
+/* Render email chips */
 function renderEmailChips(){
   if (!groupEmailList.length){
     emailChipContainer.innerHTML =
@@ -1132,7 +1009,7 @@ function renderEmailChips(){
     return;
   }
 
-  emailChipContainer.innerHTML = groupEmailList.map(email => `
+  emailChipContainer.innerHTML = groupEmailList.map(email=>`
     <span class="chip">
       ${email}
       <button onclick="removeEmail('${email}')">×</button>
@@ -1140,22 +1017,18 @@ function renderEmailChips(){
   `).join("");
 }
 
-window.removeEmail = function(email){
-  groupEmailList = groupEmailList.filter(e => e !== email);
-  renderEmailChips();
-};
 
+/* Add email */
 function addEmailToList(){
   const email = newEmailInput.value.trim();
-  if (!email) return;
 
+  if (!email) return;
   if (!email.includes("@")){
-    alert("Invalid email.");
+    alert("Invalid email format.");
     return;
   }
-
   if (groupEmailList.includes(email)){
-    alert("Already exists.");
+    alert("Already added.");
     return;
   }
 
@@ -1164,24 +1037,35 @@ function addEmailToList(){
   renderEmailChips();
 }
 
+
+/* Remove email (global for inline onclick) */
+window.removeEmail = function(email){
+  groupEmailList = groupEmailList.filter(e=>e !== email);
+  renderEmailChips();
+};
+
+
+/* Save group list to Firestore */
 async function saveGroupEmails(){
   const group = groupSelect.value;
 
-  try {
+  try{
     await setDoc(doc(db,"ticket_groups",group),{
       emails: groupEmailList,
       updatedAt: serverTimestamp()
     });
+
     groupStatus.textContent = `Saved members for ${group}.`;
-  }
-  catch(err){
+
+  }catch(err){
     groupStatus.textContent = "Error saving: " + err.message;
   }
 }
 
-/* -------------------------------------------------------
+
+/* ============================================================
    HELPERS
-------------------------------------------------------- */
+============================================================ */
 function statusPill(s){
   const st = (s || "open").toLowerCase();
   if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
@@ -1190,10 +1074,9 @@ function statusPill(s){
 }
 
 function formatDate(v){
-  if(!v) return "";
+  if (!v) return "";
   let d = v.toDate?.() ?? v;
-  try { return d.toLocaleString(); }
-  catch { return ""; }
+  return d.toLocaleString();
 }
 
 function capitalize(s){
@@ -1201,11 +1084,12 @@ function capitalize(s){
 }
 
 function escapeHtml(s){
-  return String(s||"").replace(/[&<>"']/g, c => ({
+  return String(s || "").replace(/[&<>"']/g, c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-  }[c]));
+  })[c]);
 }
 
 </script>
+
 </body>
 </html>
