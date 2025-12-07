@@ -19,7 +19,7 @@
       color:#1a202c;
     }
 
-    /* HERO HEADER */
+    /* HERO HEADER (same style as other two pages) */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -218,15 +218,14 @@
     }
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
     .pill-closed{background:#e6fffa;color:#2c7a7b;}
-    .pill-progress{background:#fff3cd;color:#b7791f;}
 
-    /* TICKET EDIT BLOCK */
+    /* TICKET EDIT BLOCK (hidden until ticket selected) */
     .hidden{display:none;}
 
     .ticket-edit{
       border-radius:8px;
       border:1px solid #e5e7eb;
-      padding:10px;
+      padding:10px 10px 8px;
       background:#fdfefe;
       margin-bottom:10px;
     }
@@ -263,7 +262,13 @@
       resize:vertical;
     }
 
-    /* COMMENTS */
+    .status-bar{
+      font-size:.8rem;
+      margin-top:6px;
+      min-height:18px;
+      color:#718096;
+    }
+
     .comment-list{
       max-height:220px;
       overflow:auto;
@@ -278,6 +283,11 @@
       margin-bottom:6px;
       padding-bottom:6px;
       border-bottom:1px dashed #e5e7eb;
+    }
+    .comment:last-child{
+      border-bottom:none;
+      margin-bottom:0;
+      padding-bottom:0;
     }
     .comment-meta{
       font-size:.75rem;
@@ -303,13 +313,26 @@
     .group-card{
       border:1px solid #e5e7eb;
       border-radius:8px;
-      padding:10px;
+      padding:10px 10px 8px;
       background:#f9fafb;
+    }
+    .group-card h3{
+      margin:0 0 4px;
+      font-size:.95rem;
+    }
+    .group-card textarea{
+      width:100%;
+      min-height:70px;
+      border-radius:8px;
+      border:1px solid #cbd5e1;
+      font-size:.86rem;
+      padding:6px 8px;
+      resize:vertical;
+      font-family:inherit;
     }
   </style>
 </head>
 <body>
-
   <!-- HERO -->
   <header class="hero">
     <div class="hero-left">
@@ -321,7 +344,7 @@
     <div class="hero-right">
       <div class="hero-user">
         <div id="who" class="hero-email">Checking session…</div>
-        <button id="logoutBtn" class="btn-hero-small">Log out</button>
+        <button id="logoutBtn" class="btn-hero-small" type="button">Log out</button>
       </div>
     </div>
   </header>
@@ -330,10 +353,10 @@
     <section class="card-shell">
       <h1>Tickets (Admin view)</h1>
       <p class="subtitle">
-        View and manage all service requests from staff. Update status, assign tickets, and reply.
+        View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
       </p>
 
-      <!-- TOOLBAR -->
+      <!-- TOP TOOLBAR -->
       <div class="toolbar">
         <div class="search-box">
           <span>🔍</span>
@@ -348,21 +371,20 @@
             <option value="Front Office">Front Office</option>
             <option value="Nurse">Nurse</option>
           </select>
-
           <select id="statusFilter">
             <option value="">All statuses</option>
             <option value="open">Open</option>
-            <option value="in-progress">In progress</option>
             <option value="closed">Closed</option>
           </select>
-
-          <button id="newTicketBtn" class="btn btn-primary">➕ New ticket</button>
+          <button id="newTicketBtn" class="btn btn-primary" type="button">
+            ➕ New ticket
+          </button>
         </div>
       </div>
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
 
-      <!-- TABLE -->
+      <!-- TICKET LIST -->
       <section class="panel">
         <h2>Ticket list</h2>
         <div class="table-wrap">
@@ -386,21 +408,25 @@
         </div>
       </section>
 
-      <!-- DETAILS -->
-      <p class="small-text">Click a ticket to see details.</p>
+      <p class="small-text">
+        Click a ticket in the list above to see details, update status, and reply.
+      </p>
 
+      <!-- DETAILS & REPLIES -->
       <section class="panel">
-        <h2>Ticket details & replies</h2>
+        <h2>Ticket details &amp; replies</h2>
+        <p class="muted" id="detailsHint">
+          No ticket selected yet.
+        </p>
 
-        <p class="muted" id="detailsHint">No ticket selected yet.</p>
-
+        <!-- This placeholder text stays until a ticket is selected -->
         <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
           Select a ticket above to view its details.
         </div>
 
-        <!-- EDIT BLOCK -->
+        <!-- Ticket edit / info block (HIDDEN until a ticket is selected) -->
         <div id="ticketEditBlock" class="ticket-edit hidden">
-
+          <!-- Row: group / status / priority / assignee -->
           <div class="ticket-top-grid">
             <div>
               <div class="field-label">Group</div>
@@ -411,17 +437,13 @@
                 <option value="Nurse">Nurse</option>
               </select>
             </div>
-
             <div>
               <div class="field-label">Status</div>
-              <!-- UPDATED -->
               <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
-                <option value="in-progress">In progress</option>
                 <option value="closed">Closed</option>
               </select>
             </div>
-
             <div>
               <div class="field-label">Priority</div>
               <select id="priorityInput" class="field-select">
@@ -430,49 +452,51 @@
                 <option value="low">Low</option>
               </select>
             </div>
-
             <div>
               <div class="field-label">Assignee</div>
               <div style="display:flex;gap:6px;align-items:center;">
                 <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-                <button id="assignMeBtn" class="btn btn-ghost">✅ Me</button>
-
-                <!-- NEW UNASSIGN BUTTON -->
-                <button id="unassignBtn" class="btn btn-ghost">❌ Unassign</button>
+                <button id="assignMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+                  ✅ Me
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- READ-ONLY FIELDS -->
+          <!-- Read-only info fields; admin mainly updates status/group/assignee -->
           <div class="field-label">Summary</div>
-          <input id="summaryInput" class="field-input" readonly/>
+          <input id="summaryInput" class="field-input" readonly
+                 placeholder="Short description (e.g. Printer not working)"/>
 
           <div class="field-label">Description</div>
-          <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
+          <textarea id="descriptionInput" class="field-textarea" readonly
+            placeholder="Describe the issue, include room number, device ID, etc."></textarea>
 
           <div class="field-label">Location</div>
-          <input id="locationInput" class="field-input" readonly/>
+          <input id="locationInput" class="field-input" readonly
+                 placeholder="Room / building (optional)"/>
 
           <div class="field-label">Requested completion date</div>
           <input id="dueDateInput" type="date" class="field-input" disabled/>
 
-          <div class="field-label">Urgency</div>
+          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
           <select id="urgencyInput" class="field-select" disabled>
-            <option value="1">1</option>
+            <option value="1">1 – Low</option>
             <option value="2">2</option>
-            <option value="3" selected>3</option>
+            <option value="3" selected>3 – Normal</option>
             <option value="4">4</option>
-            <option value="5">5</option>
+            <option value="5">5 – Very urgent</option>
           </select>
 
-          <div style="margin-top:10px;">
-            <button id="saveTicketBtn" class="btn btn-primary">💾 Save ticket</button>
+          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+            <button id="saveTicketBtn" class="btn btn-primary" type="button">
+              💾 Save ticket
+            </button>
           </div>
-
           <div id="formStatus" class="status-bar"></div>
         </div>
 
-        <!-- COMMENTS -->
+        <!-- CONVERSATION -->
         <div>
           <div class="field-label">Conversation</div>
           <div id="commentsList" class="comment-list">
@@ -480,24 +504,31 @@
           </div>
 
           <div class="field-label" style="margin-top:8px;">Add reply</div>
-          <textarea id="replyInput" class="field-textarea"></textarea>
-          <button id="addReplyBtn" class="btn btn-ghost" style="margin-top:6px;">💬 Add reply</button>
+          <textarea id="replyInput" class="field-textarea"
+            placeholder="Reply to the requester or add an internal note."></textarea>
+          <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
+            💬 Add reply
+          </button>
         </div>
       </section>
 
-      <!-- GROUPS -->
+      <!-- GROUP NOTIFICATION MEMBERS -->
       <section class="panel">
         <h2>Group notification members</h2>
-        <p class="muted">Comma-separated emails for each group.</p>
-        <div id="groupsContainer" class="group-grid"></div>
+        <p class="muted">
+          Add staff email addresses for each group. When a ticket is created for a group,
+          a notification service (Cloud Function) can use this list to email all members.
+        </p>
+
+        <div id="groupsContainer" class="group-grid">
+          <!-- Filled by JS -->
+        </div>
+
         <div id="groupStatus" class="status-bar"></div>
       </section>
-
     </section>
   </main>
 
-
-<!-- SCRIPT -->
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import {
@@ -505,60 +536,63 @@ import {
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const whoEl = who;
-const logoutBtn = logoutBtn;
-const ticketsBody = ticketsBody;
-const listStatus = listStatus;
-const detailsHint = detailsHint;
-const detailsPlaceholder = detailsPlaceholder;
+/* ============================
+   DOM ELEMENTS
+============================ */
+const whoEl              = document.getElementById("who");
+const logoutBtn          = document.getElementById("logoutBtn");
+const ticketsBody        = document.getElementById("ticketsBody");
+const listStatus         = document.getElementById("listStatus");
+const detailsHint        = document.getElementById("detailsHint");
+const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
-const searchEl = search;
-const groupFilterEl = groupFilter;
-const statusFilterEl = statusFilter;
-const newTicketBtn = newTicketBtn;
+const searchEl        = document.getElementById("search");
+const groupFilterEl   = document.getElementById("groupFilter");
+const statusFilterEl  = document.getElementById("statusFilter");
+const newTicketBtn    = document.getElementById("newTicketBtn");
 
-// ticket input fields
-const ticketEditBlock = ticketEditBlock;
-const groupInput = groupInput;
-const statusInput = statusInput;
-const priorityInput = priorityInput;
-const assigneeInput = assigneeInput;
-const assignMeBtn = assignMeBtn;
-const unassignBtn = unassignBtn;  
-const summaryInput = summaryInput;
-const descriptionInput = descriptionInput;
-const locationInput = locationInput;
-const dueDateInput = dueDateInput;
-const urgencyInput = urgencyInput;
-const saveTicketBtn = saveTicketBtn;
-const formStatus = formStatus;
+// ticket edit
+const ticketEditBlock   = document.getElementById("ticketEditBlock");
+const groupInput        = document.getElementById("groupInput");
+const statusInput       = document.getElementById("statusInput");
+const priorityInput     = document.getElementById("priorityInput");
+const assigneeInput     = document.getElementById("assigneeInput");
+const assignMeBtn       = document.getElementById("assignMeBtn");
+const summaryInput      = document.getElementById("summaryInput");
+const descriptionInput  = document.getElementById("descriptionInput");
+const locationInput     = document.getElementById("locationInput");
+const dueDateInput      = document.getElementById("dueDateInput");
+const urgencyInput      = document.getElementById("urgencyInput");
+const saveTicketBtn     = document.getElementById("saveTicketBtn");
+const formStatus        = document.getElementById("formStatus");
 
 // conversation
-const commentsList = commentsList;
-const replyInput = replyInput;
-const addReplyBtn = addReplyBtn;
+const commentsList      = document.getElementById("commentsList");
+const replyInput        = document.getElementById("replyInput");
+const addReplyBtn       = document.getElementById("addReplyBtn");
 
 // groups
-const groupsContainer = groupsContainer;
-const groupStatus = groupStatus;
+const groupsContainer   = document.getElementById("groupsContainer");
+const groupStatus       = document.getElementById("groupStatus");
 
 let currentUser = null;
 let currentRole = "viewer";
-let allTickets = [];
+let allTickets  = [];
 let selectedTicketId = null;
 
+const AGENT_ROLES = ["admin","it"];
 const VALID_STATUSES = ["open","in-progress","closed"];
 
-/* ======================
-   LOGOUT
-====================== */
+/* ============================
+   LOGOUT BUTTON
+============================ */
 logoutBtn.addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
-/* ======================
-   AUTH CHECK
-====================== */
+/* ============================
+   AUTH + INITIAL LOAD
+============================ */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl,
@@ -566,13 +600,13 @@ watchAuth({
     currentUser = user;
     currentRole = role;
 
-    if(!user || !["admin","it"].includes(role)){
-      alert("Admins/IT only.");
+    if(!user || !AGENT_ROLES.includes(role)){
+      alert("This page is for IT/Admin only.");
       window.location.href = "tickets.html";
       return;
     }
 
-    newTicketBtn.addEventListener("click", () => {
+    newTicketBtn.addEventListener("click", ()=>{
       window.location.href = "submit-request.html";
     });
 
@@ -584,17 +618,19 @@ watchAuth({
     addReplyBtn.addEventListener("click", addReply);
 
     assignMeBtn.addEventListener("click", () => {
-      assigneeInput.value = currentUser.displayName || currentUser.email;
+      if(currentUser?.displayName){
+        assigneeInput.value = currentUser.displayName;
+      }else if(currentUser?.email){
+        assigneeInput.value = currentUser.email;
+      }
     });
 
-    /* NEW: UNASSIGN BUTTON */
-    unassignBtn.addEventListener("click", () => {
-      assigneeInput.value = "Unassigned";
-    });
+    // hide details by default
+    ticketEditBlock.classList.add("hidden");
 
     await Promise.all([
       loadTickets(),
-      loadGroupMembers()
+      loadGroupMembers()   // NEW: replaced multi-card with dropdown system
     ]);
   }
 });
@@ -603,35 +639,53 @@ watchAuth({
    LOAD TICKETS
 ============================ */
 async function loadTickets(){
-  listStatus.textContent = "Loading tickets…";
+  try{
+    listStatus.textContent = "Loading tickets…";
 
-  const snap = await getDocs(collection(db,"tickets"));
-  allTickets = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
+    const snap = await getDocs(collection(db,"tickets"));
+    allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
 
-  allTickets.sort((a,b)=>{
-    return (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0);
-  });
+    if(!allTickets.length){
+      ticketsBody.innerHTML = `<tr><td colspan="8">No tickets yet.</td></tr>`;
+      listStatus.textContent = "No tickets.";
+      return;
+    }
 
-  renderTickets();
+    allTickets.sort((a,b)=>{
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
+
+    listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
+    renderTickets();
+
+  }catch(err){
+    console.error(err);
+    ticketsBody.innerHTML = `<tr><td colspan="8">Failed to load.</td></tr>`;
+    listStatus.textContent = err.message;
+  }
 }
 
 /* ============================
-   RENDER TABLE
+   RENDER TICKETS
 ============================ */
 function renderTickets(){
-  const term = searchEl.value.toLowerCase();
-  const gf = groupFilterEl.value;
-  const sf = statusFilterEl.value;
+  const term  = searchEl.value.toLowerCase();
+  const gfilt = groupFilterEl.value;
+  const sfilt = statusFilterEl.value;
 
   const rows = allTickets.filter(t=>{
-    const st = (t.status || "open").toLowerCase();
-    if(gf && t.group !== gf) return false;
-    if(sf && st !== sf) return false;
+    const group  = t.group || "";
+    const status = (t.status || "open").toLowerCase();
+
+    if(gfilt && group !== gfilt) return false;
+    if(sfilt && status !== sfilt) return false;
 
     if(term){
       const hay = [
-        t.summary,t.description,t.location,
-        t.requesterName,t.requesterEmail
+        t.summary, t.description,
+        t.requesterName, t.requesterEmail, t.location
       ].join(" ").toLowerCase();
       if(!hay.includes(term)) return false;
     }
@@ -644,22 +698,23 @@ function renderTickets(){
     return;
   }
 
-  ticketsBody.innerHTML = rows.map((t,i) => `
-    <tr data-id="${t.id}">
-      <td>${i+1}</td>
-      <td>${escapeHtml(t.summary)}</td>
-      <td>${t.group || ""}</td>
-      <td>${capitalize(t.priority || "medium")}</td>
-      <td>${statusPill(t.status)}</td>
-      <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
-      <td>${t.requesterName || t.requesterEmail || ""}</td>
-      <td>${formatDate(t.createdAt)}</td>
-    </tr>
-  `).join("");
+  ticketsBody.innerHTML = rows.map((t,i)=>{
+    return `
+      <tr data-id="${t.id}">
+        <td>${i+1}</td>
+        <td>${escapeHtml(t.summary)}</td>
+        <td>${t.group || ""}</td>
+        <td>${capitalize(t.priority || "medium")}</td>
+        <td>${statusPill(t.status)}</td>
+        <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
+        <td>${t.requesterName || t.requesterEmail || ""}</td>
+        <td>${formatDate(t.createdAt)}</td>
+      </tr>`;
+  }).join("");
 }
 
 /* ============================
-   CLICK ROW → SHOW DETAILS
+   CLICK ROW → SHOW/HIDE DETAILS
 ============================ */
 function onRowClick(e){
   const tr = e.target.closest("tr[data-id]");
@@ -667,13 +722,20 @@ function onRowClick(e){
 
   const id = tr.getAttribute("data-id");
 
-  if(id === selectedTicketId){
+  // toggle hide when clicking same ticket
+  if(id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
     hideDetails();
     return;
   }
 
-  const t = allTickets.find(x => x.id === id);
-  if(t) selectTicket(t);
+  // highlight selected row
+  document.querySelectorAll("tr[data-id]").forEach(r => r.classList.remove("active"));
+  tr.classList.add("active");
+
+  const ticket = allTickets.find(x => x.id === id);
+  if(ticket){
+    selectTicket(ticket);
+  }
 }
 
 function hideDetails(){
@@ -685,31 +747,29 @@ function hideDetails(){
 }
 
 /* ============================
-   LOAD SELECTED TICKET
+   LOAD DETAILS INTO PANEL
 ============================ */
 function selectTicket(t){
   selectedTicketId = t.id;
 
-  detailsHint.textContent =
-    `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
+  detailsHint.textContent = `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
 
   detailsPlaceholder.textContent = "";
   ticketEditBlock.classList.remove("hidden");
 
-  groupInput.value    = t.group || "IT";
-  priorityInput.value = t.priority || "medium";
-  statusInput.value   = VALID_STATUSES.includes(t.status)
-                        ? t.status
-                        : "open";
-  assigneeInput.value = t.assigneeName || t.assigneeEmail || "Unassigned";
+  groupInput.value     = t.group || "IT";
+  priorityInput.value  = t.priority || "medium";
+  statusInput.value    = VALID_STATUSES.includes(t.status) ? t.status : "open";
+  assigneeInput.value  = t.assigneeName || t.assigneeEmail || "Unassigned";
 
   summaryInput.value     = t.summary || "";
   descriptionInput.value = t.description || "";
   locationInput.value    = t.location || "";
   dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
-  urgencyInput.value     = t.urgency || 3;
+  urgencyInput.value     = t.urgency ?? 3;
 
   formStatus.textContent = "";
+  replyInput.value = "";
 
   loadComments(t.id);
 }
@@ -719,64 +779,79 @@ function selectTicket(t){
 ============================ */
 async function saveTicket(){
   if(!selectedTicketId){
-    formStatus.textContent = "Select a ticket.";
+    formStatus.textContent = "Select a ticket first.";
     return;
   }
+
+  formStatus.textContent = "Saving…";
 
   const payload = {
     group: groupInput.value,
     priority: priorityInput.value,
-    status: statusInput.value,
-    urgency: Number(urgencyInput.value),
+    status: VALID_STATUSES.includes(statusInput.value)
+      ? statusInput.value
+      : "open",
+    urgency: Number(urgencyInput.value || 3),
     updatedAt: serverTimestamp()
   };
 
   const a = assigneeInput.value.trim();
-
-  if(a.toLowerCase() === "unassigned" || a === ""){
+  if(a && a.toLowerCase() !== "unassigned"){
+    payload.assigneeName = a;
+    if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
+      payload.assigneeUid   = currentUser.uid;
+      payload.assigneeEmail = currentUser.email;
+    }
+  }else{
     payload.assigneeName = "";
     payload.assigneeUid = "";
     payload.assigneeEmail = "";
-  } else {
-    payload.assigneeName = a;
-    if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
-      payload.assigneeUid = currentUser.uid;
-      payload.assigneeEmail = currentUser.email;
-    } else {
-      payload.assigneeUid = "";
-      payload.assigneeEmail = "";
-    }
   }
 
-  await updateDoc(doc(db,"tickets",selectedTicketId), payload);
-
-  formStatus.textContent = "Saved.";
-  await loadTickets();
+  try{
+    await updateDoc(doc(db,"tickets",selectedTicketId), payload);
+    formStatus.textContent = "Saved.";
+    await loadTickets();
+    const t = allTickets.find(x=>x.id === selectedTicketId);
+    if(t) selectTicket(t);
+  }catch(err){
+    console.error(err);
+    formStatus.textContent = err.message;
+  }
 }
 
 /* ============================
    COMMENTS
 ============================ */
 async function loadComments(ticketId){
-  commentsList.innerHTML = "Loading…";
+  commentsList.innerHTML = "<div class='comment-muted'>Loading…</div>";
 
-  const q = query(
-    collection(db,"tickets",ticketId,"comments"),
-    orderBy("createdAt","asc"),
-    limit(200)
-  );
+  try{
+    const q = query(
+      collection(db,"tickets",ticketId,"comments"),
+      orderBy("createdAt","asc"),
+      limit(200)
+    );
+    const snap = await getDocs(q);
+    const arr = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
 
-  const snap = await getDocs(q);
-  const arr = snap.docs.map(ds => ({id:ds.id,...ds.data()}));
+    if(!arr.length){
+      commentsList.innerHTML = `<div class="comment-muted">No replies yet.</div>`;
+      return;
+    }
 
-  commentsList.innerHTML = arr.length ? arr.map(c => `
-    <div class="comment">
-      <div class="comment-meta">
-        ${escapeHtml(c.authorName || c.authorEmail)} • ${formatDate(c.createdAt)}
+    commentsList.innerHTML = arr.map(c => `
+      <div class="comment">
+        <div class="comment-meta">
+          ${escapeHtml(c.authorName || c.authorEmail || "Unknown")} • ${formatDate(c.createdAt)}
+        </div>
+        <div>${escapeHtml(c.message)}</div>
       </div>
-      <div>${escapeHtml(c.message)}</div>
-    </div>
-  `).join("") : `<div class="comment-muted">No replies yet.</div>`;
+    `).join("");
+
+  }catch(err){
+    commentsList.innerHTML = `<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
+  }
 }
 
 async function addReply(){
@@ -784,63 +859,95 @@ async function addReply(){
     alert("Select a ticket first.");
     return;
   }
-
   const msg = replyInput.value.trim();
   if(!msg) return;
 
-  await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
-    message: msg,
-    authorEmail: currentUser.email,
-    authorName: currentUser.displayName,
-    createdAt: serverTimestamp()
-  });
+  addReplyBtn.disabled = true;
+  try{
+    await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
+      message: msg,
+      authorEmail: currentUser.email,
+      authorName: currentUser.displayName,
+      createdAt: serverTimestamp()
+    });
 
-  replyInput.value = "";
-  loadComments(selectedTicketId);
+    await updateDoc(doc(db,"tickets",selectedTicketId),{
+      updatedAt: serverTimestamp()
+    });
+
+    replyInput.value = "";
+    await loadComments(selectedTicketId);
+
+  }catch(err){
+    alert(err.message);
+  }finally{
+    addReplyBtn.disabled = false;
+  }
 }
 
 /* ============================
-   GROUP NOTIFICATION MEMBERS
+   SINGLE GROUP CARD + DROPDOWN
 ============================ */
 async function loadGroupMembers(){
-  const GROUPS = ["IT","Maintenance","Front Office","Nurse"];
+  groupsContainer.innerHTML = `
+    <div class="group-card">
+      <h3>Group Notification List</h3>
 
-  groupsContainer.innerHTML = GROUPS.map(g => `
-    <div class="group-card" data-group="${g}">
-      <h3>${g}</h3>
-      <p class="muted">Comma-separated emails</p>
-      <textarea></textarea>
-      <button class="btn btn-ghost">Save</button>
+      <label>Select Group:</label>
+      <select id="groupSelect" class="field-select">
+        <option value="IT">IT</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Front Office">Front Office</option>
+        <option value="Nurse">Nurse</option>
+      </select>
+
+      <p class="muted">Comma-separated emails.</p>
+
+      <textarea id="groupEmails"></textarea>
+
+      <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:6px;">Save</button>
     </div>
-  `).join("");
+  `;
 
-  const snap = await getDocs(collection(db,"ticket_groups"));
-  const map = {};
-  snap.forEach(ds => { map[ds.id] = ds.data(); });
+  const ddl = document.getElementById("groupSelect");
+  const textarea = document.getElementById("groupEmails");
+  const btn = document.getElementById("saveGroupBtn");
 
-  [...groupsContainer.children].forEach(card=>{
-    const group = card.dataset.group;
-    const textarea = card.querySelector("textarea");
-    const btn = card.querySelector("button");
-
-    if(map[group] && Array.isArray(map[group].emails)){
-      textarea.value = map[group].emails.join(", ");
+  async function loadOne(id){
+    textarea.value = "";
+    try{
+      const snap = await getDocs(collection(db,"ticket_groups"));
+      const map = {};
+      snap.forEach(ds => { map[ds.id] = ds.data(); });
+      if(map[id] && Array.isArray(map[id].emails)){
+        textarea.value = map[id].emails.join(", ");
+      }
+    }catch(err){
+      console.error(err);
     }
+  }
 
-    btn.addEventListener("click", async ()=>{
-      const emails = textarea.value
-        .split(",")
-        .map(e => e.trim())
-        .filter(e => e);
+  ddl.addEventListener("change", () => loadOne(ddl.value));
+  btn.addEventListener("click", () => saveOne(ddl.value, textarea.value));
 
-      await setDoc(doc(db,"ticket_groups",group),{
-        emails,
-        updatedAt: serverTimestamp()
-      });
+  await loadOne("IT");
+}
 
-      groupStatus.textContent = `Saved for ${group}.`;
+async function saveOne(id,text){
+  const emails = text
+    .split(",")
+    .map(e=>e.trim())
+    .filter(e=>e);
+
+  try{
+    await setDoc(doc(db,"ticket_groups",id),{
+      emails,
+      updatedAt: serverTimestamp()
     });
-  });
+    groupStatus.textContent = `Saved members for ${id}.`;
+  }catch(err){
+    groupStatus.textContent = err.message;
+  }
 }
 
 /* ============================
@@ -848,30 +955,35 @@ async function loadGroupMembers(){
 ============================ */
 function statusPill(s){
   const st = (s || "open").toLowerCase();
+  if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
   if(st === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
-  if(st === "closed")      return `<span class="pill pill-closed">Closed</span>`;
   return `<span class="pill pill-open">Open</span>`;
 }
 
 function formatDate(v){
-  try{
-    return v?.toDate?.().toLocaleString() || "";
-  }catch{
-    return "";
-  }
-}
-
-function escapeHtml(s){
-  return String(s || "").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-  }[c]));
+  if(!v) return "";
+  let d = v.toDate?.() ?? v;
+  return d.toLocaleString();
 }
 
 function capitalize(s){
-  return s ? s.charAt(0).toUpperCase()+s.slice(1) : "";
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+}
+
+function escapeHtml(s){
+  return String(s || "").replace(/[&<>"']/g,c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    "\"":"&quot;",
+    "'":"&#39;"
+  }[c]));
 }
 
 </script>
 
+
 </body>
 </html>
+
+
