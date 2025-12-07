@@ -218,8 +218,9 @@
     }
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
     .pill-closed{background:#e6fffa;color:#2c7a7b;}
+    .pill-progress{background:#fff3cd;color:#b7791f;}
 
-    /* TICKET EDIT BLOCK (hidden until ticket selected) */
+    /* TICKET EDIT BLOCK */
     .hidden{display:none;}
 
     .ticket-edit{
@@ -299,7 +300,7 @@
       color:#94a3b8;
     }
 
-    /* GROUP NOTIFICATION MEMBERS */
+    /* GROUP NOTIFICATION MEMBERS (ORIGINAL LAYOUT) */
     .group-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
@@ -332,6 +333,7 @@
     }
   </style>
 </head>
+
 <body>
   <!-- HERO -->
   <header class="hero">
@@ -420,14 +422,11 @@
           No ticket selected yet.
         </p>
 
-        <!-- This placeholder text stays until a ticket is selected -->
         <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
           Select a ticket above to view its details.
         </div>
 
-        <!-- Ticket edit / info block (HIDDEN until a ticket is selected) -->
         <div id="ticketEditBlock" class="ticket-edit hidden">
-          <!-- Row: group / status / priority / assignee -->
           <div class="ticket-top-grid">
             <div>
               <div class="field-label">Group</div>
@@ -438,10 +437,10 @@
                 <option value="Nurse">Nurse</option>
               </select>
             </div>
+
             <div>
               <div class="field-label">Status</div>
-
-              <!-- ✅ UPDATED: Added "In progress" -->
+              <!-- UPDATED DROPDOWN -->
               <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
                 <option value="in-progress">In progress</option>
@@ -457,37 +456,31 @@
                 <option value="low">Low</option>
               </select>
             </div>
+
             <div>
               <div class="field-label">Assignee</div>
-
-              <!-- ORIGINAL INPUT + ASSIGN ME + NEW UNASSIGN BUTTON -->
               <div style="display:flex;gap:6px;align-items:center;">
                 <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
                 <button id="assignMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
                   ✅ Me
                 </button>
 
-                <!-- ✅ NEW UNASSIGN BUTTON -->
+                <!-- NEW UNASSIGN BUTTON -->
                 <button id="unassignBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
                   ❌ Unassign
                 </button>
               </div>
-
             </div>
           </div>
 
-          <!-- Read-only info fields -->
           <div class="field-label">Summary</div>
-          <input id="summaryInput" class="field-input" readonly
-                 placeholder="Short description (e.g. Printer not working)"/>
+          <input id="summaryInput" class="field-input" readonly/>
 
           <div class="field-label">Description</div>
-          <textarea id="descriptionInput" class="field-textarea" readonly
-            placeholder="Describe the issue, include room number, device ID, etc."></textarea>
+          <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
 
           <div class="field-label">Location</div>
-          <input id="locationInput" class="field-input" readonly
-                 placeholder="Room / building (optional)"/>
+          <input id="locationInput" class="field-input" readonly/>
 
           <div class="field-label">Requested completion date</div>
           <input id="dueDateInput" type="date" class="field-input" disabled/>
@@ -525,7 +518,7 @@
         </div>
       </section>
 
-      <!-- GROUP NOTIFICATION MEMBERS -->
+      <!-- GROUP NOTIFICATION MEMBERS (RESTORED ORIGINAL LAYOUT) -->
       <section class="panel">
         <h2>Group notification members</h2>
         <p class="muted">
@@ -534,11 +527,12 @@
         </p>
 
         <div id="groupsContainer" class="group-grid">
-          <!-- Filled by JS -->
+          <!-- JS will insert the 4 original cards -->
         </div>
 
         <div id="groupStatus" class="status-bar"></div>
       </section>
+
     </section>
   </main>
 
@@ -571,7 +565,7 @@ const statusInput       = document.getElementById("statusInput");
 const priorityInput     = document.getElementById("priorityInput");
 const assigneeInput     = document.getElementById("assigneeInput");
 const assignMeBtn       = document.getElementById("assignMeBtn");
-const unassignBtn       = document.getElementById("unassignBtn");  // ✅ NEW
+const unassignBtn       = document.getElementById("unassignBtn"); // NEW
 const summaryInput      = document.getElementById("summaryInput");
 const descriptionInput  = document.getElementById("descriptionInput");
 const locationInput     = document.getElementById("locationInput");
@@ -595,7 +589,7 @@ let allTickets  = [];
 let selectedTicketId = null;
 
 const AGENT_ROLES = ["admin","it"];
-const VALID_STATUSES = ["open","in-progress","closed"];
+const VALID_STATUSES = ["open","in-progress","closed"];  // UPDATED
 
 /* ============================
    LOGOUT BUTTON
@@ -639,7 +633,7 @@ watchAuth({
       }
     });
 
-    /* ✅ NEW UNASSIGN HANDLER */
+    // NEW: UNASSIGN BUTTON
     unassignBtn.addEventListener("click", () => {
       assigneeInput.value = "Unassigned";
     });
@@ -649,7 +643,7 @@ watchAuth({
 
     await Promise.all([
       loadTickets(),
-      loadGroupMembers()
+      loadGroupMembers() // ORIGINAL LAYOUT RESTORED
     ]);
   }
 });
@@ -741,15 +735,11 @@ function onRowClick(e){
 
   const id = tr.getAttribute("data-id");
 
-  // toggle hide when clicking same ticket
+  // Toggle hide if clicking same row
   if(id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
     hideDetails();
     return;
   }
-
-  // highlight selected row
-  document.querySelectorAll("tr[data-id]").forEach(r => r.classList.remove("active"));
-  tr.classList.add("active");
 
   const ticket = allTickets.find(x => x.id === id);
   if(ticket){
@@ -766,7 +756,7 @@ function hideDetails(){
 }
 
 /* ============================
-   LOAD DETAILS INTO PANEL
+   LOAD DETAILS
 ============================ */
 function selectTicket(t){
   selectedTicketId = t.id;
@@ -817,10 +807,12 @@ async function saveTicket(){
   const a = assigneeInput.value.trim();
   if(a && a.toLowerCase() !== "unassigned"){
     payload.assigneeName = a;
+
     if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
       payload.assigneeUid   = currentUser.uid;
       payload.assigneeEmail = currentUser.email;
     }
+
   }else{
     payload.assigneeName = "";
     payload.assigneeUid = "";
@@ -905,6 +897,74 @@ async function addReply(){
 }
 
 /* ============================
+   ORIGINAL 4-CARD GROUP MEMBERS LAYOUT (RESTORED)
+============================ */
+const GROUP_DEFS = [
+  { id:"IT",            label:"IT" },
+  { id:"Maintenance",   label:"Maintenance" },
+  { id:"Front Office",  label:"Front Office" },
+  { id:"Nurse",         label:"Nurse" }
+];
+
+async function loadGroupMembers(){
+  groupsContainer.innerHTML = "";
+
+  GROUP_DEFS.forEach(g=>{
+    const wrapper = document.createElement("div");
+    wrapper.className = "group-card";
+    wrapper.dataset.groupId = g.id;
+    wrapper.innerHTML = `
+      <h3>${g.label}</h3>
+      <p class="muted" style="margin:0 0 4px;">
+        Comma-separated emails. Example: it1@ocsi.org, it2@ocsi.org
+      </p>
+      <textarea></textarea>
+      <button class="btn btn-ghost" type="button" style="margin-top:6px;">Save</button>
+    `;
+    groupsContainer.appendChild(wrapper);
+  });
+
+  try{
+    const snap = await getDocs(collection(db,"ticket_groups"));
+    const map = {};
+    snap.forEach(ds => { map[ds.id] = ds.data(); });
+
+    [...groupsContainer.children].forEach(card=>{
+      const id = card.dataset.groupId;
+      const info = map[id];
+      if(info && Array.isArray(info.emails)){
+        card.querySelector("textarea").value = info.emails.join(", ");
+      }
+      const btn = card.querySelector("button");
+      btn.addEventListener("click", ()=>saveGroupCard(card));
+    });
+
+  }catch(err){
+    console.error(err);
+    groupStatus.textContent = "Error loading group members: " + err.message;
+  }
+}
+
+async function saveGroupCard(card){
+  const id  = card.dataset.groupId;
+  const txt = card.querySelector("textarea").value.trim();
+  const emails = txt
+    ? txt.split(",").map(e=>e.trim()).filter(e=>e)
+    : [];
+
+  try{
+    await setDoc(doc(db,"ticket_groups",id),{
+      emails,
+      updatedAt: serverTimestamp()
+    });
+    groupStatus.textContent = `Saved members for ${id}.`;
+  }catch(err){
+    console.error(err);
+    groupStatus.textContent = "Error saving group members: " + err.message;
+  }
+}
+
+/* ============================
    HELPERS
 ============================ */
 function statusPill(s){
@@ -935,7 +995,7 @@ function escapeHtml(s){
 }
 
 </script>
-
-
 </body>
 </html>
+
+
