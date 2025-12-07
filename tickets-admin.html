@@ -217,10 +217,10 @@
       font-size:.75rem;
     }
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
-    .pill-progress{background:#fff3cd;color:#b7791f;}
     .pill-closed{background:#e6fffa;color:#2c7a7b;}
+    .pill-progress{background:#fff3cd;color:#b7791f;}
 
-    /* HIDDEN BLOCK */
+    /* TICKET EDIT BLOCK */
     .hidden{display:none;}
 
     .ticket-edit{
@@ -256,397 +256,535 @@
       border-radius:8px;
       border:1px solid #cbd5e1;
       font-size:.9rem;
+      font-family:inherit;
+    }
+    .field-textarea{
+      min-height:80px;
+      resize:vertical;
     }
 
+    /* COMMENTS */
     .comment-list{
       max-height:220px;
       overflow:auto;
       border:1px solid #e5e7eb;
       border-radius:8px;
       padding:8px 10px;
+      font-size:.82rem;
       background:#f9fafb;
+      margin-top:2px;
+    }
+    .comment{
+      margin-bottom:6px;
+      padding-bottom:6px;
+      border-bottom:1px dashed #e5e7eb;
+    }
+    .comment-meta{
+      font-size:.75rem;
+      color:#6b7280;
+      margin-bottom:2px;
+    }
+    .comment-muted{
+      font-size:.8rem;
+      color:#94a3b8;
     }
 
-    /* GROUPS */
+    /* GROUP NOTIFICATION MEMBERS */
     .group-grid{
       display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr));
       gap:12px;
     }
+    @media(max-width:800px){
+      .group-grid{
+        grid-template-columns:1fr;
+      }
+    }
+    .group-card{
+      border:1px solid #e5e7eb;
+      border-radius:8px;
+      padding:10px;
+      background:#f9fafb;
+    }
   </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="hero-left">
-    <div class="hero-title">OCSI Service Request</div>
-    <nav class="hero-menu"><a href="tickets.html">Requester view</a></nav>
-  </div>
-  <div class="hero-right">
-    <div class="hero-user">
-      <div id="who" class="hero-email">Checking session…</div>
-      <button id="logoutBtn" class="btn-hero-small">Log out</button>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-left">
+      <div class="hero-title">OCSI Service Request</div>
+      <nav class="hero-menu">
+        <a href="tickets.html">Requester view</a>
+      </nav>
     </div>
-  </div>
-</header>
-
-<main class="wrap">
-<section class="card-shell">
-
-<h1>Tickets (Admin view)</h1>
-<p class="subtitle">View and manage all service requests from staff.</p>
-
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-box">
-    <span>🔍</span>
-    <input id="search" placeholder="Search summary, requester, location…"/>
-  </div>
-
-  <div class="filters">
-    <select id="groupFilter">
-      <option value="">All groups</option>
-      <option value="IT">IT</option>
-      <option value="Maintenance">Maintenance</option>
-      <option value="Front Office">Front Office</option>
-      <option value="Nurse">Nurse</option>
-    </select>
-
-    <select id="statusFilter">
-      <option value="">All statuses</option>
-      <option value="open">Open</option>
-      <option value="in-progress">In progress</option> <!-- NEW -->
-      <option value="closed">Closed</option>
-    </select>
-
-    <button id="newTicketBtn" class="btn btn-primary">➕ New ticket</button>
-  </div>
-</div>
-
-<p id="listStatus" class="small-text">Loading tickets…</p>
-
-<!-- TICKET TABLE -->
-<section class="panel">
-  <h2>Ticket list</h2>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Summary</th><th>Group</th><th>Priority</th>
-          <th>Status</th><th>Assignee</th><th>Requester</th><th>Created</th>
-        </tr>
-      </thead>
-      <tbody id="ticketsBody">
-        <tr><td colspan="8">Loading…</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<p class="small-text">Click a ticket to show or hide details.</p>
-
-<!-- DETAILS PANEL -->
-<section class="panel">
-  <h2>Ticket details & replies</h2>
-
-  <p id="detailsHint" class="muted">No ticket selected yet.</p>
-
-  <div id="detailsPlaceholder" class="comment-muted">
-    Select a ticket above to view its details.
-  </div>
-
-  <div id="ticketEditBlock" class="ticket-edit hidden">
-
-    <div class="ticket-top-grid">
-
-      <div>
-        <div class="field-label">Group</div>
-        <select id="groupInput" class="field-select">
-          <option value="IT">IT</option>
-          <option value="Maintenance">Maintenance</option>
-          <option value="Front Office">Front Office</option>
-          <option value="Nurse">Nurse</option>
-        </select>
+    <div class="hero-right">
+      <div class="hero-user">
+        <div id="who" class="hero-email">Checking session…</div>
+        <button id="logoutBtn" class="btn-hero-small">Log out</button>
       </div>
+    </div>
+  </header>
 
-      <div>
-        <div class="field-label">Status</div>
-        <select id="statusInput" class="field-select">
-          <option value="open">Open</option>
-          <option value="in-progress">In progress</option> <!-- NEW -->
-          <option value="closed">Closed</option>
-        </select>
-      </div>
+  <main class="wrap">
+    <section class="card-shell">
+      <h1>Tickets (Admin view)</h1>
+      <p class="subtitle">
+        View and manage all service requests from staff. Update status, assign tickets, and reply.
+      </p>
 
-      <div>
-        <div class="field-label">Priority</div>
-        <select id="priorityInput" class="field-select">
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-          <option value="low">Low</option>
-        </select>
-      </div>
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-box">
+          <span>🔍</span>
+          <input id="search" placeholder="Search summary, requester, location…"/>
+        </div>
 
-      <div>
-        <div class="field-label">Assignee</div>
-        <div style="display:flex;gap:6px;">
-          <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-          <button id="assignMeBtn" class="btn btn-ghost">Me</button>
+        <div class="filters">
+          <select id="groupFilter">
+            <option value="">All groups</option>
+            <option value="IT">IT</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Front Office">Front Office</option>
+            <option value="Nurse">Nurse</option>
+          </select>
 
-          <!-- NEW UNASSIGN BUTTON -->
-          <button id="unassignBtn" class="btn btn-ghost" type="button">Unassign</button>
+          <select id="statusFilter">
+            <option value="">All statuses</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In progress</option>
+            <option value="closed">Closed</option>
+          </select>
 
+          <button id="newTicketBtn" class="btn btn-primary">➕ New ticket</button>
         </div>
       </div>
 
-    </div>
+      <p id="listStatus" class="small-text">Loading tickets…</p>
 
-    <div class="field-label">Summary</div>
-    <input id="summaryInput" class="field-input" readonly>
+      <!-- TABLE -->
+      <section class="panel">
+        <h2>Ticket list</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:55px;">#</th>
+                <th>Summary</th>
+                <th>Group</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Assignee</th>
+                <th>Requester</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsBody">
+              <tr><td colspan="8">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-    <div class="field-label">Description</div>
-    <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
+      <!-- DETAILS -->
+      <p class="small-text">Click a ticket to see details.</p>
 
-    <div class="field-label">Location</div>
-    <input id="locationInput" class="field-input" readonly>
+      <section class="panel">
+        <h2>Ticket details & replies</h2>
 
-    <div class="field-label">Requested completion date</div>
-    <input id="dueDateInput" type="date" class="field-input" disabled>
+        <p class="muted" id="detailsHint">No ticket selected yet.</p>
 
-    <div class="field-label">Urgency</div>
-    <select id="urgencyInput" class="field-select" disabled>
-      <option value="1">1 – Low</option>
-      <option value="2">2</option>
-      <option value="3" selected>3 – Normal</option>
-      <option value="4">4</option>
-      <option value="5">5 – Very urgent</option>
-    </select>
+        <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
+          Select a ticket above to view its details.
+        </div>
 
-    <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:10px;">💾 Save</button>
-    <div id="formStatus" class="status-bar"></div>
+        <!-- EDIT BLOCK -->
+        <div id="ticketEditBlock" class="ticket-edit hidden">
 
-    <!-- Conversation -->
-    <div class="field-label">Conversation</div>
-    <div id="commentsList" class="comment-list">
-      <div class="comment-muted">No ticket selected yet.</div>
-    </div>
+          <div class="ticket-top-grid">
+            <div>
+              <div class="field-label">Group</div>
+              <select id="groupInput" class="field-select">
+                <option value="IT">IT</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Front Office">Front Office</option>
+                <option value="Nurse">Nurse</option>
+              </select>
+            </div>
 
-    <div class="field-label" style="margin-top:8px;">Add reply</div>
-    <textarea id="replyInput" class="field-textarea"
-      placeholder="Reply to the requester or add an internal note."></textarea>
+            <div>
+              <div class="field-label">Status</div>
+              <!-- UPDATED -->
+              <select id="statusInput" class="field-select">
+                <option value="open">Open</option>
+                <option value="in-progress">In progress</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
 
-    <button id="addReplyBtn" class="btn btn-ghost" style="margin-top:6px;">💬 Add reply</button>
+            <div>
+              <div class="field-label">Priority</div>
+              <select id="priorityInput" class="field-select">
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
 
-  </div>
-</section>
+            <div>
+              <div class="field-label">Assignee</div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
+                <button id="assignMeBtn" class="btn btn-ghost">✅ Me</button>
 
-<!-- GROUPS -->
-<section class="panel">
-  <h2>Group notification members</h2>
-  <p class="muted">Add comma-separated emails for each group.</p>
-  <div id="groupsContainer" class="group-grid"></div>
-  <div id="groupStatus" class="status-bar"></div>
-</section>
+                <!-- NEW UNASSIGN BUTTON -->
+                <button id="unassignBtn" class="btn btn-ghost">❌ Unassign</button>
+              </div>
+            </div>
+          </div>
 
-</section>
-</main>
+          <!-- READ-ONLY FIELDS -->
+          <div class="field-label">Summary</div>
+          <input id="summaryInput" class="field-input" readonly/>
 
+          <div class="field-label">Description</div>
+          <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
+
+          <div class="field-label">Location</div>
+          <input id="locationInput" class="field-input" readonly/>
+
+          <div class="field-label">Requested completion date</div>
+          <input id="dueDateInput" type="date" class="field-input" disabled/>
+
+          <div class="field-label">Urgency</div>
+          <select id="urgencyInput" class="field-select" disabled>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+
+          <div style="margin-top:10px;">
+            <button id="saveTicketBtn" class="btn btn-primary">💾 Save ticket</button>
+          </div>
+
+          <div id="formStatus" class="status-bar"></div>
+        </div>
+
+        <!-- COMMENTS -->
+        <div>
+          <div class="field-label">Conversation</div>
+          <div id="commentsList" class="comment-list">
+            <div class="comment-muted">No ticket selected yet.</div>
+          </div>
+
+          <div class="field-label" style="margin-top:8px;">Add reply</div>
+          <textarea id="replyInput" class="field-textarea"></textarea>
+          <button id="addReplyBtn" class="btn btn-ghost" style="margin-top:6px;">💬 Add reply</button>
+        </div>
+      </section>
+
+      <!-- GROUPS -->
+      <section class="panel">
+        <h2>Group notification members</h2>
+        <p class="muted">Comma-separated emails for each group.</p>
+        <div id="groupsContainer" class="group-grid"></div>
+        <div id="groupStatus" class="status-bar"></div>
+      </section>
+
+    </section>
+  </main>
+
+
+<!-- SCRIPT -->
 <script type="module">
-/* FIRESTORE IMPORTS */
 import { db, watchAuth } from "./firebase.js";
 import {
   collection, doc, addDoc, getDocs, updateDoc, setDoc,
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* DOM REFS */
-const ticketsBody        = document.getElementById("ticketsBody");
-const searchEl           = document.getElementById("search");
-const groupFilterEl      = document.getElementById("groupFilter");
-const statusFilterEl     = document.getElementById("statusFilter");
-const newTicketBtn       = document.getElementById("newTicketBtn");
+const whoEl = who;
+const logoutBtn = logoutBtn;
+const ticketsBody = ticketsBody;
+const listStatus = listStatus;
+const detailsHint = detailsHint;
+const detailsPlaceholder = detailsPlaceholder;
 
-const ticketEditBlock    = document.getElementById("ticketEditBlock");
-const groupInput         = document.getElementById("groupInput");
-const statusInput        = document.getElementById("statusInput");
-const priorityInput      = document.getElementById("priorityInput");
-const assigneeInput      = document.getElementById("assigneeInput");
-const assignMeBtn        = document.getElementById("assignMeBtn");
-const unassignBtn        = document.getElementById("unassignBtn"); // NEW
-const summaryInput       = document.getElementById("summaryInput");
-const descriptionInput   = document.getElementById("descriptionInput");
-const locationInput      = document.getElementById("locationInput");
-const dueDateInput       = document.getElementById("dueDateInput");
-const urgencyInput       = document.getElementById("urgencyInput");
-const saveTicketBtn      = document.getElementById("saveTicketBtn");
-const formStatus         = document.getElementById("formStatus");
+const searchEl = search;
+const groupFilterEl = groupFilter;
+const statusFilterEl = statusFilter;
+const newTicketBtn = newTicketBtn;
 
-const commentsList       = document.getElementById("commentsList");
-const replyInput         = document.getElementById("replyInput");
-const addReplyBtn        = document.getElementById("addReplyBtn");
+// ticket input fields
+const ticketEditBlock = ticketEditBlock;
+const groupInput = groupInput;
+const statusInput = statusInput;
+const priorityInput = priorityInput;
+const assigneeInput = assigneeInput;
+const assignMeBtn = assignMeBtn;
+const unassignBtn = unassignBtn;  
+const summaryInput = summaryInput;
+const descriptionInput = descriptionInput;
+const locationInput = locationInput;
+const dueDateInput = dueDateInput;
+const urgencyInput = urgencyInput;
+const saveTicketBtn = saveTicketBtn;
+const formStatus = formStatus;
 
+// conversation
+const commentsList = commentsList;
+const replyInput = replyInput;
+const addReplyBtn = addReplyBtn;
+
+// groups
+const groupsContainer = groupsContainer;
+const groupStatus = groupStatus;
+
+let currentUser = null;
+let currentRole = "viewer";
 let allTickets = [];
 let selectedTicketId = null;
-let currentUser = null;
 
 const VALID_STATUSES = ["open","in-progress","closed"];
 
-/* AUTH */
+/* ======================
+   LOGOUT
+====================== */
+logoutBtn.addEventListener("click", () => {
+  window.location.href = "login.html";
+});
+
+/* ======================
+   AUTH CHECK
+====================== */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
-  whoEl: document.getElementById("who"),
+  whoEl,
   onReady: async (user,role)=>{
     currentUser = user;
+    currentRole = role;
 
-    searchEl.oninput = renderTickets;
-    groupFilterEl.onchange = renderTickets;
-    statusFilterEl.onchange = renderTickets;
+    if(!user || !["admin","it"].includes(role)){
+      alert("Admins/IT only.");
+      window.location.href = "tickets.html";
+      return;
+    }
 
-    ticketsBody.onclick = onRowClick;
-    saveTicketBtn.onclick = saveTicket;
-    addReplyBtn.onclick = addReply;
+    newTicketBtn.addEventListener("click", () => {
+      window.location.href = "submit-request.html";
+    });
 
-    assignMeBtn.onclick = () => {
+    searchEl.addEventListener("input", renderTickets);
+    groupFilterEl.addEventListener("change", renderTickets);
+    statusFilterEl.addEventListener("change", renderTickets);
+    ticketsBody.addEventListener("click", onRowClick);
+    saveTicketBtn.addEventListener("click", saveTicket);
+    addReplyBtn.addEventListener("click", addReply);
+
+    assignMeBtn.addEventListener("click", () => {
       assigneeInput.value = currentUser.displayName || currentUser.email;
-    };
+    });
 
     /* NEW: UNASSIGN BUTTON */
-    unassignBtn.onclick = () => {
+    unassignBtn.addEventListener("click", () => {
       assigneeInput.value = "Unassigned";
-    };
+    });
 
-    await loadTickets();
-    await loadGroupMembers();
+    await Promise.all([
+      loadTickets(),
+      loadGroupMembers()
+    ]);
   }
 });
 
-/* LOAD TICKETS */
+/* ============================
+   LOAD TICKETS
+============================ */
 async function loadTickets(){
+  listStatus.textContent = "Loading tickets…";
+
   const snap = await getDocs(collection(db,"tickets"));
-  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
-  allTickets.sort((a,b)=> (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0));
+  allTickets = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
+
+  allTickets.sort((a,b)=>{
+    return (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0);
+  });
+
   renderTickets();
 }
 
-/* RENDER TABLE */
+/* ============================
+   RENDER TABLE
+============================ */
 function renderTickets(){
-  const term  = searchEl.value.toLowerCase();
-  const gfilt = groupFilterEl.value;
-  const sfilt = statusFilterEl.value;
+  const term = searchEl.value.toLowerCase();
+  const gf = groupFilterEl.value;
+  const sf = statusFilterEl.value;
 
   const rows = allTickets.filter(t=>{
-    const group = t.group || "";
-    const status = (t.status || "open").toLowerCase();
-
-    if(gfilt && group !== gfilt) return false;
-    if(sfilt && status !== sfilt) return false;
+    const st = (t.status || "open").toLowerCase();
+    if(gf && t.group !== gf) return false;
+    if(sf && st !== sf) return false;
 
     if(term){
-      const hay = `${t.summary} ${t.description} ${t.requesterName} ${t.requesterEmail}`.toLowerCase();
+      const hay = [
+        t.summary,t.description,t.location,
+        t.requesterName,t.requesterEmail
+      ].join(" ").toLowerCase();
       if(!hay.includes(term)) return false;
     }
+
     return true;
   });
 
-  ticketsBody.innerHTML = rows.length
-    ? rows.map((t,i)=>`
-      <tr data-id="${t.id}">
-        <td>${i+1}</td>
-        <td>${t.summary || ""}</td>
-        <td>${t.group || ""}</td>
-        <td>${t.priority || ""}</td>
-        <td>${statusPill(t.status)}</td>
-        <td>${t.assigneeName || "Unassigned"}</td>
-        <td>${t.requesterName || ""}</td>
-        <td>${formatDate(t.createdAt)}</td>
-      </tr>`).join("")
-    : `<tr><td colspan="8">No results.</td></tr>`;
-}
-
-/* CLICK ROW → TOGGLE DETAILS */
-function onRowClick(e){
-  const tr = e.target.closest("tr[data-id]");
-  if(!tr) return;
-  const id = tr.dataset.id;
-
-  if(selectedTicketId === id){
-    ticketEditBlock.classList.add("hidden");
-    selectedTicketId = null;
+  if(!rows.length){
+    ticketsBody.innerHTML = `<tr><td colspan="8">No match.</td></tr>`;
     return;
   }
 
-  selectedTicketId = id;
-  const t = allTickets.find(x => x.id === id);
-  loadDetails(t);
+  ticketsBody.innerHTML = rows.map((t,i) => `
+    <tr data-id="${t.id}">
+      <td>${i+1}</td>
+      <td>${escapeHtml(t.summary)}</td>
+      <td>${t.group || ""}</td>
+      <td>${capitalize(t.priority || "medium")}</td>
+      <td>${statusPill(t.status)}</td>
+      <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
+      <td>${t.requesterName || t.requesterEmail || ""}</td>
+      <td>${formatDate(t.createdAt)}</td>
+    </tr>
+  `).join("");
 }
 
-function loadDetails(t){
+/* ============================
+   CLICK ROW → SHOW DETAILS
+============================ */
+function onRowClick(e){
+  const tr = e.target.closest("tr[data-id]");
+  if(!tr) return;
+
+  const id = tr.getAttribute("data-id");
+
+  if(id === selectedTicketId){
+    hideDetails();
+    return;
+  }
+
+  const t = allTickets.find(x => x.id === id);
+  if(t) selectTicket(t);
+}
+
+function hideDetails(){
+  selectedTicketId = null;
+  ticketEditBlock.classList.add("hidden");
+  commentsList.innerHTML = `<div class="comment-muted">No ticket selected.</div>`;
+  detailsHint.textContent = "No ticket selected.";
+  detailsPlaceholder.textContent = "Select a ticket above to view details.";
+}
+
+/* ============================
+   LOAD SELECTED TICKET
+============================ */
+function selectTicket(t){
+  selectedTicketId = t.id;
+
+  detailsHint.textContent =
+    `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
+
+  detailsPlaceholder.textContent = "";
   ticketEditBlock.classList.remove("hidden");
 
-  groupInput.value = t.group || "IT";
-  statusInput.value = VALID_STATUSES.includes(t.status) ? t.status : "open";
+  groupInput.value    = t.group || "IT";
   priorityInput.value = t.priority || "medium";
+  statusInput.value   = VALID_STATUSES.includes(t.status)
+                        ? t.status
+                        : "open";
   assigneeInput.value = t.assigneeName || t.assigneeEmail || "Unassigned";
 
-  summaryInput.value = t.summary || "";
+  summaryInput.value     = t.summary || "";
   descriptionInput.value = t.description || "";
-  locationInput.value = t.location || "";
-  dueDateInput.value = t.requestedCompletionDate || "";
-  urgencyInput.value = t.urgency || 3;
+  locationInput.value    = t.location || "";
+  dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
+  urgencyInput.value     = t.urgency || 3;
+
+  formStatus.textContent = "";
 
   loadComments(t.id);
 }
 
-/* SAVE */
+/* ============================
+   SAVE TICKET
+============================ */
 async function saveTicket(){
-  if(!selectedTicketId){ return; }
+  if(!selectedTicketId){
+    formStatus.textContent = "Select a ticket.";
+    return;
+  }
 
-  const a = assigneeInput.value.trim();
-
-  const data = {
+  const payload = {
     group: groupInput.value,
-    status: statusInput.value,
     priority: priorityInput.value,
-    urgency: Number(urgencyInput.value || 3),
+    status: statusInput.value,
+    urgency: Number(urgencyInput.value),
     updatedAt: serverTimestamp()
   };
 
-  /* ASSIGN OR UNASSIGN LOGIC */
-  if(!a || a.toLowerCase() === "unassigned"){
-    data.assigneeName = "";
-    data.assigneeUid = "";
-    data.assigneeEmail = "";
+  const a = assigneeInput.value.trim();
+
+  if(a.toLowerCase() === "unassigned" || a === ""){
+    payload.assigneeName = "";
+    payload.assigneeUid = "";
+    payload.assigneeEmail = "";
   } else {
-    data.assigneeName = a;
+    payload.assigneeName = a;
     if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
-      data.assigneeUid = currentUser.uid;
-      data.assigneeEmail = currentUser.email;
+      payload.assigneeUid = currentUser.uid;
+      payload.assigneeEmail = currentUser.email;
+    } else {
+      payload.assigneeUid = "";
+      payload.assigneeEmail = "";
     }
   }
 
-  await updateDoc(doc(db,"tickets",selectedTicketId), data);
+  await updateDoc(doc(db,"tickets",selectedTicketId), payload);
 
+  formStatus.textContent = "Saved.";
   await loadTickets();
-  loadDetails(allTickets.find(t => t.id === selectedTicketId));
 }
 
-/* COMMENTS */
-async function loadComments(id){
-  const q = query(collection(db,"tickets",id,"comments"), orderBy("createdAt","asc"), limit(200));
-  const snap = await getDocs(q);
-  const arr = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
+/* ============================
+   COMMENTS
+============================ */
+async function loadComments(ticketId){
+  commentsList.innerHTML = "Loading…";
 
-  commentsList.innerHTML = arr.length
-    ? arr.map(c => `
-      <div class="comment">
-        <div class="comment-meta">${c.authorName || c.authorEmail} • ${formatDate(c.createdAt)}</div>
-        <div>${c.message}</div>
-      </div>`).join("")
-    : `<div class="comment-muted">No replies yet.</div>`;
+  const q = query(
+    collection(db,"tickets",ticketId,"comments"),
+    orderBy("createdAt","asc"),
+    limit(200)
+  );
+
+  const snap = await getDocs(q);
+  const arr = snap.docs.map(ds => ({id:ds.id,...ds.data()}));
+
+  commentsList.innerHTML = arr.length ? arr.map(c => `
+    <div class="comment">
+      <div class="comment-meta">
+        ${escapeHtml(c.authorName || c.authorEmail)} • ${formatDate(c.createdAt)}
+      </div>
+      <div>${escapeHtml(c.message)}</div>
+    </div>
+  `).join("") : `<div class="comment-muted">No replies yet.</div>`;
 }
 
 async function addReply(){
-  if(!selectedTicketId) return;
+  if(!selectedTicketId){
+    alert("Select a ticket first.");
+    return;
+  }
+
   const msg = replyInput.value.trim();
   if(!msg) return;
 
@@ -661,48 +799,76 @@ async function addReply(){
   loadComments(selectedTicketId);
 }
 
-/* GROUP MEMBERS DROPDOWN */
+/* ============================
+   GROUP NOTIFICATION MEMBERS
+============================ */
 async function loadGroupMembers(){
-  const container = document.getElementById("groupsContainer");
-  container.innerHTML = "";
+  const GROUPS = ["IT","Maintenance","Front Office","Nurse"];
 
-  const groups = ["IT","Maintenance","Front Office","Nurse"];
-
-  const snap = await getDocs(collection(db,"ticket_groups"));
-  const map = {};
-  snap.forEach(ds => map[ds.id] = ds.data());
-
-  container.innerHTML = groups.map(g => `
-    <div class="group-card">
+  groupsContainer.innerHTML = GROUPS.map(g => `
+    <div class="group-card" data-group="${g}">
       <h3>${g}</h3>
-      <textarea data-group="${g}">${(map[g]?.emails || []).join(", ")}</textarea>
-      <button class="btn btn-ghost" data-save="${g}">Save</button>
+      <p class="muted">Comma-separated emails</p>
+      <textarea></textarea>
+      <button class="btn btn-ghost">Save</button>
     </div>
   `).join("");
 
-  container.addEventListener("click", async e => {
-    if(!e.target.dataset.save) return;
-    const g = e.target.dataset.save;
-    const ta = container.querySelector(`textarea[data-group="${g}"]`);
-    const emails = ta.value.split(",").map(x=>x.trim()).filter(Boolean);
-    await setDoc(doc(db,"ticket_groups",g),{
-      emails, updatedAt: serverTimestamp()
+  const snap = await getDocs(collection(db,"ticket_groups"));
+  const map = {};
+  snap.forEach(ds => { map[ds.id] = ds.data(); });
+
+  [...groupsContainer.children].forEach(card=>{
+    const group = card.dataset.group;
+    const textarea = card.querySelector("textarea");
+    const btn = card.querySelector("button");
+
+    if(map[group] && Array.isArray(map[group].emails)){
+      textarea.value = map[group].emails.join(", ");
+    }
+
+    btn.addEventListener("click", async ()=>{
+      const emails = textarea.value
+        .split(",")
+        .map(e => e.trim())
+        .filter(e => e);
+
+      await setDoc(doc(db,"ticket_groups",group),{
+        emails,
+        updatedAt: serverTimestamp()
+      });
+
+      groupStatus.textContent = `Saved for ${group}.`;
     });
-    document.getElementById("groupStatus").textContent = `Saved ${g}`;
   });
 }
 
-/* HELPERS */
+/* ============================
+   HELPERS
+============================ */
 function statusPill(s){
-  s = (s||"open").toLowerCase();
-  if(s==="closed") return `<span class="pill pill-closed">Closed</span>`;
-  if(s==="in-progress") return `<span class="pill pill-progress">In progress</span>`;
+  const st = (s || "open").toLowerCase();
+  if(st === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
+  if(st === "closed")      return `<span class="pill pill-closed">Closed</span>`;
   return `<span class="pill pill-open">Open</span>`;
 }
+
 function formatDate(v){
-  if(!v) return "";
-  const d = v.toDate ? v.toDate() : v;
-  return d.toLocaleString();
+  try{
+    return v?.toDate?.().toLocaleString() || "";
+  }catch{
+    return "";
+  }
+}
+
+function escapeHtml(s){
+  return String(s || "").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+  }[c]));
+}
+
+function capitalize(s){
+  return s ? s.charAt(0).toUpperCase()+s.slice(1) : "";
 }
 
 </script>
