@@ -529,458 +529,459 @@
     </section>
   </main>
 
-  <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import {
-    collection, doc, addDoc, getDocs, updateDoc, setDoc,
-    serverTimestamp, query, orderBy, limit
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<script type="module">
+import { db, watchAuth } from "./firebase.js";
+import {
+  collection, doc, addDoc, getDocs, updateDoc, setDoc,
+  serverTimestamp, query, orderBy, limit
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl              = document.getElementById("who");
-  const logoutBtn          = document.getElementById("logoutBtn");
-  const ticketsBody        = document.getElementById("ticketsBody");
-  const listStatus         = document.getElementById("listStatus");
-  const detailsHint        = document.getElementById("detailsHint");
-  const detailsPlaceholder = document.getElementById("detailsPlaceholder");
+/* ============================
+   DOM ELEMENTS
+============================ */
+const whoEl              = document.getElementById("who");
+const logoutBtn          = document.getElementById("logoutBtn");
+const ticketsBody        = document.getElementById("ticketsBody");
+const listStatus         = document.getElementById("listStatus");
+const detailsHint        = document.getElementById("detailsHint");
+const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
-  const searchEl        = document.getElementById("search");
-  const groupFilterEl   = document.getElementById("groupFilter");
-  const statusFilterEl  = document.getElementById("statusFilter");
-  const newTicketBtn    = document.getElementById("newTicketBtn");
+const searchEl        = document.getElementById("search");
+const groupFilterEl   = document.getElementById("groupFilter");
+const statusFilterEl  = document.getElementById("statusFilter");
+const newTicketBtn    = document.getElementById("newTicketBtn");
 
-  // edit bar + read-only details (hidden until a ticket is selected)
-  const ticketEditBlock   = document.getElementById("ticketEditBlock");
-  const groupInput        = document.getElementById("groupInput");
-  const statusInput       = document.getElementById("statusInput");
-  const priorityInput     = document.getElementById("priorityInput");
-  const assigneeInput     = document.getElementById("assigneeInput");
-  const assignMeBtn       = document.getElementById("assignMeBtn");
-  const summaryInput      = document.getElementById("summaryInput");      // readonly
-  const descriptionInput  = document.getElementById("descriptionInput");  // readonly
-  const locationInput     = document.getElementById("locationInput");     // readonly
-  const dueDateInput      = document.getElementById("dueDateInput");      // readonly
-  const urgencyInput      = document.getElementById("urgencyInput");      // readonly
-  const saveTicketBtn     = document.getElementById("saveTicketBtn");
-  const formStatus        = document.getElementById("formStatus");
+// ticket edit
+const ticketEditBlock   = document.getElementById("ticketEditBlock");
+const groupInput        = document.getElementById("groupInput");
+const statusInput       = document.getElementById("statusInput");
+const priorityInput     = document.getElementById("priorityInput");
+const assigneeInput     = document.getElementById("assigneeInput");
+const assignMeBtn       = document.getElementById("assignMeBtn");
+const summaryInput      = document.getElementById("summaryInput");
+const descriptionInput  = document.getElementById("descriptionInput");
+const locationInput     = document.getElementById("locationInput");
+const dueDateInput      = document.getElementById("dueDateInput");
+const urgencyInput      = document.getElementById("urgencyInput");
+const saveTicketBtn     = document.getElementById("saveTicketBtn");
+const formStatus        = document.getElementById("formStatus");
 
-  // Conversation
-  const commentsList      = document.getElementById("commentsList");
-  const replyInput        = document.getElementById("replyInput");
-  const addReplyBtn       = document.getElementById("addReplyBtn");
+// conversation
+const commentsList      = document.getElementById("commentsList");
+const replyInput        = document.getElementById("replyInput");
+const addReplyBtn       = document.getElementById("addReplyBtn");
 
-  // Groups panel
-  const groupsContainer   = document.getElementById("groupsContainer");
-  const groupStatus       = document.getElementById("groupStatus");
+// groups
+const groupsContainer   = document.getElementById("groupsContainer");
+const groupStatus       = document.getElementById("groupStatus");
 
-  let currentUser = null;
-  let currentRole = "viewer";
-  let allTickets  = [];
-  let selectedTicketId = null;
+let currentUser = null;
+let currentRole = "viewer";
+let allTickets  = [];
+let selectedTicketId = null;
 
-  const AGENT_ROLES = ["admin","it"];
-  const VALID_STATUSES = ["open","in-progress","closed"];
+const AGENT_ROLES = ["admin","it"];
+const VALID_STATUSES = ["open","in-progress","closed"];
 
-  // simple logout: redirect
-  logoutBtn.addEventListener("click", ()=>{
-    window.location.href = "login.html";
-  });
+/* ============================
+   LOGOUT BUTTON
+============================ */
+logoutBtn.addEventListener("click", () => {
+  window.location.href = "login.html";
+});
 
-  watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl,
-    onReady: async (user, role)=>{
-      currentUser = user;
-      currentRole = role;
+/* ============================
+   AUTH + INITIAL LOAD
+============================ */
+watchAuth({
+  allowedRoles:["admin","it","viewer"],
+  whoEl,
+  onReady: async (user,role)=>{
+    currentUser = user;
+    currentRole = role;
 
-      if(!user || !AGENT_ROLES.includes(role)){
-        alert("This page is for IT / Admin only. You’ll be redirected to your own tickets.");
-        window.location.href = "tickets.html";
-        return;
-      }
-
-      newTicketBtn.addEventListener("click", ()=>{
-        window.location.href = "submit-request.html";
-      });
-
-      searchEl.addEventListener("input", renderTickets);
-      groupFilterEl.addEventListener("change", renderTickets);
-      statusFilterEl.addEventListener("change", renderTickets);
-      ticketsBody.addEventListener("click", onRowClick);
-      saveTicketBtn.addEventListener("click", saveTicket);
-      addReplyBtn.addEventListener("click", addReply);
-
-      assignMeBtn.addEventListener("click", ()=>{
-        if(currentUser?.displayName){
-          assigneeInput.value = currentUser.displayName;
-        }else if(currentUser?.email){
-          assigneeInput.value = currentUser.email;
-        }
-      });
-
-      // ensure details block hidden on load
-      ticketEditBlock.classList.add("hidden");
-      detailsPlaceholder.textContent = "No ticket selected yet.";
-
-      await Promise.all([
-        loadTickets(),
-        loadGroupMembers()
-      ]);
-    }
-  });
-
-  async function loadTickets(){
-    try{
-      listStatus.textContent = "Loading tickets…";
-
-      // simpler: fetch all, then sort in JS
-      const snap = await getDocs(collection(db,"tickets"));
-      allTickets = [];
-      snap.forEach(ds=>{
-        allTickets.push({ id: ds.id, ...ds.data() });
-      });
-
-      if(!allTickets.length){
-        ticketsBody.innerHTML =
-          `<tr><td colspan="8">No tickets in the system yet.</td></tr>`;
-        listStatus.textContent = "No tickets in collection \"tickets\" yet.";
-        return;
-      }
-
-      // newest first
-      allTickets.sort((a,b)=>{
-        const ta = (a.createdAt && a.createdAt.toMillis) ? a.createdAt.toMillis() : 0;
-        const tb = (b.createdAt && b.createdAt.toMillis) ? b.createdAt.toMillis() : 0;
-        return tb - ta;
-      });
-
-      listStatus.textContent = `Showing ${allTickets.length} ticket(s).`;
-      renderTickets();
-    }catch(err){
-      console.error(err);
-      ticketsBody.innerHTML =
-        `<tr><td colspan="8">Failed to load tickets.</td></tr>`;
-      listStatus.textContent = "Error loading tickets: " + err.message;
-    }
-  }
-
-  function renderTickets(){
-    if(!allTickets.length){
-      ticketsBody.innerHTML =
-        `<tr><td colspan="8">No tickets found.</td></tr>`;
+    if(!user || !AGENT_ROLES.includes(role)){
+      alert("This page is for IT/Admin only.");
+      window.location.href = "tickets.html";
       return;
     }
 
-    const term  = (searchEl.value || "").toLowerCase();
-    const gFilt = groupFilterEl.value;
-    const sFilt = statusFilterEl.value; // "", "open", "in-progress", "closed"
-
-    const rows = allTickets.filter(t=>{
-      const groupVal  = t.group || "";
-      const statusVal = (t.status || "open").toLowerCase();
-
-      if(gFilt && groupVal !== gFilt) return false;
-      if(sFilt && statusVal !== sFilt) return false;
-
-      if(!term) return true;
-
-      const hay = [
-        t.summary,
-        t.description,
-        t.requesterName,
-        t.requesterEmail,
-        t.location
-      ].join(" ").toLowerCase();
-
-      return hay.includes(term);
+    newTicketBtn.addEventListener("click", ()=>{
+      window.location.href = "submit-request.html";
     });
 
-    if(!rows.length){
-      ticketsBody.innerHTML =
-        `<tr><td colspan="8">No tickets match your filters.</td></tr>`;
+    searchEl.addEventListener("input", renderTickets);
+    groupFilterEl.addEventListener("change", renderTickets);
+    statusFilterEl.addEventListener("change", renderTickets);
+    ticketsBody.addEventListener("click", onRowClick);
+    saveTicketBtn.addEventListener("click", saveTicket);
+    addReplyBtn.addEventListener("click", addReply);
+
+    assignMeBtn.addEventListener("click", () => {
+      if(currentUser?.displayName){
+        assigneeInput.value = currentUser.displayName;
+      }else if(currentUser?.email){
+        assigneeInput.value = currentUser.email;
+      }
+    });
+
+    // hide details by default
+    ticketEditBlock.classList.add("hidden");
+
+    await Promise.all([
+      loadTickets(),
+      loadGroupMembers()   // NEW: replaced multi-card with dropdown system
+    ]);
+  }
+});
+
+/* ============================
+   LOAD TICKETS
+============================ */
+async function loadTickets(){
+  try{
+    listStatus.textContent = "Loading tickets…";
+
+    const snap = await getDocs(collection(db,"tickets"));
+    allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
+
+    if(!allTickets.length){
+      ticketsBody.innerHTML = `<tr><td colspan="8">No tickets yet.</td></tr>`;
+      listStatus.textContent = "No tickets.";
       return;
     }
 
-    ticketsBody.innerHTML = rows.map((t,idx)=>{
-      const created   = formatDate(t.createdAt);
-      const requester = t.requesterName || t.requesterEmail || "Unknown";
-      const groupLbl  = t.group || "IT";
-      const status    = (t.status || "open").toLowerCase();
-      const priority  = capitalize(t.priority || "medium");
-      const assignee  = t.assigneeName || t.assigneeEmail || "Unassigned";
+    allTickets.sort((a,b)=>{
+      const ta = a.createdAt?.toMillis?.() ?? 0;
+      const tb = b.createdAt?.toMillis?.() ?? 0;
+      return tb - ta;
+    });
 
-      return `
-        <tr data-id="${t.id}">
-          <td>${idx+1}</td>
-          <td>${escapeHtml(t.summary || "")}</td>
-          <td>${escapeHtml(groupLbl)}</td>
-          <td>${escapeHtml(priority)}</td>
-          <td>${statusPill(status)}</td>
-          <td>${escapeHtml(assignee)}</td>
-          <td>${escapeHtml(requester)}</td>
-          <td>${escapeHtml(created)}</td>
-        </tr>`;
-    }).join("");
+    listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
+    renderTickets();
+
+  }catch(err){
+    console.error(err);
+    ticketsBody.innerHTML = `<tr><td colspan="8">Failed to load.</td></tr>`;
+    listStatus.textContent = err.message;
+  }
+}
+
+/* ============================
+   RENDER TICKETS
+============================ */
+function renderTickets(){
+  const term  = searchEl.value.toLowerCase();
+  const gfilt = groupFilterEl.value;
+  const sfilt = statusFilterEl.value;
+
+  const rows = allTickets.filter(t=>{
+    const group  = t.group || "";
+    const status = (t.status || "open").toLowerCase();
+
+    if(gfilt && group !== gfilt) return false;
+    if(sfilt && status !== sfilt) return false;
+
+    if(term){
+      const hay = [
+        t.summary, t.description,
+        t.requesterName, t.requesterEmail, t.location
+      ].join(" ").toLowerCase();
+      if(!hay.includes(term)) return false;
+    }
+
+    return true;
+  });
+
+  if(!rows.length){
+    ticketsBody.innerHTML = `<tr><td colspan="8">No match.</td></tr>`;
+    return;
   }
 
-  function onRowClick(e){
-    const tr = e.target.closest("tr[data-id]");
-    if(!tr) return;
-    const id = tr.getAttribute("data-id");
-    const ticket = allTickets.find(t=>t.id === id);
-    if(!ticket) return;
+  ticketsBody.innerHTML = rows.map((t,i)=>{
+    return `
+      <tr data-id="${t.id}">
+        <td>${i+1}</td>
+        <td>${escapeHtml(t.summary)}</td>
+        <td>${t.group || ""}</td>
+        <td>${capitalize(t.priority || "medium")}</td>
+        <td>${statusPill(t.status)}</td>
+        <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
+        <td>${t.requesterName || t.requesterEmail || ""}</td>
+        <td>${formatDate(t.createdAt)}</td>
+      </tr>`;
+  }).join("");
+}
+
+/* ============================
+   CLICK ROW → SHOW/HIDE DETAILS
+============================ */
+function onRowClick(e){
+  const tr = e.target.closest("tr[data-id]");
+  if(!tr) return;
+
+  const id = tr.getAttribute("data-id");
+
+  // toggle hide when clicking same ticket
+  if(id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
+    hideDetails();
+    return;
+  }
+
+  // highlight selected row
+  document.querySelectorAll("tr[data-id]").forEach(r => r.classList.remove("active"));
+  tr.classList.add("active");
+
+  const ticket = allTickets.find(x => x.id === id);
+  if(ticket){
     selectTicket(ticket);
   }
+}
 
-  function selectTicket(t){
-    selectedTicketId = t.id;
-    detailsHint.textContent =
-      `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail || "Unknown requester"}`;
-    detailsPlaceholder.textContent = "";
+function hideDetails(){
+  selectedTicketId = null;
+  ticketEditBlock.classList.add("hidden");
+  commentsList.innerHTML = `<div class="comment-muted">No ticket selected.</div>`;
+  detailsHint.textContent = "No ticket selected.";
+  detailsPlaceholder.textContent = "Select a ticket above to view details.";
+}
 
-    ticketEditBlock.classList.remove("hidden");
+/* ============================
+   LOAD DETAILS INTO PANEL
+============================ */
+function selectTicket(t){
+  selectedTicketId = t.id;
 
-    groupInput.value    = t.group || "IT";
+  detailsHint.textContent = `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
 
-    const st = (t.status || "open").toLowerCase();
-    statusInput.value   = VALID_STATUSES.includes(st) ? st : "open";
+  detailsPlaceholder.textContent = "";
+  ticketEditBlock.classList.remove("hidden");
 
-    priorityInput.value = t.priority || "medium";
-    assigneeInput.value = t.assigneeName || t.assigneeEmail || "Unassigned";
+  groupInput.value     = t.group || "IT";
+  priorityInput.value  = t.priority || "medium";
+  statusInput.value    = VALID_STATUSES.includes(t.status) ? t.status : "open";
+  assigneeInput.value  = t.assigneeName || t.assigneeEmail || "Unassigned";
 
-    // read-only details from requester
-    summaryInput.value      = t.summary || "";
-    descriptionInput.value  = t.description || "";
-    locationInput.value     = t.location || "";
-    dueDateInput.value      = t.requestedDate || t.requestedCompletionDate || "";
-    urgencyInput.value      = String(t.urgency || 3);
+  summaryInput.value     = t.summary || "";
+  descriptionInput.value = t.description || "";
+  locationInput.value    = t.location || "";
+  dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
+  urgencyInput.value     = t.urgency ?? 3;
 
-    formStatus.textContent  = "";
-    replyInput.value        = "";
-    loadComments(t.id);
+  formStatus.textContent = "";
+  replyInput.value = "";
+
+  loadComments(t.id);
+}
+
+/* ============================
+   SAVE TICKET
+============================ */
+async function saveTicket(){
+  if(!selectedTicketId){
+    formStatus.textContent = "Select a ticket first.";
+    return;
   }
 
-  async function saveTicket(){
-    if(!selectedTicketId){
-      formStatus.textContent = "Select a ticket first.";
+  formStatus.textContent = "Saving…";
+
+  const payload = {
+    group: groupInput.value,
+    priority: priorityInput.value,
+    status: VALID_STATUSES.includes(statusInput.value)
+      ? statusInput.value
+      : "open",
+    urgency: Number(urgencyInput.value || 3),
+    updatedAt: serverTimestamp()
+  };
+
+  const a = assigneeInput.value.trim();
+  if(a && a.toLowerCase() !== "unassigned"){
+    payload.assigneeName = a;
+    if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
+      payload.assigneeUid   = currentUser.uid;
+      payload.assigneeEmail = currentUser.email;
+    }
+  }else{
+    payload.assigneeName = "";
+    payload.assigneeUid = "";
+    payload.assigneeEmail = "";
+  }
+
+  try{
+    await updateDoc(doc(db,"tickets",selectedTicketId), payload);
+    formStatus.textContent = "Saved.";
+    await loadTickets();
+    const t = allTickets.find(x=>x.id === selectedTicketId);
+    if(t) selectTicket(t);
+  }catch(err){
+    console.error(err);
+    formStatus.textContent = err.message;
+  }
+}
+
+/* ============================
+   COMMENTS
+============================ */
+async function loadComments(ticketId){
+  commentsList.innerHTML = "<div class='comment-muted'>Loading…</div>";
+
+  try{
+    const q = query(
+      collection(db,"tickets",ticketId,"comments"),
+      orderBy("createdAt","asc"),
+      limit(200)
+    );
+    const snap = await getDocs(q);
+    const arr = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
+
+    if(!arr.length){
+      commentsList.innerHTML = `<div class="comment-muted">No replies yet.</div>`;
       return;
     }
 
-    formStatus.textContent = "Saving ticket…";
+    commentsList.innerHTML = arr.map(c => `
+      <div class="comment">
+        <div class="comment-meta">
+          ${escapeHtml(c.authorName || c.authorEmail || "Unknown")} • ${formatDate(c.createdAt)}
+        </div>
+        <div>${escapeHtml(c.message)}</div>
+      </div>
+    `).join("");
 
-    const statusVal = statusInput.value;
-    const normalizedStatus = VALID_STATUSES.includes(statusVal)
-      ? statusVal
-      : "open";
-
-    const data = {
-      group:   groupInput.value,
-      status:  normalizedStatus,
-      priority: priorityInput.value,
-      urgency: Number(urgencyInput.value || 3),
-      updatedAt: serverTimestamp()
-    };
-
-    const assigneeVal = assigneeInput.value.trim();
-    if(assigneeVal && assigneeVal.toLowerCase() !== "unassigned"){
-      data.assigneeName = assigneeVal;
-      if(currentUser?.uid &&
-         assigneeVal === (currentUser.displayName || currentUser.email)){
-        data.assigneeUid   = currentUser.uid;
-        data.assigneeEmail = currentUser.email || "";
-      }
-    }else{
-      data.assigneeName  = "";
-      data.assigneeUid   = "";
-      data.assigneeEmail = "";
-    }
-
-    try{
-      await updateDoc(doc(db,"tickets",selectedTicketId), data);
-      formStatus.textContent = "Ticket updated.";
-      await loadTickets();
-      const t = allTickets.find(t=>t.id === selectedTicketId);
-      if(t) selectTicket(t);
-    }catch(err){
-      console.error(err);
-      formStatus.textContent = "Error saving ticket: " + err.message;
-    }
+  }catch(err){
+    commentsList.innerHTML = `<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
   }
+}
 
-  async function loadComments(ticketId){
-    commentsList.innerHTML = "Loading conversation…";
-    try{
-      const q = query(
-        collection(db,"tickets",ticketId,"comments"),
-        orderBy("createdAt","asc"),
-        limit(200)
-      );
-      const snap = await getDocs(q);
-      const comments = [];
-      snap.forEach(ds => comments.push({ id: ds.id, ...ds.data() }));
-
-      if(!comments.length){
-        commentsList.innerHTML =
-          `<div class="comment-muted">No replies yet.</div>`;
-        return;
-      }
-
-      commentsList.innerHTML = comments.map(c=>{
-        const when = formatDate(c.createdAt);
-        const who  = c.authorName || c.authorEmail || "Unknown";
-        const text = escapeHtml(c.message || "");
-        return `
-          <div class="comment">
-            <div class="comment-meta">${escapeHtml(who)} • ${escapeHtml(when)}</div>
-            <div>${text}</div>
-          </div>`;
-      }).join("");
-    }catch(err){
-      console.error(err);
-      commentsList.innerHTML =
-        "Failed to load conversation: " + escapeHtml(err.message);
-    }
+async function addReply(){
+  if(!selectedTicketId){
+    alert("Select a ticket first.");
+    return;
   }
+  const msg = replyInput.value.trim();
+  if(!msg) return;
 
-  async function addReply(){
-    if(!selectedTicketId){
-      alert("Select a ticket before adding a reply.");
-      return;
-    }
-    const msg = replyInput.value.trim();
-    if(!msg) return;
-
-    addReplyBtn.disabled = true;
-    try{
-      await addDoc(
-        collection(db,"tickets",selectedTicketId,"comments"),
-        {
-          message: msg,
-          authorEmail: currentUser?.email || "",
-          authorName:  currentUser?.displayName || "",
-          createdAt:   serverTimestamp()
-        }
-      );
-      await updateDoc(doc(db,"tickets",selectedTicketId),{
-        updatedAt: serverTimestamp()
-      });
-      replyInput.value = "";
-      await loadComments(selectedTicketId);
-    }catch(err){
-      console.error(err);
-      alert("Failed to add reply: " + err.message);
-    }finally{
-      addReplyBtn.disabled = false;
-    }
-  }
-
-  /* ---------- GROUP MEMBERS CONFIG ---------- */
-
-  const GROUP_DEFS = [
-    { id:"IT",            label:"IT" },
-    { id:"Maintenance",   label:"Maintenance" },
-    { id:"Front Office",  label:"Front Office" },
-    { id:"Nurse",         label:"Nurse" }
-  ];
-
-  async function loadGroupMembers(){
-    groupsContainer.innerHTML = "";
-    GROUP_DEFS.forEach(g=>{
-      const wrapper = document.createElement("div");
-      wrapper.className = "group-card";
-      wrapper.dataset.groupId = g.id;
-      wrapper.innerHTML = `
-        <h3>${g.label}</h3>
-        <p class="muted" style="margin:0 0 4px;">
-          Comma-separated emails. Example: it1@ocsi.org, it2@ocsi.org
-        </p>
-        <textarea></textarea>
-        <button class="btn btn-ghost" type="button" style="margin-top:6px;">Save</button>
-      `;
-      groupsContainer.appendChild(wrapper);
+  addReplyBtn.disabled = true;
+  try{
+    await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
+      message: msg,
+      authorEmail: currentUser.email,
+      authorName: currentUser.displayName,
+      createdAt: serverTimestamp()
     });
 
+    await updateDoc(doc(db,"tickets",selectedTicketId),{
+      updatedAt: serverTimestamp()
+    });
+
+    replyInput.value = "";
+    await loadComments(selectedTicketId);
+
+  }catch(err){
+    alert(err.message);
+  }finally{
+    addReplyBtn.disabled = false;
+  }
+}
+
+/* ============================
+   SINGLE GROUP CARD + DROPDOWN
+============================ */
+async function loadGroupMembers(){
+  groupsContainer.innerHTML = `
+    <div class="group-card">
+      <h3>Group Notification List</h3>
+
+      <label>Select Group:</label>
+      <select id="groupSelect" class="field-select">
+        <option value="IT">IT</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Front Office">Front Office</option>
+        <option value="Nurse">Nurse</option>
+      </select>
+
+      <p class="muted">Comma-separated emails.</p>
+
+      <textarea id="groupEmails"></textarea>
+
+      <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:6px;">Save</button>
+    </div>
+  `;
+
+  const ddl = document.getElementById("groupSelect");
+  const textarea = document.getElementById("groupEmails");
+  const btn = document.getElementById("saveGroupBtn");
+
+  async function loadOne(id){
+    textarea.value = "";
     try{
       const snap = await getDocs(collection(db,"ticket_groups"));
       const map = {};
-      snap.forEach(ds=>{
-        map[ds.id] = ds.data();
-      });
-
-      [...groupsContainer.children].forEach(card=>{
-        const id = card.dataset.groupId;
-        const info = map[id];
-        if(info && Array.isArray(info.emails)){
-          card.querySelector("textarea").value = info.emails.join(", ");
-        }
-        const btn = card.querySelector("button");
-        btn.addEventListener("click", ()=>saveGroupCard(card));
-      });
-
+      snap.forEach(ds => { map[ds.id] = ds.data(); });
+      if(map[id] && Array.isArray(map[id].emails)){
+        textarea.value = map[id].emails.join(", ");
+      }
     }catch(err){
       console.error(err);
-      groupStatus.textContent = "Error loading group members: " + err.message;
     }
   }
 
-  async function saveGroupCard(card){
-    const id  = card.dataset.groupId;
-    const txt = card.querySelector("textarea").value.trim();
-    const emails = txt
-      ? txt.split(",").map(e=>e.trim()).filter(e=>e)
-      : [];
+  ddl.addEventListener("change", () => loadOne(ddl.value));
+  btn.addEventListener("click", () => saveOne(ddl.value, textarea.value));
 
-    try{
-      await setDoc(doc(db,"ticket_groups",id),{
-        emails,
-        updatedAt: serverTimestamp()
-      });
-      groupStatus.textContent = `Saved members for ${id}.`;
-    }catch(err){
-      console.error(err);
-      groupStatus.textContent = "Error saving group members: " + err.message;
-    }
+  await loadOne("IT");
+}
+
+async function saveOne(id,text){
+  const emails = text
+    .split(",")
+    .map(e=>e.trim())
+    .filter(e=>e);
+
+  try{
+    await setDoc(doc(db,"ticket_groups",id),{
+      emails,
+      updatedAt: serverTimestamp()
+    });
+    groupStatus.textContent = `Saved members for ${id}.`;
+  }catch(err){
+    groupStatus.textContent = err.message;
   }
+}
 
-  /* ---------- helpers ---------- */
+/* ============================
+   HELPERS
+============================ */
+function statusPill(s){
+  const st = (s || "open").toLowerCase();
+  if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
+  if(st === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
+  return `<span class="pill pill-open">Open</span>`;
+}
 
-  function statusPill(status){
-    const s = (status || "open").toLowerCase();
-    let cls = "pill-open";
-    let label = "Open";
+function formatDate(v){
+  if(!v) return "";
+  let d = v.toDate?.() ?? v;
+  return d.toLocaleString();
+}
 
-    if(s === "closed"){
-      cls = "pill-closed";
-      label = "Closed";
-    }else if(s === "in-progress"){
-      cls = "pill-progress";
-      label = "In progress";
-    }
-    return `<span class="pill ${cls}">${label}</span>`;
-  }
+function capitalize(s){
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+}
 
-  function formatDate(val){
-    if(!val) return "";
-    try{
-      let d = val;
-      if(val.toDate) d = val.toDate();
-      return d.toLocaleString();
-    }catch{
-      return "";
-    }
-  }
+function escapeHtml(s){
+  return String(s || "").replace(/[&<>"']/g,c => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    "\"":"&quot;",
+    "'":"&#39;"
+  }[c]));
+}
 
-  function capitalize(s){
-    if(!s) return "";
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  function escapeHtml(s){
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    ));
-  }
 </script>
+
 
 </body>
 </html>
