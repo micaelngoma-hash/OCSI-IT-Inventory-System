@@ -4,14 +4,17 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCSI Service Request – Admin Tickets</title>
+
   <style>
     :root{
       --red1:#c53030;
       --red2:#f56565;
       --brand:#1a73e8;
       --border:#e5e7eb;
+      --chip-bg:#edf2f7;
+      --chip-text:#2d3748;
     }
-    *{box-sizing:border-box;}
+    *{ box-sizing:border-box; }
     body{
       margin:0;
       font-family:system-ui,-apple-system,Segoe UI,sans-serif;
@@ -19,7 +22,7 @@
       color:#1a202c;
     }
 
-    /* HERO HEADER (same style as other two pages) */
+    /* HERO HEADER */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -70,7 +73,7 @@
       cursor:pointer;
     }
 
-    /* MAIN LAYOUT */
+    /* MAIN */
     .wrap{
       display:flex;
       justify-content:center;
@@ -86,10 +89,7 @@
       box-shadow:0 10px 30px rgba(15,23,42,.06);
     }
 
-    h1{
-      margin:0 0 4px;
-      font-size:1.3rem;
-    }
+    h1{ margin:0 0 4px; font-size:1.3rem; }
     .subtitle{
       margin:0 0 14px;
       font-size:.9rem;
@@ -129,6 +129,7 @@
       flex-wrap:wrap;
       align-items:center;
     }
+
     select{
       padding:6px 8px;
       border-radius:999px;
@@ -165,6 +166,7 @@
       margin:4px 0 10px;
     }
 
+    /* PANELS */
     .panel{
       border-radius:10px;
       border:1px solid var(--border);
@@ -207,7 +209,7 @@
       color:#4b5563;
       font-weight:600;
     }
-    tr:hover td{background:#f9fafb;}
+    tr:hover td{ background:#f9fafb; }
 
     .pill{
       display:inline-flex;
@@ -216,12 +218,12 @@
       border-radius:999px;
       font-size:.75rem;
     }
-    .pill-open{background:#ebf8ff;color:#2b6cb0;}
-    .pill-closed{background:#e6fffa;color:#2c7a7b;}
-    .pill-progress{background:#fff3cd;color:#b7791f;}
+    .pill-open       { background:#ebf8ff; color:#2b6cb0; }
+    .pill-closed     { background:#e6fffa; color:#2c7a7b; }
+    .pill-progress   { background:#fff3cd; color:#b7791f; }
 
-    /* TICKET EDIT BLOCK */
-    .hidden{display:none;}
+    /* FORM FIELDS */
+    .hidden{ display:none; }
 
     .ticket-edit{
       border-radius:8px;
@@ -270,6 +272,7 @@
       color:#718096;
     }
 
+    /* COMMENTS */
     .comment-list{
       max-height:220px;
       overflow:auto;
@@ -300,41 +303,31 @@
       color:#94a3b8;
     }
 
-    /* GROUP NOTIFICATION MEMBERS (ORIGINAL LAYOUT) */
-    .group-grid{
-      display:grid;
-      grid-template-columns:repeat(2,minmax(0,1fr));
-      gap:12px;
+    /* NEW GROUP EMAIL CHIP SYSTEM */
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      background:var(--chip-bg);
+      color:var(--chip-text);
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:.82rem;
+      margin:4px;
     }
-    @media(max-width:800px){
-      .group-grid{
-        grid-template-columns:1fr;
-      }
+    .chip button{
+      margin-left:6px;
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      font-size:.85rem;
+      color:#c53030;
     }
-    .group-card{
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      padding:10px 10px 8px;
-      background:#f9fafb;
-    }
-    .group-card h3{
-      margin:0 0 4px;
-      font-size:.95rem;
-    }
-    .group-card textarea{
-      width:100%;
-      min-height:70px;
-      border-radius:8px;
-      border:1px solid #cbd5e1;
-      font-size:.86rem;
-      padding:6px 8px;
-      resize:vertical;
-      font-family:inherit;
-    }
+
   </style>
 </head>
 
 <body>
+
   <!-- HERO -->
   <header class="hero">
     <div class="hero-left">
@@ -353,6 +346,7 @@
 
   <main class="wrap">
     <section class="card-shell">
+
       <h1>Tickets (Admin view)</h1>
       <p class="subtitle">
         View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
@@ -373,12 +367,14 @@
             <option value="Front Office">Front Office</option>
             <option value="Nurse">Nurse</option>
           </select>
+
           <select id="statusFilter">
             <option value="">All statuses</option>
             <option value="open">Open</option>
             <option value="in-progress">In progress</option>
             <option value="closed">Closed</option>
           </select>
+
           <button id="newTicketBtn" class="btn btn-primary" type="button">
             ➕ New ticket
           </button>
@@ -386,7 +382,6 @@
       </div>
 
       <p id="listStatus" class="small-text">Loading tickets…</p>
-
       <!-- TICKET LIST -->
       <section class="panel">
         <h2>Ticket list</h2>
@@ -418,6 +413,7 @@
       <!-- DETAILS & REPLIES -->
       <section class="panel">
         <h2>Ticket details &amp; replies</h2>
+
         <p class="muted" id="detailsHint">
           No ticket selected yet.
         </p>
@@ -426,8 +422,11 @@
           Select a ticket above to view its details.
         </div>
 
+        <!-- TICKET EDIT BLOCK (Hidden until ticket clicked) -->
         <div id="ticketEditBlock" class="ticket-edit hidden">
+
           <div class="ticket-top-grid">
+
             <div>
               <div class="field-label">Group</div>
               <select id="groupInput" class="field-select">
@@ -440,7 +439,7 @@
 
             <div>
               <div class="field-label">Status</div>
-              <!-- UPDATED DROPDOWN -->
+              <!-- UPDATED (Includes: In progress) -->
               <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
                 <option value="in-progress">In progress</option>
@@ -461,18 +460,22 @@
               <div class="field-label">Assignee</div>
               <div style="display:flex;gap:6px;align-items:center;">
                 <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-                <button id="assignMeBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+
+                <!-- Assign to Me -->
+                <button id="assignMeBtn" class="btn btn-ghost" type="button">
                   ✅ Me
                 </button>
 
-                <!-- NEW UNASSIGN BUTTON -->
-                <button id="unassignBtn" class="btn btn-ghost" type="button" style="white-space:nowrap;">
+                <!-- NEW Unassign button -->
+                <button id="unassignBtn" class="btn btn-ghost" type="button">
                   ❌ Unassign
                 </button>
               </div>
             </div>
+
           </div>
 
+          <!-- READ ONLY FIELDS -->
           <div class="field-label">Summary</div>
           <input id="summaryInput" class="field-input" readonly/>
 
@@ -499,10 +502,12 @@
               💾 Save ticket
             </button>
           </div>
-          <div id="formStatus" class="status-bar"></div>
-        </div>
 
-        <!-- CONVERSATION -->
+          <div id="formStatus" class="status-bar"></div>
+
+        </div> <!-- end ticketEditBlock -->
+
+        <!-- CONVERSATION PANEL -->
         <div>
           <div class="field-label">Conversation</div>
           <div id="commentsList" class="comment-list">
@@ -512,30 +517,51 @@
           <div class="field-label" style="margin-top:8px;">Add reply</div>
           <textarea id="replyInput" class="field-textarea"
             placeholder="Reply to the requester or add an internal note."></textarea>
+
           <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
             💬 Add reply
           </button>
         </div>
-      </section>
 
-      <!-- GROUP NOTIFICATION MEMBERS (RESTORED ORIGINAL LAYOUT) -->
+      </section> <!-- END details + replies -->
+      <!-- GROUP NOTIFICATION MEMBERS (NEW DROPDOWN + CHIPS) -->
       <section class="panel">
         <h2>Group notification members</h2>
         <p class="muted">
-          Add staff email addresses for each group. When a ticket is created for a group,
-          a notification service (Cloud Function) can use this list to email all members.
+          Select a group, add/remove email addresses, and save the distribution list.
         </p>
 
-        <div id="groupsContainer" class="group-grid">
-          <!-- JS will insert the 4 original cards -->
+        <div style="margin-bottom:10px;">
+          <label class="field-label">Select group</label>
+          <select id="groupSelect" class="field-select" style="max-width:250px;">
+            <option value="IT">IT</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Front Office">Front Office</option>
+            <option value="Nurse">Nurse</option>
+          </select>
         </div>
+
+        <div>
+          <div class="field-label">Group members</div>
+          <div id="emailChipContainer" style="min-height:40px;"></div>
+        </div>
+
+        <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
+          <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
+          <button id="addEmailBtn" class="btn btn-primary" type="button">➕ Add</button>
+        </div>
+
+        <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">
+          💾 Save group list
+        </button>
 
         <div id="groupStatus" class="status-bar"></div>
       </section>
 
-    </section>
+    </section> <!-- END card-shell -->
   </main>
 
+<!-- FULL JAVASCRIPT -->
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import {
@@ -543,13 +569,13 @@ import {
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* ============================
-   DOM ELEMENTS
-============================ */
+/* DOM ELEMENTS */
 const whoEl              = document.getElementById("who");
 const logoutBtn          = document.getElementById("logoutBtn");
+
 const ticketsBody        = document.getElementById("ticketsBody");
 const listStatus         = document.getElementById("listStatus");
+
 const detailsHint        = document.getElementById("detailsHint");
 const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
@@ -558,14 +584,14 @@ const groupFilterEl   = document.getElementById("groupFilter");
 const statusFilterEl  = document.getElementById("statusFilter");
 const newTicketBtn    = document.getElementById("newTicketBtn");
 
-// ticket edit
 const ticketEditBlock   = document.getElementById("ticketEditBlock");
 const groupInput        = document.getElementById("groupInput");
 const statusInput       = document.getElementById("statusInput");
 const priorityInput     = document.getElementById("priorityInput");
 const assigneeInput     = document.getElementById("assigneeInput");
 const assignMeBtn       = document.getElementById("assignMeBtn");
-const unassignBtn       = document.getElementById("unassignBtn"); // NEW
+const unassignBtn       = document.getElementById("unassignBtn");
+
 const summaryInput      = document.getElementById("summaryInput");
 const descriptionInput  = document.getElementById("descriptionInput");
 const locationInput     = document.getElementById("locationInput");
@@ -574,95 +600,92 @@ const urgencyInput      = document.getElementById("urgencyInput");
 const saveTicketBtn     = document.getElementById("saveTicketBtn");
 const formStatus        = document.getElementById("formStatus");
 
-// conversation
 const commentsList      = document.getElementById("commentsList");
 const replyInput        = document.getElementById("replyInput");
 const addReplyBtn       = document.getElementById("addReplyBtn");
 
-// groups
-const groupsContainer   = document.getElementById("groupsContainer");
+/* GROUP SYSTEM */
+const groupSelect       = document.getElementById("groupSelect");
+const emailChipContainer= document.getElementById("emailChipContainer");
+const newEmailInput     = document.getElementById("newEmailInput");
+const addEmailBtn       = document.getElementById("addEmailBtn");
+const saveGroupBtn      = document.getElementById("saveGroupBtn");
 const groupStatus       = document.getElementById("groupStatus");
 
+
+/* STATE */
 let currentUser = null;
 let currentRole = "viewer";
-let allTickets  = [];
+let allTickets = [];
 let selectedTicketId = null;
 
 const AGENT_ROLES = ["admin","it"];
-const VALID_STATUSES = ["open","in-progress","closed"];  // UPDATED
+const VALID_STATUSES = ["open","in-progress","closed"];
 
-/* ============================
-   LOGOUT BUTTON
-============================ */
+let groupEmailList = []; // holds emails for selected group
+
+
+/* LOGOUT */
 logoutBtn.addEventListener("click", () => {
   window.location.href = "login.html";
 });
 
-/* ============================
-   AUTH + INITIAL LOAD
-============================ */
+
+/* AUTH */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl,
-  onReady: async (user,role)=>{
+  onReady: async (user, role)=>{
     currentUser = user;
     currentRole = role;
 
-    if(!user || !AGENT_ROLES.includes(role)){
+    if (!user || !AGENT_ROLES.includes(role)) {
       alert("This page is for IT/Admin only.");
       window.location.href = "tickets.html";
       return;
     }
 
-    newTicketBtn.addEventListener("click", ()=>{
+    newTicketBtn.addEventListener("click", ()=> {
       window.location.href = "submit-request.html";
     });
 
     searchEl.addEventListener("input", renderTickets);
     groupFilterEl.addEventListener("change", renderTickets);
     statusFilterEl.addEventListener("change", renderTickets);
+
     ticketsBody.addEventListener("click", onRowClick);
     saveTicketBtn.addEventListener("click", saveTicket);
+
     addReplyBtn.addEventListener("click", addReply);
 
-    assignMeBtn.addEventListener("click", () => {
-      if(currentUser?.displayName){
-        assigneeInput.value = currentUser.displayName;
-      }else if(currentUser?.email){
-        assigneeInput.value = currentUser.email;
-      }
+    assignMeBtn.addEventListener("click", ()=>{
+      assigneeInput.value = currentUser.displayName || currentUser.email;
     });
 
-    // NEW: UNASSIGN BUTTON
-    unassignBtn.addEventListener("click", () => {
+    unassignBtn.addEventListener("click", ()=>{
       assigneeInput.value = "Unassigned";
     });
 
-    // hide details by default
+    /* GROUP EVENTS */
+    groupSelect.addEventListener("change", loadSelectedGroup);
+    addEmailBtn.addEventListener("click", addEmailToList);
+    saveGroupBtn.addEventListener("click", saveGroupEmails);
+
     ticketEditBlock.classList.add("hidden");
 
-    await Promise.all([
-      loadTickets(),
-      loadGroupMembers() // ORIGINAL LAYOUT RESTORED
-    ]);
+    await loadTickets();
+    await loadSelectedGroup(); // load IT by default
   }
 });
 
-/* ============================
-   LOAD TICKETS
-============================ */
+
+/* LOAD TICKETS */
 async function loadTickets(){
-  try{
-    listStatus.textContent = "Loading tickets…";
+  listStatus.textContent = "Loading tickets…";
 
+  try {
     const snap = await getDocs(collection(db,"tickets"));
-    allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
-
-    if(!allTickets.length){
-      ticketsBody.innerHTML = `<tr><td colspan="8">No tickets yet.</td></tr>`;
-      listStatus.textContent = "No tickets.";
-      return;
-    }
+    allTickets = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
 
     allTickets.sort((a,b)=>{
       const ta = a.createdAt?.toMillis?.() ?? 0;
@@ -670,82 +693,75 @@ async function loadTickets(){
       return tb - ta;
     });
 
-    listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
     renderTickets();
-
-  }catch(err){
-    console.error(err);
-    ticketsBody.innerHTML = `<tr><td colspan="8">Failed to load.</td></tr>`;
+    listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
+  }
+  catch(err){
     listStatus.textContent = err.message;
   }
 }
 
-/* ============================
-   RENDER TICKETS
-============================ */
+
+/* RENDER TICKET LIST */
 function renderTickets(){
   const term  = searchEl.value.toLowerCase();
   const gfilt = groupFilterEl.value;
   const sfilt = statusFilterEl.value;
 
   const rows = allTickets.filter(t=>{
-    const group  = t.group || "";
+    const group = t.group || "";
     const status = (t.status || "open").toLowerCase();
 
-    if(gfilt && group !== gfilt) return false;
-    if(sfilt && status !== sfilt) return false;
+    if (gfilt && group !== gfilt) return false;
+    if (sfilt && status !== sfilt) return false;
 
-    if(term){
+    if (term) {
       const hay = [
         t.summary, t.description,
         t.requesterName, t.requesterEmail, t.location
       ].join(" ").toLowerCase();
-      if(!hay.includes(term)) return false;
+      if (!hay.includes(term)) return false;
     }
 
     return true;
   });
 
-  if(!rows.length){
+  if (!rows.length) {
     ticketsBody.innerHTML = `<tr><td colspan="8">No match.</td></tr>`;
     return;
   }
 
-  ticketsBody.innerHTML = rows.map((t,i)=>{
-    return `
-      <tr data-id="${t.id}">
-        <td>${i+1}</td>
-        <td>${escapeHtml(t.summary)}</td>
-        <td>${t.group || ""}</td>
-        <td>${capitalize(t.priority || "medium")}</td>
-        <td>${statusPill(t.status)}</td>
-        <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
-        <td>${t.requesterName || t.requesterEmail || ""}</td>
-        <td>${formatDate(t.createdAt)}</td>
-      </tr>`;
-  }).join("");
+  ticketsBody.innerHTML = rows.map((t, i)=>`
+    <tr data-id="${t.id}">
+      <td>${i+1}</td>
+      <td>${escapeHtml(t.summary)}</td>
+      <td>${t.group || ""}</td>
+      <td>${capitalize(t.priority || "medium")}</td>
+      <td>${statusPill(t.status)}</td>
+      <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
+      <td>${t.requesterName || t.requesterEmail || ""}</td>
+      <td>${formatDate(t.createdAt)}</td>
+    </tr>
+  `).join("");
 }
 
-/* ============================
-   CLICK ROW → SHOW/HIDE DETAILS
-============================ */
+
+/* TICKET CLICK */
 function onRowClick(e){
   const tr = e.target.closest("tr[data-id]");
-  if(!tr) return;
+  if (!tr) return;
 
   const id = tr.getAttribute("data-id");
 
-  // Toggle hide if clicking same row
-  if(id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
+  if (id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")) {
     hideDetails();
     return;
   }
 
   const ticket = allTickets.find(x => x.id === id);
-  if(ticket){
-    selectTicket(ticket);
-  }
+  if (ticket) selectTicket(ticket);
 }
+
 
 function hideDetails(){
   selectedTicketId = null;
@@ -755,14 +771,12 @@ function hideDetails(){
   detailsPlaceholder.textContent = "Select a ticket above to view details.";
 }
 
-/* ============================
-   LOAD DETAILS
-============================ */
+
+/* LOAD DETAILS IN FORM */
 function selectTicket(t){
   selectedTicketId = t.id;
 
   detailsHint.textContent = `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
-
   detailsPlaceholder.textContent = "";
   ticketEditBlock.classList.remove("hidden");
 
@@ -783,11 +797,10 @@ function selectTicket(t){
   loadComments(t.id);
 }
 
-/* ============================
-   SAVE TICKET
-============================ */
+
+/* SAVE TICKET */
 async function saveTicket(){
-  if(!selectedTicketId){
+  if (!selectedTicketId){
     formStatus.textContent = "Select a ticket first.";
     return;
   }
@@ -797,61 +810,54 @@ async function saveTicket(){
   const payload = {
     group: groupInput.value,
     priority: priorityInput.value,
-    status: VALID_STATUSES.includes(statusInput.value)
-      ? statusInput.value
-      : "open",
+    status: statusInput.value,
     urgency: Number(urgencyInput.value || 3),
     updatedAt: serverTimestamp()
   };
 
-  const a = assigneeInput.value.trim();
-  if(a && a.toLowerCase() !== "unassigned"){
-    payload.assigneeName = a;
-
-    if(currentUser && (a === currentUser.displayName || a === currentUser.email)){
-      payload.assigneeUid   = currentUser.uid;
-      payload.assigneeEmail = currentUser.email;
-    }
-
-  }else{
+  const raw = assigneeInput.value.trim();
+  if (raw && raw.toLowerCase() !== "unassigned"){
+    payload.assigneeName = raw;
+  } else {
     payload.assigneeName = "";
-    payload.assigneeUid = "";
     payload.assigneeEmail = "";
+    payload.assigneeUid = "";
   }
 
   try{
     await updateDoc(doc(db,"tickets",selectedTicketId), payload);
     formStatus.textContent = "Saved.";
+
     await loadTickets();
     const t = allTickets.find(x=>x.id === selectedTicketId);
-    if(t) selectTicket(t);
-  }catch(err){
-    console.error(err);
+    if (t) selectTicket(t);
+  }
+  catch(err){
     formStatus.textContent = err.message;
   }
 }
 
-/* ============================
-   COMMENTS
-============================ */
+
+/* COMMENTS */
 async function loadComments(ticketId){
   commentsList.innerHTML = "<div class='comment-muted'>Loading…</div>";
 
-  try{
+  try {
     const q = query(
       collection(db,"tickets",ticketId,"comments"),
       orderBy("createdAt","asc"),
       limit(200)
     );
     const snap = await getDocs(q);
+
     const arr = snap.docs.map(ds => ({ id:ds.id, ...ds.data() }));
 
-    if(!arr.length){
+    if (!arr.length){
       commentsList.innerHTML = `<div class="comment-muted">No replies yet.</div>`;
       return;
     }
 
-    commentsList.innerHTML = arr.map(c => `
+    commentsList.innerHTML = arr.map(c=>`
       <div class="comment">
         <div class="comment-meta">
           ${escapeHtml(c.authorName || c.authorEmail || "Unknown")} • ${formatDate(c.createdAt)}
@@ -859,21 +865,24 @@ async function loadComments(ticketId){
         <div>${escapeHtml(c.message)}</div>
       </div>
     `).join("");
-
-  }catch(err){
+  }
+  catch(err){
     commentsList.innerHTML = `<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
   }
 }
 
+
 async function addReply(){
-  if(!selectedTicketId){
+  if (!selectedTicketId){
     alert("Select a ticket first.");
     return;
   }
+
   const msg = replyInput.value.trim();
-  if(!msg) return;
+  if (!msg) return;
 
   addReplyBtn.disabled = true;
+
   try{
     await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
       message: msg,
@@ -888,85 +897,102 @@ async function addReply(){
 
     replyInput.value = "";
     await loadComments(selectedTicketId);
-
-  }catch(err){
-    alert(err.message);
-  }finally{
-    addReplyBtn.disabled = false;
   }
+  catch(err){ alert(err.message); }
+  finally { addReplyBtn.disabled = false; }
 }
 
-/* ============================
-   ORIGINAL 4-CARD GROUP MEMBERS LAYOUT (RESTORED)
-============================ */
-const GROUP_DEFS = [
-  { id:"IT",            label:"IT" },
-  { id:"Maintenance",   label:"Maintenance" },
-  { id:"Front Office",  label:"Front Office" },
-  { id:"Nurse",         label:"Nurse" }
-];
 
-async function loadGroupMembers(){
-  groupsContainer.innerHTML = "";
+/* ============================================================
+   GROUP NOTIFICATION — NEW SYSTEM (Dropdown + Chips)
+============================================================ */
 
-  GROUP_DEFS.forEach(g=>{
-    const wrapper = document.createElement("div");
-    wrapper.className = "group-card";
-    wrapper.dataset.groupId = g.id;
-    wrapper.innerHTML = `
-      <h3>${g.label}</h3>
-      <p class="muted" style="margin:0 0 4px;">
-        Comma-separated emails. Example: it1@ocsi.org, it2@ocsi.org
-      </p>
-      <textarea></textarea>
-      <button class="btn btn-ghost" type="button" style="margin-top:6px;">Save</button>
-    `;
-    groupsContainer.appendChild(wrapper);
-  });
+/* Load selected group data */
+async function loadSelectedGroup(){
+  const group = groupSelect.value;
+
+  groupEmailList = [];
+  emailChipContainer.innerHTML = "Loading…";
 
   try{
     const snap = await getDocs(collection(db,"ticket_groups"));
     const map = {};
-    snap.forEach(ds => { map[ds.id] = ds.data(); });
+    snap.forEach(ds => map[ds.id] = ds.data());
 
-    [...groupsContainer.children].forEach(card=>{
-      const id = card.dataset.groupId;
-      const info = map[id];
-      if(info && Array.isArray(info.emails)){
-        card.querySelector("textarea").value = info.emails.join(", ");
-      }
-      const btn = card.querySelector("button");
-      btn.addEventListener("click", ()=>saveGroupCard(card));
-    });
-
-  }catch(err){
-    console.error(err);
-    groupStatus.textContent = "Error loading group members: " + err.message;
+    if (map[group] && Array.isArray(map[group].emails)){
+      groupEmailList = [...map[group].emails];
+    }
   }
+  catch(err){
+    groupStatus.textContent = "Error loading: " + err.message;
+  }
+
+  renderEmailChips();
 }
 
-async function saveGroupCard(card){
-  const id  = card.dataset.groupId;
-  const txt = card.querySelector("textarea").value.trim();
-  const emails = txt
-    ? txt.split(",").map(e=>e.trim()).filter(e=>e)
-    : [];
 
-  try{
-    await setDoc(doc(db,"ticket_groups",id),{
-      emails,
+/* Render chips */
+function renderEmailChips(){
+  if (!groupEmailList.length){
+    emailChipContainer.innerHTML = `<div class="comment-muted">No emails added yet.</div>`;
+    return;
+  }
+
+  emailChipContainer.innerHTML = groupEmailList.map(email=>`
+    <span class="chip">
+      ${email}
+      <button onclick="removeEmail('${email}')">×</button>
+    </span>
+  `).join("");
+}
+
+
+/* Add email */
+function addEmailToList(){
+  const email = newEmailInput.value.trim();
+  if (!email) return;
+
+  if (!email.includes("@")){
+    alert("Invalid email format.");
+    return;
+  }
+
+  if (groupEmailList.includes(email)){
+    alert("Email already in list.");
+    return;
+  }
+
+  groupEmailList.push(email);
+  newEmailInput.value = "";
+  renderEmailChips();
+}
+
+
+/* Remove email */
+window.removeEmail = function(email){
+  groupEmailList = groupEmailList.filter(e=>e !== email);
+  renderEmailChips();
+};
+
+
+/* Save to Firestore */
+async function saveGroupEmails(){
+  const group = groupSelect.value;
+
+  try {
+    await setDoc(doc(db,"ticket_groups",group),{
+      emails: groupEmailList,
       updatedAt: serverTimestamp()
     });
-    groupStatus.textContent = `Saved members for ${id}.`;
-  }catch(err){
-    console.error(err);
-    groupStatus.textContent = "Error saving group members: " + err.message;
+    groupStatus.textContent = `Saved members for ${group}.`;
+  }
+  catch(err){
+    groupStatus.textContent = "Error saving: " + err.message;
   }
 }
 
-/* ============================
-   HELPERS
-============================ */
+
+/* HELPERS */
 function statusPill(s){
   const st = (s || "open").toLowerCase();
   if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
@@ -985,17 +1011,13 @@ function capitalize(s){
 }
 
 function escapeHtml(s){
-  return String(s || "").replace(/[&<>"']/g,c => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    "\"":"&quot;",
-    "'":"&#39;"
+  return String(s || "").replace(/[&<>"']/g, c=> ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    "\"":"&quot;", "'":"&#39;"
   }[c]));
 }
 
 </script>
+
 </body>
 </html>
-
-
