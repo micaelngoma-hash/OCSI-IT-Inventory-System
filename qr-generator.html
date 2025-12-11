@@ -1,152 +1,114 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8" />
-<title>OCSI IT Inventory – QR Code Generator</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- QR Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Generate QR Code – OCSI IT Inventory</title>
 
 <style>
-    body {
-        font-family: system-ui, sans-serif;
-        background: #f5f7fb;
-        margin: 0;
-        padding: 20px;
-    }
-    h1 {
-        margin-top: 0;
-        color: #0f172a;
-        font-size: 1.6rem;
-    }
-    .generator-box {
-        max-width: 600px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 14px;
-        border: 1px solid #d5d9e2;
-    }
-    label { font-size: .85rem; color: #475569; display: block; margin-top: 12px; }
-    input, textarea {
-        width: 100%;
-        padding: 9px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        font-size: .9rem;
-    }
-    .btn {
-        margin-top: 15px;
-        padding: 10px 16px;
-        border: none;
-        border-radius: 999px;
-        cursor: pointer;
-        font-size: .9rem;
-        font-weight: 500;
-    }
-    .btn-primary { background: #1a73e8; color: white; }
-    .qr-container {
-        margin-top: 20px;
-        padding: 12px;
-        display: inline-block;
-        background: white;
-        border: 1px solid #d5d9e2;
-        border-radius: 12px;
-    }
-    .download-btn {
-        margin-top: 12px;
-        padding: 8px 14px;
-        background: #0f172a;
-        color: white;
-        border-radius: 999px;
-        cursor: pointer;
-        font-size: .85rem;
-        border: none;
-    }
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f5f7fb;
+    padding: 30px;
+    text-align: center;
+  }
+  .card {
+    background: white;
+    padding: 20px;
+    max-width: 420px;
+    margin: 0 auto;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  }
+  #qrBox svg {
+    width: 100%;
+  }
+  button {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    font-size: .9rem;
+    margin: 10px;
+  }
+  .btn-primary {
+    background: #1a73e8;
+    color: white;
+  }
+  .btn-ghost {
+    background:white;
+    border:1px solid #cbd5e1;
+  }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script type="module">
+  import { db } from "./firebase.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const params = new URLSearchParams(location.search);
+  const itemId = params.get("id");
+
+  const nameEl = document.getElementById("deviceName");
+  const assetEl = document.getElementById("assetId");
+  const qrBox  = document.getElementById("qrBox");
+  const btnDL  = document.getElementById("btnDownload");
+
+  async function loadItem() {
+    if (!itemId) return;
+
+    const snap = await getDoc(doc(db, "items", itemId));
+    if (!snap.exists()) {
+      nameEl.textContent = "Item not found";
+      return;
+    }
+
+    const d = snap.data();
+    nameEl.textContent = d.deviceName || "Unnamed Device";
+    assetEl.textContent = d.assetId || "(no asset ID)";
+
+    generateQR();
+  }
+
+  async function generateQR() {
+    const url = `${location.origin}/item.html?id=${itemId}`;
+
+    const svgCode = await QRCode.toString(url, {
+      type: "svg",
+      margin: 2,
+      scale: 12,
+      errorCorrectionLevel: "H"
+    });
+
+    qrBox.innerHTML = svgCode;
+
+    btnDL.onclick = () => {
+      const blob = new Blob([svgCode], { type: "image/svg+xml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `OCSI-${itemId}.svg`;
+      a.click();
+    };
+  }
+
+  loadItem();
+</script>
 </head>
 
 <body>
+  <h1>QR Code for Device</h1>
 
-<div class="generator-box">
-    <h1>QR Code Generator</h1>
-    <p style="color:#64748b; font-size:.9rem;">
-        Enter the item details to generate a scannable QR code for OCSI Inventory.
-    </p>
+  <div class="card">
 
-    <label>Document ID (Firestore ID)</label>
-    <input id="docId" type="text" placeholder="e.g. aK39fdL92jf3" />
+    <h2 id="deviceName">Loading...</h2>
+    <p style="color:#555">Asset ID: <span id="assetId"></span></p>
 
-    <label>Asset ID</label>
-    <input id="assetId" type="text" placeholder="e.g. OCSI-LAP-024" />
+    <div id="qrBox" style="margin:20px 0;"></div>
 
-    <label>Device Name</label>
-    <input id="deviceName" type="text" placeholder="e.g. Teacher Laptop" />
-
-    <label>Manufacturer / Model</label>
-    <input id="model" type="text" placeholder="e.g. Apple MacBook Air M2" />
-
-    <button class="btn btn-primary" onclick="generate()">Generate QR Code</button>
-
-    <!-- QR Output -->
-    <div id="qrOutput"></div>
-</div>
-
-<script>
-let qrObject = null;
-
-function generate() {
-    const docId = document.getElementById("docId").value.trim();
-    const assetId = document.getElementById("assetId").value.trim();
-    const deviceName = document.getElementById("deviceName").value.trim();
-    const model = document.getElementById("model").value.trim();
-
-    if (!docId) {
-        alert("Document ID is required.");
-        return;
-    }
-
-    const qrData = {
-        id: docId,
-        assetId,
-        deviceName,
-        model
-    };
-
-    const container = document.getElementById("qrOutput");
-    container.innerHTML = ""; // reset
-
-    const qrBox = document.createElement("div");
-    qrBox.className = "qr-container";
-    qrBox.id = "qrBox";
-
-    container.appendChild(qrBox);
-
-    qrObject = new QRCode(qrBox, {
-        text: JSON.stringify(qrData),
-        width: 200,
-        height: 200
-    });
-
-    const downloadBtn = document.createElement("button");
-    downloadBtn.innerText = "⬇️ Download QR Code";
-    downloadBtn.className = "download-btn";
-    downloadBtn.onclick = downloadQR;
-
-    container.appendChild(downloadBtn);
-}
-
-function downloadQR() {
-    const img = document.querySelector("#qrBox img");
-    if (!img) return alert("QR not generated yet.");
-
-    const link = document.createElement("a");
-    link.href = img.src;
-    link.download = "OCSI-QR-Code.png";
-    link.click();
-}
-</script>
+    <button id="btnDownload" class="btn-primary">⬇️ Download QR (SVG)</button>
+    <button onclick="history.back()" class="btn-ghost">Back</button>
+  </div>
 
 </body>
 </html>
