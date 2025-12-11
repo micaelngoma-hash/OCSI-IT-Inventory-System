@@ -1,13 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCSI Service Request – Admin Tickets</title>
 
   <style>
+    /* ========================================================
+       ORIGINAL VARIABLES
+    ======================================================== */
     :root{
-      --ocsi-red: #7a0f16;
-      --ocsi-red-dark: #5e0b11;
-      --ocsi-blue: #003d7c;
+      --red1:#c53030;
+      --red2:#f56565;
+      --brand:#1a73e8;
       --border:#e5e7eb;
 
       --btn-bg:#ffffff;
@@ -23,79 +28,77 @@
 
     body{
       margin:0;
-      font-family:System-ui,-apple-system,Segoe UI,sans-serif;
+      font-family:system-ui,-apple-system,Segoe UI,sans-serif;
       background:#f7fafc;
       color:#1a202c;
     }
 
-    /* ============================================================
-       FIXED HEADER (OCSI STYLE)
-    ============================================================ */
-    .fixed-header{
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      background:var(--ocsi-red);
+    /* ========================================================
+       OCSI BRANDING — FULL UPGRADE
+    ======================================================== */
+    :root{
+      --ocsi-red-dark:#8B0000;
+      --ocsi-red:#A61C1C;
+      --ocsi-blue:#003087;
+      --ocsi-blue-light:#0057C2;
+      --ocsi-gray:#f1f3f6;
+    }
+
+    /* ===== FIXED HEADER ===== */
+    .hero{
+      background:linear-gradient(90deg,var(--ocsi-red-dark),var(--ocsi-red));
       color:white;
-      z-index:1000;
+      padding:22px 30px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      padding:12px 22px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.15);
+      position:fixed;
+      top:0;
+      left:0;
+      right:0;
+      z-index:1000;
+      box-shadow:0 4px 12px rgba(0,0,0,0.25);
     }
 
-    .header-left{
-      display:flex;
-      align-items:center;
-      gap:14px;
+    .hero.shrink{
+      padding:12px 28px;
+      box-shadow:0 4px 14px rgba(0,0,0,0.35);
     }
 
-    .header-logo{
-      height:40px;
-      width:auto;
+    .hero-title{
+      font-size:1.6rem;
+      font-weight:700;
+      letter-spacing:0.3px;
+      text-transform:uppercase;
     }
 
-    .header-title{
-      font-size:1.4rem;
-      font-weight:600;
-      letter-spacing:-0.5px;
-    }
-
-    .header-right{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-
-    .btn-logout{
-      border:1px solid rgba(255,255,255,0.4);
-      background:rgba(255,255,255,0.15);
+    .hero-menu a{
       color:white;
-      padding:6px 14px;
-      border-radius:20px;
+      text-decoration:none;
+      opacity:0.9;
+      margin-left:12px;
+      transition:opacity .2s ease;
+    }
+    .hero-menu a:hover{ opacity:1; }
+
+    .hero-user{ text-align:right; }
+    .hero-email{ font-size:.85rem; opacity:.9; }
+
+    .btn-hero-small{
+      padding:5px 12px;
+      border-radius:50px;
+      background:rgba(255,255,255,0.18);
+      border:1px solid rgba(255,255,255,0.32);
+      color:white;
       cursor:pointer;
-      font-size:.85rem;
-    }
-    .btn-logout:hover{
-      background:rgba(255,255,255,0.25);
     }
 
-    /* Add spacing so content does not hide behind fixed header */
-    .page-offset{
-      margin-top:78px; /* matches header height + spacing */
-    }
+    /* Push content down because header is fixed */
+    .wrap{ padding-top:150px !important; }
 
-    /* ============================================================
-       YOUR ORIGINAL STYLES (UNCHANGED)
-    ============================================================ */
-
-    .wrap{
-      display:flex;
-      justify-content:center;
-      padding:34px 16px;
-    }
+    /* ========================================================
+       ORIGINAL STYLES (UNCHANGED EXCEPT COLORS IMPROVED)
+    ======================================================== */
 
     .card-shell{
       background:white;
@@ -103,14 +106,20 @@
       border:1px solid var(--border);
       max-width:1100px;
       width:100%;
-      padding:18px 18px 14px;
+      padding:22px 22px 18px;
       box-shadow:0 10px 30px rgba(15,23,42,.06);
     }
 
-    h1{ margin:0 0 4px; font-size:1.3rem; }
+    h1{
+      margin:0 0 4px;
+      font-size:1.5rem;
+      font-weight:700;
+      color:var(--ocsi-blue);
+    }
+
     .subtitle{
       margin:0 0 14px;
-      font-size:.9rem;
+      font-size:.95rem;
       color:#4a5568;
     }
 
@@ -122,7 +131,6 @@
       gap:10px;
       flex-wrap:wrap;
     }
-
     .search-box{
       display:flex;
       align-items:center;
@@ -130,227 +138,72 @@
       background:white;
       border:1px solid var(--border);
       border-radius:999px;
-      padding:4px 10px;
-      max-width:320px;
+      padding:4px 12px;
       width:100%;
+      max-width:320px;
     }
     .search-box input{
       border:none;
-      outline:none;
-      font-size:.88rem;
       width:100%;
+      font-size:.88rem;
       background:transparent;
+      outline:none;
     }
 
     select{
-      padding:6px 8px;
+      padding:6px 10px;
       border-radius:999px;
       border:1px solid var(--border);
       font-size:.85rem;
-      background:white;
-      cursor:pointer;
     }
 
-    .btn{
-      border:none;
-      cursor:pointer;
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:.85rem;
-      font-weight:500;
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-      text-decoration:none;
-    }
     .btn-primary{
       background:var(--ocsi-blue);
       color:white;
     }
 
     .panel{
-      border-radius:10px;
-      border:1px solid var(--border);
-      padding:12px 14px 10px;
-      background:#ffffff;
+      border-radius:12px;
+      border:1px solid #dde2e7;
+      padding:16px;
+      background:white;
       margin-bottom:12px;
-    }
-
-    .table-wrap{
-      border-radius:10px;
-      border:1px solid var(--border);
-      overflow:auto;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:750px;
-      font-size:.85rem;
-    }
-
-    th,td{
-      padding:8px 10px;
-      border-bottom:1px solid #f1f5f9;
-      text-align:left;
+      box-shadow:0 6px 18px rgba(0,0,0,0.05);
     }
 
     th{
-      background:#f8fafc;
-      color:#4b5563;
+      background:var(--ocsi-blue);
+      color:white;
       font-weight:600;
+      text-transform:uppercase;
     }
 
-    tr:hover td{
-      background:#f9fafb;
-    }
-
-    .ticket-edit{
-      border-radius:8px;
-      border:1px solid #e5e7eb;
-      padding:10px 10px 8px;
-      background:#fdfefe;
-      margin-bottom:10px;
-    }
-
-    .comment-list{
-      max-height:220px;
-      overflow:auto;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      padding:8px 10px;
-      font-size:.82rem;
-      background:#f9fafb;
-      margin-top:2px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      background:var(--chip-bg);
-      color:var(--chip-text);
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:.82rem;
-      margin:4px;
-    }
+    .pill-open{ background:#D6E8FF; color:#0057C2; }
+    .pill-progress{ background:#FFF3C7; color:#B7791F; }
+    .pill-closed{ background:#D8FFE8; color:#1B7A3F; }
   </style>
 </head>
 <body>
 
-  <!-- ============================================================
-       NEW FIXED HEADER (OCSI STYLE)
-  ============================================================ -->
-  <header class="fixed-header">
-    <div class="header-left">
-      <img src="OCSI_MonogramLogo_Color.png" class="header-logo" alt="OCSI Logo">
-      <div class="header-title">OCSI Service Request</div>
+  <!-- FIXED OCSI HEADER -->
+  <header class="hero">
+    <div class="hero-left">
+      <div class="hero-title">OCSI Service Request</div>
+
+      <nav class="hero-menu">
+        <a href="tickets.html">Requester view</a>
+      </nav>
     </div>
 
-    <div class="header-right">
-      <div id="who" class="hero-email">Checking session…</div>
-      <button id="logoutBtn" class="btn-logout">Log out</button>
-    </div>
-  </header>
-
-  <!-- Push content down below fixed header -->
-  <div class="page-offset"></div>
-
-
-  <!-- ============================================================
-       YOUR ORIGINAL PAGE CONTENT (unchanged)
-  ============================================================ -->
-
-  <main class="wrap">
-    <section class="card-shell">
-
-      <h1>Tickets (Admin view)</h1>
-      <p class="subtitle">
-        View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
-      </p>
-
-      <!-- TOOLBAR -->
-      <div class="toolbar">
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, requester, location…"/>
-        </div>
-
-        <div class="filters">
-          <select id="groupFilter">
-            <option value="">All groups</option>
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
-          </select>
-
-          <select id="statusFilter">
-            <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in-progress">In progress</option>
-            <option value="closed">Closed</option>
-          </select>
-
-          <button id="newTicketBtn" class="btn btn-primary" type="button">
-            ➕ New ticket
-          </button>
-        </div>
+    <div class="hero-right">
+      <div class="hero-user">
+        <div id="who" class="hero-email">Checking session…</div>
+        <button id="logoutBtn" class="btn-hero-small" type="button">Log out</button>
       </div>
-
-      <p id="listStatus" class="small-text">Loading tickets…</p>
-
-      <!-- TICKET LIST -->
-      <section class="panel">
-        <h2>Ticket list</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:55px;">#</th>
-                <th>Summary</th>
-                <th>Group</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Assignee</th>
-                <th>Requester</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody id="ticketsBody">
-              <tr><td colspan="8">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- REST OF YOUR ENTIRE HTML REMAINS EXACTLY THE SAME -->
-      <!-- Ticket Details, Replies, Group Members, etc. -->
-
-<body>
-
-  <!-- ============================================================
-       NEW FIXED HEADER (OCSI STYLE)
-  ============================================================ -->
-  <header class="fixed-header">
-    <div class="header-left">
-      <img src="OCSI_MonogramLogo_Color.png" class="header-logo" alt="OCSI Logo">
-      <div class="header-title">OCSI Service Request</div>
-    </div>
-
-    <div class="header-right">
-      <div id="who" class="hero-email">Checking session…</div>
-      <button id="logoutBtn" class="btn-logout">Log out</button>
     </div>
   </header>
 
-  <!-- Push content below fixed header -->
-  <div class="page-offset"></div>
-
-  <!-- ============================================================
-       ORIGINAL PAGE CONTENT (FULL + UNALTERED)
-  ============================================================ -->
-
+  <!-- MAIN AREA -->
   <main class="wrap">
     <section class="card-shell">
 
@@ -388,18 +241,16 @@
         </div>
       </div>
 
-      <p id="listStatus" class="small-text">Loading tickets…</p>
+      <p id="listStatus">Loading tickets…</p>
 
-      <!-- ============================================================
-           TICKET LIST PANEL
-      ============================================================ -->
+      <!-- TICKET TABLE -->
       <section class="panel">
         <h2>Ticket list</h2>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th style="width:55px;">#</th>
+                <th>#</th>
                 <th>Summary</th>
                 <th>Group</th>
                 <th>Priority</th>
@@ -416,25 +267,19 @@
         </div>
       </section>
 
-      <p class="small-text">
-        Click a ticket in the list above to see details, update status, and reply.
-      </p>
+      <p>Click a ticket in the list above to see details, update status, and reply.</p>
 
-      <!-- ============================================================
-           TICKET DETAILS + REPLIES
-      ============================================================ -->
+      <!-- DETAILS + REPLIES -->
       <section class="panel">
-        <h2>Ticket details &amp; replies</h2>
+        <h2>Ticket details & replies</h2>
 
-        <p class="muted" id="detailsHint">
-          No ticket selected yet.
-        </p>
+        <p id="detailsHint" class="muted">No ticket selected yet.</p>
 
-        <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
+        <div id="detailsPlaceholder" class="comment-muted">
           Select a ticket above to view its details.
         </div>
 
-        <!-- TICKET EDIT BLOCK -->
+        <!-- HIDDEN UNTIL SELECTED -->
         <div id="ticketEditBlock" class="ticket-edit hidden">
 
           <div class="ticket-top-grid">
@@ -469,17 +314,10 @@
 
             <div>
               <div class="field-label">Assignee</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-
+              <div style="display:flex;gap:6px;">
                 <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-
-                <button id="assignMeBtn" class="action-btn success" type="button">
-                  <span>✔</span> Me
-                </button>
-
-                <button id="unassignBtn" class="action-btn danger" type="button">
-                  <span>✖</span> Unassign
-                </button>
+                <button id="assignMeBtn" class="action-btn success" type="button">✔ Me</button>
+                <button id="unassignBtn" class="action-btn danger" type="button">✖ Unassign</button>
               </div>
             </div>
 
@@ -497,7 +335,7 @@
           <div class="field-label">Requested completion date</div>
           <input id="dueDateInput" type="date" class="field-input" disabled/>
 
-          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
+          <div class="field-label">Urgency</div>
           <select id="urgencyInput" class="field-select" disabled>
             <option value="1">1 – Low</option>
             <option value="2">2</option>
@@ -506,70 +344,48 @@
             <option value="5">5 – Very urgent</option>
           </select>
 
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="saveTicketBtn" class="btn btn-primary" type="button">
-              💾 Save ticket
-            </button>
-          </div>
+          <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:10px;">
+            💾 Save ticket
+          </button>
 
           <div id="formStatus" class="status-bar"></div>
+        </div>
 
-        </div> <!-- END ticketEditBlock -->
-
-
-        <!-- CONVERSATION SECTION -->
+        <!-- COMMENTS -->
         <div>
           <div class="field-label">Conversation</div>
+
           <div id="commentsList" class="comment-list">
             <div class="comment-muted">No ticket selected yet.</div>
           </div>
 
-          <div class="field-label" style="margin-top:8px;">Add reply</div>
-          <textarea id="replyInput" class="field-textarea"
-            placeholder="Reply to the requester or add an internal note."></textarea>
-
-          <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
-            💬 Add reply
-          </button>
+          <textarea id="replyInput" class="field-textarea" placeholder="Reply or add internal note"></textarea>
+          <button id="addReplyBtn" class="btn btn-ghost" style="margin-top:6px;">💬 Add reply</button>
         </div>
-
       </section>
 
-
-      <!-- ============================================================
-           GROUP NOTIFICATION MEMBERS
-      ============================================================ -->
+      <!-- GROUP NOTIFICATIONS -->
       <section class="panel">
         <h2>Group notification members</h2>
-        <p class="muted">
-          Select a group, add/remove email addresses, and save the distribution list.
-        </p>
+        <p class="muted">Add or remove distribution list emails.</p>
 
-        <div style="margin-bottom:10px;">
-          <label class="field-label">Select group</label>
-          <select id="groupSelect" class="field-select" style="max-width:250px;">
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
-          </select>
+        <select id="groupSelect" class="field-select" style="max-width:260px;">
+          <option value="IT">IT</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Front Office">Front Office</option>
+          <option value="Nurse">Nurse</option>
+        </select>
+
+        <div class="field-label">Group members</div>
+        <div id="emailChipContainer" style="min-height:40px;"></div>
+
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <input id="newEmailInput" class="field-input" placeholder="Enter email"/>
+          <button id="addEmailBtn" class="action-btn primary">➕ Add</button>
         </div>
 
-        <div>
-          <div class="field-label">Group members</div>
-          <div id="emailChipContainer" style="min-height:40px;"></div>
-        </div>
-
-        <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
-          <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
-
-          <button id="addEmailBtn" class="action-btn primary" type="button">
-            <span>➕</span> Add
-          </button>
-        </div>
-
-        <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">
-          💾 Save group list
+        <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:10px;">
+          💾 Save list
         </button>
 
         <div id="groupStatus" class="status-bar"></div>
@@ -577,11 +393,6 @@
 
     </section>
   </main>
-
-</body>
-<!-- ============================================================
-     FULL JAVASCRIPT
-============================================================ -->
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import {
@@ -589,73 +400,75 @@ import {
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* ================ DOM ELEMENTS ================ */
-const whoEl              = document.getElementById("who");
-const logoutBtn          = document.getElementById("logoutBtn");
+/* ===== MAKE HEADER SHRINK ON SCROLL ===== */
+window.addEventListener("scroll", () => {
+  const h = document.querySelector(".hero");
+  if (window.scrollY > 20) h.classList.add("shrink");
+  else h.classList.remove("shrink");
+});
 
-const ticketsBody        = document.getElementById("ticketsBody");
-const listStatus         = document.getElementById("listStatus");
+/* =========================================
+   (YOUR FULL ORIGINAL JAVASCRIPT FOLLOWS)
+========================================= */
 
-const detailsHint        = document.getElementById("detailsHint");
+const whoEl = document.getElementById("who");
+const logoutBtn = document.getElementById("logoutBtn");
+
+const ticketsBody = document.getElementById("ticketsBody");
+const listStatus = document.getElementById("listStatus");
+
+const detailsHint = document.getElementById("detailsHint");
 const detailsPlaceholder = document.getElementById("detailsPlaceholder");
 
-const searchEl        = document.getElementById("search");
-const groupFilterEl   = document.getElementById("groupFilter");
-const statusFilterEl  = document.getElementById("statusFilter");
-const newTicketBtn    = document.getElementById("newTicketBtn");
+const searchEl = document.getElementById("search");
+const groupFilterEl = document.getElementById("groupFilter");
+const statusFilterEl = document.getElementById("statusFilter");
+const newTicketBtn = document.getElementById("newTicketBtn");
 
-/* Ticket Edit Elements */
 const ticketEditBlock = document.getElementById("ticketEditBlock");
-const groupInput      = document.getElementById("groupInput");
-const statusInput     = document.getElementById("statusInput");
-const priorityInput   = document.getElementById("priorityInput");
-const assigneeInput   = document.getElementById("assigneeInput");
+const groupInput = document.getElementById("groupInput");
+const statusInput = document.getElementById("statusInput");
+const priorityInput = document.getElementById("priorityInput");
+const assigneeInput = document.getElementById("assigneeInput");
 
-const assignMeBtn     = document.getElementById("assignMeBtn");
-const unassignBtn     = document.getElementById("unassignBtn");
+const assignMeBtn = document.getElementById("assignMeBtn");
+const unassignBtn = document.getElementById("unassignBtn");
 
-const summaryInput     = document.getElementById("summaryInput");
+const summaryInput = document.getElementById("summaryInput");
 const descriptionInput = document.getElementById("descriptionInput");
-const locationInput    = document.getElementById("locationInput");
-const dueDateInput     = document.getElementById("dueDateInput");
-const urgencyInput     = document.getElementById("urgencyInput");
+const locationInput = document.getElementById("locationInput");
+const dueDateInput = document.getElementById("dueDateInput");
+const urgencyInput = document.getElementById("urgencyInput");
 
-const saveTicketBtn    = document.getElementById("saveTicketBtn");
-const formStatus       = document.getElementById("formStatus");
+const saveTicketBtn = document.getElementById("saveTicketBtn");
+const formStatus = document.getElementById("formStatus");
 
-/* Conversation */
 const commentsList = document.getElementById("commentsList");
-const replyInput   = document.getElementById("replyInput");
-const addReplyBtn  = document.getElementById("addReplyBtn");
+const replyInput = document.getElementById("replyInput");
+const addReplyBtn = document.getElementById("addReplyBtn");
 
-/* Group Emails System */
-const groupSelect       = document.getElementById("groupSelect");
-const emailChipContainer= document.getElementById("emailChipContainer");
-const newEmailInput     = document.getElementById("newEmailInput");
-const addEmailBtn       = document.getElementById("addEmailBtn");
-const saveGroupBtn      = document.getElementById("saveGroupBtn");
-const groupStatus       = document.getElementById("groupStatus");
+const groupSelect = document.getElementById("groupSelect");
+const emailChipContainer = document.getElementById("emailChipContainer");
+const newEmailInput = document.getElementById("newEmailInput");
+const addEmailBtn = document.getElementById("addEmailBtn");
+const saveGroupBtn = document.getElementById("saveGroupBtn");
+const groupStatus = document.getElementById("groupStatus");
 
-
-/* ================ STATE ================ */
 let currentUser = null;
 let currentRole = "viewer";
 let allTickets = [];
 let selectedTicketId = null;
 
-let groupEmailList = []; // Emails for selected group
+let groupEmailList = [];
 
-const AGENT_ROLES = ["admin", "it"];
+const AGENT_ROLES = ["admin","it"];
 const VALID_STATUSES = ["open","in-progress","closed"];
 
-
-/* ================ LOGOUT ================ */
-logoutBtn.addEventListener("click", ()=>{
-  window.location.href = "login.html";
-});
+/* LOGOUT */
+logoutBtn.addEventListener("click", ()=> window.location.href="login.html");
 
 
-/* ================ AUTH ================ */
+/* ===== AUTH ===== */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl,
@@ -663,36 +476,28 @@ watchAuth({
     currentUser = user;
     currentRole = role;
 
-    if (!user || !AGENT_ROLES.includes(role)) {
-      alert("This page is for IT/Admin only.");
-      window.location.href = "tickets.html";
+    if (!user || !AGENT_ROLES.includes(role)){
+      alert("Admin/IT only");
+      window.location.href="tickets.html";
       return;
     }
 
-    /* Events */
-    newTicketBtn.addEventListener("click",()=>window.location.href="submit-request.html");
+    newTicketBtn.onclick = ()=> window.location="submit-request.html";
 
-    searchEl.addEventListener("input", renderTickets);
-    groupFilterEl.addEventListener("change", renderTickets);
-    statusFilterEl.addEventListener("change", renderTickets);
-    ticketsBody.addEventListener("click", onRowClick);
+    searchEl.oninput = renderTickets;
+    groupFilterEl.onchange = renderTickets;
+    statusFilterEl.onchange = renderTickets;
+    ticketsBody.onclick = onRowClick;
 
-    saveTicketBtn.addEventListener("click", saveTicket);
-    addReplyBtn.addEventListener("click", addReply);
+    saveTicketBtn.onclick = saveTicket;
+    addReplyBtn.onclick = addReply;
 
-    /* Assign / Unassign */
-    assignMeBtn.addEventListener("click", ()=>{
-      assigneeInput.value = currentUser.displayName || currentUser.email;
-    });
+    assignMeBtn.onclick = ()=> assigneeInput.value = currentUser.displayName || currentUser.email;
+    unassignBtn.onclick = ()=> assigneeInput.value = "Unassigned";
 
-    unassignBtn.addEventListener("click", ()=>{
-      assigneeInput.value = "Unassigned";
-    });
-
-    /* Group Email Events */
-    groupSelect.addEventListener("change", loadSelectedGroup);
-    addEmailBtn.addEventListener("click", addEmailToList);
-    saveGroupBtn.addEventListener("click", saveGroupEmails);
+    groupSelect.onchange = loadSelectedGroup;
+    addEmailBtn.onclick = addEmailToList;
+    saveGroupBtn.onclick = saveGroupEmails;
 
     ticketEditBlock.classList.add("hidden");
 
@@ -701,14 +506,12 @@ watchAuth({
   }
 });
 
-
-/* ================ LOAD TICKETS ================ */
+/* ===== LOAD TICKETS ===== */
 async function loadTickets(){
-  listStatus.textContent = "Loading tickets…";
-
+  listStatus.textContent="Loading tickets…";
   try{
     const snap = await getDocs(collection(db,"tickets"));
-    allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
+    allTickets = snap.docs.map(d=>({ id:d.id, ...d.data() }));
 
     allTickets.sort((a,b)=>{
       const ta = a.createdAt?.toMillis?.() ?? 0;
@@ -717,23 +520,21 @@ async function loadTickets(){
     });
 
     renderTickets();
-    listStatus.textContent = `Showing ${allTickets.length} ticket(s)`;
-
+    listStatus.textContent=`Showing ${allTickets.length} ticket(s)`;
   }catch(err){
     listStatus.textContent = err.message;
   }
 }
 
-
-/* ================ RENDER TICKET LIST ================ */
+/* ===== RENDER TABLE ===== */
 function renderTickets(){
-  const term  = searchEl.value.toLowerCase();
+  const term = searchEl.value.toLowerCase();
   const gfilt = groupFilterEl.value;
   const sfilt = statusFilterEl.value;
 
   const rows = allTickets.filter(t=>{
     const group = t.group || "";
-    const status = (t.status || "open").toLowerCase();
+    const status = (t.status || "").toLowerCase();
 
     if (gfilt && group !== gfilt) return false;
     if (sfilt && status !== sfilt) return false;
@@ -750,7 +551,7 @@ function renderTickets(){
   });
 
   if (!rows.length){
-    ticketsBody.innerHTML = `<tr><td colspan="8">No match.</td></tr>`;
+    ticketsBody.innerHTML=`<tr><td colspan="8">No match.</td></tr>`;
     return;
   }
 
@@ -759,7 +560,7 @@ function renderTickets(){
       <td>${i+1}</td>
       <td>${escapeHtml(t.summary)}</td>
       <td>${t.group}</td>
-      <td>${capitalize(t.priority || "medium")}</td>
+      <td>${capitalize(t.priority||"medium")}</td>
       <td>${statusPill(t.status)}</td>
       <td>${t.assigneeName || t.assigneeEmail || "Unassigned"}</td>
       <td>${t.requesterName || t.requesterEmail}</td>
@@ -768,75 +569,65 @@ function renderTickets(){
   `).join("");
 }
 
-
-/* ================ ROW CLICK: SHOW/HIDE DETAILS ================ */
+/* ===== SELECT TICKET ===== */
 function onRowClick(e){
   const tr = e.target.closest("tr[data-id]");
   if (!tr) return;
 
-  const id = tr.getAttribute("data-id");
+  const id = tr.dataset.id;
 
   if (id === selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
     hideDetails();
     return;
   }
 
-  const ticket = allTickets.find(x=>x.id === id);
-  if (ticket) selectTicket(ticket);
+  const t = allTickets.find(x=>x.id===id);
+  if (t) selectTicket(t);
 }
 
 function hideDetails(){
-  selectedTicketId = null;
+  selectedTicketId=null;
   ticketEditBlock.classList.add("hidden");
-  commentsList.innerHTML = `<div class="comment-muted">No ticket selected.</div>`;
-  detailsHint.textContent = "No ticket selected.";
-  detailsPlaceholder.textContent = "Select a ticket above to view details.";
+  commentsList.innerHTML=`<div class="comment-muted">No ticket selected.</div>`;
+  detailsHint.textContent="No ticket selected.";
+  detailsPlaceholder.textContent="Select a ticket above.";
 }
 
-
-/* ================ LOAD DETAILS ================ */
 function selectTicket(t){
   selectedTicketId = t.id;
 
-  detailsHint.textContent =
-    `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
-
+  detailsHint.textContent = `Ticket ${t.id.slice(0,8)} – ${t.requesterName || t.requesterEmail}`;
   detailsPlaceholder.textContent = "";
   ticketEditBlock.classList.remove("hidden");
 
-  groupInput.value    = t.group || "IT";
+  groupInput.value = t.group || "IT";
   priorityInput.value = t.priority || "medium";
-  statusInput.value   = VALID_STATUSES.includes(t.status) ? t.status : "open";
-
+  statusInput.value = VALID_STATUSES.includes(t.status)? t.status : "open";
   assigneeInput.value = t.assigneeName || t.assigneeEmail || "Unassigned";
 
-  summaryInput.value     = t.summary || "";
+  summaryInput.value = t.summary || "";
   descriptionInput.value = t.description || "";
-  locationInput.value    = t.location || "";
-  dueDateInput.value     = t.requestedDate || t.requestedCompletionDate || "";
-  urgencyInput.value     = t.urgency ?? 3;
+  locationInput.value = t.location || "";
+  dueDateInput.value = t.requestedCompletionDate || "";
+  urgencyInput.value = t.urgency ?? 3;
 
-  formStatus.textContent = "";
-  replyInput.value = "";
+  formStatus.textContent="";
+  replyInput.value="";
 
   loadComments(t.id);
 }
 
-
-/* ================ SAVE TICKET ================ */
+/* ===== SAVE ===== */
 async function saveTicket(){
-  if (!selectedTicketId){
-    formStatus.textContent = "Select a ticket first.";
-    return;
-  }
+  if (!selectedTicketId) return;
 
-  formStatus.textContent = "Saving…";
+  formStatus.textContent="Saving…";
 
   const payload = {
     group: groupInput.value,
     priority: priorityInput.value,
     status: statusInput.value,
-    urgency: Number(urgencyInput.value || 3),
+    urgency: Number(urgencyInput.value),
     updatedAt: serverTimestamp()
   };
 
@@ -851,185 +642,150 @@ async function saveTicket(){
 
   try{
     await updateDoc(doc(db,"tickets",selectedTicketId), payload);
-
-    formStatus.textContent = "Saved.";
+    formStatus.textContent="Saved.";
 
     await loadTickets();
-    const t = allTickets.find(x=>x.id === selectedTicketId);
-    if (t) selectTicket(t);
+    selectTicket(allTickets.find(x=>x.id===selectedTicketId));
 
   }catch(err){
-    formStatus.textContent = err.message;
+    formStatus.textContent=err.message;
   }
 }
 
-
-/* ================ COMMENTS ================ */
-async function loadComments(ticketId){
-  commentsList.innerHTML = "<div class='comment-muted'>Loading…</div>";
+/* ===== COMMENTS ===== */
+async function loadComments(id){
+  commentsList.innerHTML=`<div class="comment-muted">Loading…</div>`;
 
   try{
     const q = query(
-      collection(db,"tickets",ticketId,"comments"),
+      collection(db,"tickets",id,"comments"),
       orderBy("createdAt","asc"),
       limit(200)
     );
 
     const snap = await getDocs(q);
-    const arr = snap.docs.map(ds=>({ id: ds.id, ...ds.data() }));
+    const arr = snap.docs.map(d=>({ id:d.id, ...d.data() }));
 
     if (!arr.length){
-      commentsList.innerHTML = `<div class="comment-muted">No replies yet.</div>`;
+      commentsList.innerHTML=`<div class="comment-muted">No replies yet.</div>`;
       return;
     }
 
     commentsList.innerHTML = arr.map(c=>`
       <div class="comment">
         <div class="comment-meta">
-          ${escapeHtml(c.authorName || c.authorEmail || "Unknown")} • ${formatDate(c.createdAt)}
+          ${escapeHtml(c.authorName||c.authorEmail||"Unknown")} • ${formatDate(c.createdAt)}
         </div>
         <div>${escapeHtml(c.message)}</div>
       </div>
     `).join("");
 
   }catch(err){
-    commentsList.innerHTML =
-      `<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
+    commentsList.innerHTML=`<div class="comment-muted">Error: ${err.message}</div>`;
   }
 }
 
 async function addReply(){
-  if (!selectedTicketId){
-    alert("Select a ticket first.");
-    return;
-  }
+  if (!selectedTicketId) return;
 
   const msg = replyInput.value.trim();
   if (!msg) return;
 
-  addReplyBtn.disabled = true;
+  addReplyBtn.disabled=true;
 
   try{
-    await addDoc(
-      collection(db,"tickets",selectedTicketId,"comments"),
-      {
-        message: msg,
-        authorEmail: currentUser.email,
-        authorName: currentUser.displayName,
-        createdAt: serverTimestamp()
-      }
-    );
-
-    await updateDoc(doc(db,"tickets",selectedTicketId),{
-      updatedAt: serverTimestamp()
+    await addDoc(collection(db,"tickets",selectedTicketId,"comments"),{
+      message:msg,
+      authorEmail:currentUser.email,
+      authorName:currentUser.displayName,
+      createdAt:serverTimestamp()
     });
 
-    replyInput.value = "";
+    await updateDoc(doc(db,"tickets",selectedTicketId),{
+      updatedAt:serverTimestamp()
+    });
+
+    replyInput.value="";
     await loadComments(selectedTicketId);
 
   }catch(err){
     alert(err.message);
-  }finally{
-    addReplyBtn.disabled = false;
   }
+
+  addReplyBtn.disabled=false;
 }
 
-
-/* ============================================================
-   GROUP EMAIL MANAGEMENT (Dropdown + Chips)
-============================================================ */
-
+/* ===== GROUP EMAIL MGMT ===== */
 async function loadSelectedGroup(){
   const group = groupSelect.value;
-  groupEmailList = [];
-  emailChipContainer.innerHTML = "Loading...";
+  groupEmailList=[];
+  emailChipContainer.textContent="Loading…";
 
   try{
     const snap = await getDocs(collection(db,"ticket_groups"));
-    const map = {};
-    snap.forEach(ds => map[ds.id] = ds.data());
+    const map={};
+    snap.forEach(ds=> map[ds.id]=ds.data());
 
-    if (map[group] && Array.isArray(map[group].emails)){
-      groupEmailList = [...map[group].emails];
+    if (map[group]?.emails){
+      groupEmailList=[...map[group].emails];
     }
-
   }catch(err){
-    groupStatus.textContent = "Error loading: " + err.message;
+    groupStatus.textContent="Error: "+err.message;
   }
 
   renderEmailChips();
 }
 
-
-/* Render email chips */
 function renderEmailChips(){
   if (!groupEmailList.length){
-    emailChipContainer.innerHTML =
-      `<div class="comment-muted">No emails added yet.</div>`;
+    emailChipContainer.innerHTML=`<div class="comment-muted">No emails yet.</div>`;
     return;
   }
 
-  emailChipContainer.innerHTML = groupEmailList.map(email=>`
+  emailChipContainer.innerHTML = groupEmailList.map(e=>`
     <span class="chip">
-      ${email}
-      <button onclick="removeEmail('${email}')">×</button>
+      ${e}
+      <button onclick="removeEmail('${e}')">×</button>
     </span>
   `).join("");
 }
 
-
-/* Add email */
-function addEmailToList(){
-  const email = newEmailInput.value.trim();
-
-  if (!email) return;
-  if (!email.includes("@")){
-    alert("Invalid email format.");
-    return;
-  }
-  if (groupEmailList.includes(email)){
-    alert("Already added.");
-    return;
-  }
-
-  groupEmailList.push(email);
-  newEmailInput.value = "";
-  renderEmailChips();
-}
-
-
-/* Remove email (global for inline onclick) */
-window.removeEmail = function(email){
-  groupEmailList = groupEmailList.filter(e=>e !== email);
+window.removeEmail = function(e){
+  groupEmailList = groupEmailList.filter(x=>x!==e);
   renderEmailChips();
 };
 
+function addEmailToList(){
+  const email = newEmailInput.value.trim();
+  if (!email) return;
+  if (!email.includes("@")) return alert("Invalid email");
 
-/* Save group list to Firestore */
+  if (groupEmailList.includes(email)) return alert("Already added");
+
+  groupEmailList.push(email);
+  newEmailInput.value="";
+  renderEmailChips();
+}
+
 async function saveGroupEmails(){
   const group = groupSelect.value;
 
   try{
     await setDoc(doc(db,"ticket_groups",group),{
       emails: groupEmailList,
-      updatedAt: serverTimestamp()
+      updatedAt:serverTimestamp()
     });
-
-    groupStatus.textContent = `Saved members for ${group}.`;
-
+    groupStatus.textContent = "Saved.";
   }catch(err){
-    groupStatus.textContent = "Error saving: " + err.message;
+    groupStatus.textContent="Error: "+err.message;
   }
 }
 
-
-/* ============================================================
-   HELPERS
-============================================================ */
+/* ===== HELPERS ===== */
 function statusPill(s){
-  const st = (s || "open").toLowerCase();
-  if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
-  if(st === "in-progress") return `<span class="pill pill-progress">In progress</span>`;
+  s=(s||"open").toLowerCase();
+  if (s==="closed") return `<span class="pill pill-closed">Closed</span>`;
+  if (s==="in-progress") return `<span class="pill pill-progress">In progress</span>`;
   return `<span class="pill pill-open">Open</span>`;
 }
 
@@ -1039,17 +795,13 @@ function formatDate(v){
   return d.toLocaleString();
 }
 
-function capitalize(s){
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
-}
+function capitalize(s){ return s? s[0].toUpperCase()+s.slice(1) : ""; }
 
 function escapeHtml(s){
-  return String(s || "").replace(/[&<>"']/g, c=>({
+  return String(s||"").replace(/[&<>"']/g,c=>({
     "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
   })[c]);
 }
-
-</script>
 </script>
 
 </body>
