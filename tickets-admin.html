@@ -1,4 +1,4 @@
-       <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -12,13 +12,11 @@
       --brand:#1a73e8;
       --border:#e5e7eb;
 
-      /* Buttons */
       --btn-bg:#ffffff;
       --btn-text:#2d3748;
       --btn-border:#cbd5e1;
       --btn-hover:#f1f5f9;
 
-      /* Chip system */
       --chip-bg:#edf2f7;
       --chip-text:#2d3748;
     }
@@ -32,7 +30,9 @@
       color:#1a202c;
     }
 
-    /* HERO HEADER */
+    /* ================================
+       UPDATED HERO HEADER (FIXED)
+       ================================ */
     .hero{
       background:linear-gradient(90deg,var(--red1),var(--red2));
       color:white;
@@ -41,61 +41,69 @@
       align-items:center;
       justify-content:space-between;
     }
+
     .hero-left{
       display:flex;
+      flex-direction:row;
       align-items:center;
-      gap:22px;
+      gap:28px;
     }
+
     .hero-title{
       font-size:1.8rem;
       font-weight:600;
     }
+
     .hero-menu a{
       color:white;
       text-decoration:none;
-      font-size:.92rem;
-      opacity:.9;
-      margin-right:14px;
+      font-size:1rem;
+      opacity:.95;
     }
+
     .hero-right{
       display:flex;
-      align-items:flex-end;
-      gap:12px;
+      flex-direction:row;
+      align-items:center;
+      gap:20px;
     }
-    .hero-user{
+
+    /* SHOW EMAIL + ROLE INLINE */
+    .hero-user-inline{
       display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:4px;
+      flex-direction:row;
+      align-items:center;
+      gap:6px;
+      font-size:.9rem;
+      opacity:.95;
+      white-space:nowrap;
     }
-    .hero-email{
-      font-size:.85rem;
-      opacity:.9;
-    }
+
     .btn-hero-small{
       border:none;
       border-radius:999px;
-      padding:4px 10px;
-      font-size:.8rem;
+      padding:6px 14px;
+      font-size:.82rem;
       font-weight:500;
       background:rgba(255,255,255,.16);
       color:white;
       cursor:pointer;
     }
 
-    /* MAIN */
+    /* MAIN CARD LAYOUT */
     .wrap{
       display:flex;
       justify-content:center;
       padding:34px 16px;
     }
+
     .card-shell{
       background:white;
       border-radius:12px;
       border:1px solid var(--border);
       max-width:1100px;
       width:100%;
-      padding:18px 18px 14px;
+      padding:18px;
       box-shadow:0 10px 30px rgba(15,23,42,.06);
     }
 
@@ -106,7 +114,7 @@
       color:#4a5568;
     }
 
-    /* TOOLBAR */
+    /* SEARCH + FILTER TOOLBAR */
     .toolbar{
       display:flex;
       justify-content:space-between;
@@ -115,6 +123,7 @@
       gap:10px;
       flex-wrap:wrap;
     }
+
     .search-box{
       display:flex;
       align-items:center;
@@ -134,13 +143,6 @@
       background:transparent;
     }
 
-    .filters{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-    }
-
     select{
       padding:6px 8px;
       border-radius:999px;
@@ -150,7 +152,6 @@
       cursor:pointer;
     }
 
-    /* STANDARD BUTTONS */
     .btn{
       border:none;
       cursor:pointer;
@@ -167,60 +168,6 @@
       background:var(--brand);
       color:white;
     }
-    .btn-ghost{
-      background:white;
-      border:1px solid #cbd5e1;
-      color:#1a202c;
-    }
-
-    /* ⭐ NEW ADVANCED ACTION BUTTONS */
-    .action-btn{
-      padding:6px 14px;
-      border-radius:50px;
-      border:1px solid var(--btn-border);
-      background:var(--btn-bg);
-      color:var(--btn-text);
-      font-size:.85rem;
-      font-weight:600;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      transition:all .18s ease;
-      box-shadow:0 1px 2px rgba(0,0,0,0.06);
-    }
-    .action-btn:hover{
-      background:var(--btn-hover);
-      transform:translateY(-1px);
-      box-shadow:0 3px 8px rgba(0,0,0,0.09);
-    }
-
-    .action-btn.success{
-      background:#e6fffa;
-      color:#2c7a7b;
-      border-color:#b2f5ea;
-    }
-    .action-btn.success:hover{
-      background:#b2f5ea;
-    }
-
-    .action-btn.danger{
-      background:#fff5f5;
-      color:#c53030;
-      border-color:#fed7d7;
-    }
-    .action-btn.danger:hover{
-      background:#fed7d7;
-    }
-
-    .action-btn.primary{
-      background:#1a73e8;
-      color:white;
-      border-color:#1664c4;
-    }
-    .action-btn.primary:hover{
-      background:#1664c4;
-    }
 
     /* PANELS */
     .panel{
@@ -230,6 +177,7 @@
       background:#ffffff;
       margin-bottom:12px;
     }
+
     .panel h2{
       margin:0 0 6px;
       font-size:1.02rem;
@@ -237,6 +185,7 @@
       justify-content:space-between;
       align-items:center;
     }
+
     .muted{
       font-size:.8rem;
       color:#718096;
@@ -249,22 +198,26 @@
       border:1px solid var(--border);
       overflow:auto;
     }
+
     table{
       width:100%;
       border-collapse:collapse;
       min-width:750px;
       font-size:.85rem;
     }
+
     th,td{
       padding:8px 10px;
       border-bottom:1px solid #f1f5f9;
       text-align:left;
     }
+
     th{
       background:#f8fafc;
       color:#4b5563;
       font-weight:600;
     }
+
     tr:hover td{ background:#f9fafb; }
 
     .pill{
@@ -274,17 +227,18 @@
       border-radius:999px;
       font-size:.75rem;
     }
+
     .pill-open{ background:#ebf8ff; color:#2b6cb0; }
     .pill-closed{ background:#e6fffa; color:#2c7a7b; }
     .pill-progress{ background:#fff3cd; color:#b7791f; }
 
-    /* FORM FIELDS */
     .hidden{ display:none; }
 
+    /* TICKET FORM FIELDS */
     .ticket-edit{
       border-radius:8px;
       border:1px solid #e5e7eb;
-      padding:10px 10px 8px;
+      padding:10px;
       background:#fdfefe;
       margin-bottom:10px;
     }
@@ -295,6 +249,7 @@
       gap:10px;
       margin-bottom:10px;
     }
+
     @media(max-width:900px){
       .ticket-top-grid{
         grid-template-columns:repeat(2,minmax(0,1fr));
@@ -306,6 +261,7 @@
       font-weight:600;
       margin-bottom:3px;
     }
+
     .field-input,
     .field-select,
     .field-textarea{
@@ -314,8 +270,8 @@
       border-radius:8px;
       border:1px solid #cbd5e1;
       font-size:.9rem;
-      font-family:inherit;
     }
+
     .field-textarea{
       min-height:80px;
       resize:vertical;
@@ -324,8 +280,8 @@
     .status-bar{
       font-size:.8rem;
       margin-top:6px;
-      min-height:18px;
       color:#718096;
+      min-height:18px;
     }
 
     /* COMMENTS */
@@ -339,21 +295,25 @@
       background:#f9fafb;
       margin-top:2px;
     }
+
     .comment{
       margin-bottom:6px;
       padding-bottom:6px;
       border-bottom:1px dashed #e5e7eb;
     }
+
     .comment:last-child{
       border-bottom:none;
       margin-bottom:0;
       padding-bottom:0;
     }
+
     .comment-meta{
       font-size:.75rem;
       color:#6b7280;
       margin-bottom:2px;
     }
+
     .comment-muted{
       font-size:.8rem;
       color:#94a3b8;
@@ -370,6 +330,7 @@
       font-size:.82rem;
       margin:4px;
     }
+
     .chip button{
       margin-left:6px;
       border:none;
@@ -382,245 +343,264 @@
 </head>
 
 <body>
- <!-- HERO -->
-  <header class="hero">
-    <div class="hero-left">
-      <div class="hero-title">OCSI Service Request</div>
-      <nav class="hero-menu">
-        <a href="tickets.html">Requester view</a>
-      </nav>
+
+<!-- ======================================
+     UPDATED FIXED HEADER (MATCHES SCREENSHOT)
+     ====================================== -->
+<header class="hero">
+
+  <div class="hero-left">
+    <div class="hero-title">OCSI Service Request</div>
+
+    <nav class="hero-menu">
+      <a href="tickets.html">Requester view</a>
+    </nav>
+  </div>
+
+  <div class="hero-right">
+    <!-- updated inline user info -->
+    <div id="who" class="hero-user-inline">
+      Checking session…
     </div>
-    <div class="hero-right">
-      <div class="hero-user">
-        <div id="who" class="hero-email">Checking session…</div>
-        <button id="logoutBtn" class="btn-hero-small" type="button">Log out</button>
-      </div>
-    </div>
-  </header>
 
-  <main class="wrap">
-    <section class="card-shell">
+    <button id="logoutBtn" class="btn-hero-small" type="button">
+      Log out
+    </button>
+  </div>
 
-      <h1>Tickets (Admin view)</h1>
-      <p class="subtitle">
-        View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
-      </p>
+</header>
 
-      <!-- TOP TOOLBAR -->
-      <div class="toolbar">
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, requester, location…"/>
-        </div>
+<!-- MAIN WRAPPER -->
+<main class="wrap">
+  <section class="card-shell">
 
-        <div class="filters">
-          <select id="groupFilter">
-            <option value="">All groups</option>
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
-          </select>
+    <h1>Tickets (Admin view)</h1>
+    <p class="subtitle">
+      View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.
+    </p>
 
-          <select id="statusFilter">
-            <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in-progress">In progress</option>
-            <option value="closed">Closed</option>
-          </select>
-
-          <button id="newTicketBtn" class="btn btn-primary" type="button">
-            ➕ New ticket
-          </button>
-        </div>
+    <!-- TOP TOOLBAR -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input id="search" placeholder="Search summary, requester, location…"/>
       </div>
 
-      <p id="listStatus" class="small-text">Loading tickets…</p>
+      <div class="filters">
 
-      <!-- TICKET LIST -->
-      <section class="panel">
-        <h2>Ticket list</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:55px;">#</th>
-                <th>Summary</th>
-                <th>Group</th>
-                <th>Priority</th>
-                <th>Status</th>
-                <th>Assignee</th>
-                <th>Requester</th>
-                <th>Created</th>
-              </tr>
-            </thead>
-            <tbody id="ticketsBody">
-              <tr><td colspan="8">Loading…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+        <select id="groupFilter">
+          <option value="">All groups</option>
+          <option value="IT">IT</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Front Office">Front Office</option>
+          <option value="Nurse">Nurse</option>
+        </select>
 
-      <p class="small-text">
-        Click a ticket in the list above to see details, update status, and reply.
-      </p>
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="open">Open</option>
+          <option value="in-progress">In progress</option>
+          <option value="closed">Closed</option>
+        </select>
 
-      <!-- DETAILS & REPLIES -->
-      <section class="panel">
-        <h2>Ticket details &amp; replies</h2>
-
-        <p class="muted" id="detailsHint">
-          No ticket selected yet.
-        </p>
-
-        <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
-          Select a ticket above to view its details.
-        </div>
-
-        <!-- TICKET EDIT BLOCK (Hidden until ticket clicked) -->
-        <div id="ticketEditBlock" class="ticket-edit hidden">
-
-          <div class="ticket-top-grid">
-
-            <div>
-              <div class="field-label">Group</div>
-              <select id="groupInput" class="field-select">
-                <option value="IT">IT</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Front Office">Front Office</option>
-                <option value="Nurse">Nurse</option>
-              </select>
-            </div>
-
-            <div>
-              <div class="field-label">Status</div>
-              <select id="statusInput" class="field-select">
-                <option value="open">Open</option>
-                <option value="in-progress">In progress</option>
-                <option value="closed">Closed</option>
-              </select>
-            </div>
-
-            <div>
-              <div class="field-label">Priority</div>
-              <select id="priorityInput" class="field-select">
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-
-            <div>
-              <div class="field-label">Assignee</div>
-              <div style="display:flex;gap:6px;align-items:center;">
-
-                <!-- TEXT FIELD -->
-                <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-
-                <!-- NEW MODERN BUTTONS -->
-                <button id="assignMeBtn" class="action-btn success" type="button">
-                  <span>✔</span> Me
-                </button>
-
-                <button id="unassignBtn" class="action-btn danger" type="button">
-                  <span>✖</span> Unassign
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- READ ONLY FIELDS -->
-          <div class="field-label">Summary</div>
-          <input id="summaryInput" class="field-input" readonly/>
-
-          <div class="field-label">Description</div>
-          <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
-
-          <div class="field-label">Location</div>
-          <input id="locationInput" class="field-input" readonly/>
-
-          <div class="field-label">Requested completion date</div>
-          <input id="dueDateInput" type="date" class="field-input" disabled/>
-
-          <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
-          <select id="urgencyInput" class="field-select" disabled>
-            <option value="1">1 – Low</option>
-            <option value="2">2</option>
-            <option value="3" selected>3 – Normal</option>
-            <option value="4">4</option>
-            <option value="5">5 – Very urgent</option>
-          </select>
-
-          <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-            <button id="saveTicketBtn" class="btn btn-primary" type="button">
-              💾 Save ticket
-            </button>
-          </div>
-
-          <div id="formStatus" class="status-bar"></div>
-
-        </div> <!-- END ticketEditBlock -->
-
-        <!-- CONVERSATION SECTION -->
-        <div>
-          <div class="field-label">Conversation</div>
-          <div id="commentsList" class="comment-list">
-            <div class="comment-muted">No ticket selected yet.</div>
-          </div>
-
-          <div class="field-label" style="margin-top:8px;">Add reply</div>
-          <textarea id="replyInput" class="field-textarea"
-            placeholder="Reply to the requester or add an internal note."></textarea>
-
-          <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
-            💬 Add reply
-          </button>
-        </div>
-
-      </section> <!-- END Ticket details -->
-<!-- GROUP NOTIFICATION MEMBERS (NEW DROPDOWN + CHIPS) -->
-      <section class="panel">
-        <h2>Group notification members</h2>
-        <p class="muted">
-          Select a group, add/remove email addresses, and save the distribution list.
-        </p>
-
-        <div style="margin-bottom:10px;">
-          <label class="field-label">Select group</label>
-          <select id="groupSelect" class="field-select" style="max-width:250px;">
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
-          </select>
-        </div>
-
-        <div>
-          <div class="field-label">Group members</div>
-          <div id="emailChipContainer" style="min-height:40px;"></div>
-        </div>
-
-        <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
-          <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
-
-          <!-- UPDATED ADVANCED BUTTON -->
-          <button id="addEmailBtn" class="action-btn primary" type="button">
-            <span>➕</span> Add
-          </button>
-        </div>
-
-        <!-- SAVE LIST BUTTON -->
-        <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">
-          💾 Save group list
+        <button id="newTicketBtn" class="btn btn-primary" type="button">
+          ➕ New ticket
         </button>
+      </div>
+    </div>
 
-        <div id="groupStatus" class="status-bar"></div>
-      </section>
+    <p id="listStatus" class="small-text">Loading tickets…</p>
 
-    </section> <!-- END card-shell -->
-  </main>
+    <!-- ========================
+         TICKET LIST TABLE PANEL
+         ======================== -->
+    <section class="panel">
+      <h2>Ticket list</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:55px;">#</th>
+              <th>Summary</th>
+              <th>Group</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Assignee</th>
+              <th>Requester</th>
+              <th>Created</th>
+            </tr>
+          </thead>
 
+          <tbody id="ticketsBody">
+            <tr><td colspan="8">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="small-text">
+      Click a ticket in the list above to see details, update status, and reply.
+    </p>
+
+    <!-- ==========================
+         TICKET DETAILS & REPLIES
+         ========================== -->
+    <section class="panel">
+      <h2>Ticket details &amp; replies</h2>
+
+      <p class="muted" id="detailsHint">
+        No ticket selected yet.
+      </p>
+
+      <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">
+        Select a ticket above to view its details.
+      </div>
+
+      <!-- EDIT BLOCK — Hidden until clicking a ticket -->
+      <div id="ticketEditBlock" class="ticket-edit hidden">
+
+        <div class="ticket-top-grid">
+
+          <div>
+            <div class="field-label">Group</div>
+            <select id="groupInput" class="field-select">
+              <option value="IT">IT</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Front Office">Front Office</option>
+              <option value="Nurse">Nurse</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="field-label">Status</div>
+            <select id="statusInput" class="field-select">
+              <option value="open">Open</option>
+              <option value="in-progress">In progress</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="field-label">Priority</div>
+            <select id="priorityInput" class="field-select">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="field-label">Assignee</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+
+              <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
+
+              <button id="assignMeBtn" class="action-btn success" type="button">
+                ✔ Me
+              </button>
+
+              <button id="unassignBtn" class="action-btn danger" type="button">
+                ✖ Unassign
+              </button>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- READ-ONLY FIELDS -->
+        <div class="field-label">Summary</div>
+        <input id="summaryInput" class="field-input" readonly/>
+
+        <div class="field-label">Description</div>
+        <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
+
+        <div class="field-label">Location</div>
+        <input id="locationInput" class="field-input" readonly/>
+
+        <div class="field-label">Requested completion date</div>
+        <input id="dueDateInput" type="date" class="field-input" disabled/>
+
+        <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
+        <select id="urgencyInput" class="field-select" disabled>
+          <option value="1">1 – Low</option>
+          <option value="2">2</option>
+          <option value="3" selected>3 – Normal</option>
+          <option value="4">4</option>
+          <option value="5">5 – Very urgent</option>
+        </select>
+
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button id="saveTicketBtn" class="btn btn-primary" type="button">
+            💾 Save ticket
+          </button>
+        </div>
+
+        <div id="formStatus" class="status-bar"></div>
+
+      </div> <!-- END ticketEditBlock -->
+
+      <!-- COMMENTS / CONVERSATION -->
+      <div>
+        <div class="field-label">Conversation</div>
+
+        <div id="commentsList" class="comment-list">
+          <div class="comment-muted">No ticket selected yet.</div>
+        </div>
+
+        <div class="field-label" style="margin-top:8px;">Add reply</div>
+        <textarea id="replyInput" class="field-textarea"
+          placeholder="Reply to the requester or add an internal note."></textarea>
+
+        <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">
+          💬 Add reply
+        </button>
+      </div>
+
+    </section> <!-- END details panel -->
+
+    <!-- ======================================
+         GROUP NOTIFICATION MEMBERS (NEW UI)
+         ====================================== -->
+    <section class="panel">
+      <h2>Group notification members</h2>
+
+      <p class="muted">
+        Select a group, add/remove email addresses, and save the distribution list.
+      </p>
+
+      <div style="margin-bottom:10px;">
+        <label class="field-label">Select group</label>
+        <select id="groupSelect" class="field-select" style="max-width:250px;">
+          <option value="IT">IT</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Front Office">Front Office</option>
+          <option value="Nurse">Nurse</option>
+        </select>
+      </div>
+
+      <div>
+        <div class="field-label">Group members</div>
+        <div id="emailChipContainer" style="min-height:40px;"></div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
+        <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
+
+        <button id="addEmailBtn" class="action-btn primary" type="button">
+          ➕ Add
+        </button>
+      </div>
+
+      <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">
+        💾 Save group list
+      </button>
+
+      <div id="groupStatus" class="status-bar"></div>
+    </section>
+
+  </section> <!-- END card-shell -->
+</main>
 <!-- FULL JAVASCRIPT -->
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
@@ -708,6 +688,9 @@ watchAuth({
       window.location.href = "tickets.html";
       return;
     }
+
+    /* SHOW email + role inline (matches screenshot) */
+    whoEl.textContent = `${user.email} ${role}`;
 
     /* Events */
     newTicketBtn.addEventListener("click",()=>window.location.href="submit-request.html");
@@ -809,7 +792,7 @@ function renderTickets(){
 }
 
 
-/* ================ ROW CLICK: SHOW/HIDE DETAILS ================ */
+/* ================ TICKET CLICK ================ */
 function onRowClick(e){
   const tr = e.target.closest("tr[data-id]");
   if (!tr) return;
@@ -834,7 +817,7 @@ function hideDetails(){
 }
 
 
-/* ================ LOAD DETAILS ================ */
+/* ================ LOAD SELECTED TICKET ================ */
 function selectTicket(t){
   selectedTicketId = t.id;
 
@@ -976,7 +959,7 @@ async function addReply(){
 
 
 /* ============================================================
-   GROUP EMAIL MANAGEMENT (Dropdown + Chips)
+   GROUP EMAIL MANAGEMENT (Chips UI)
 ============================================================ */
 
 async function loadSelectedGroup(){
@@ -1000,8 +983,7 @@ async function loadSelectedGroup(){
   renderEmailChips();
 }
 
-
-/* Render email chips */
+/* Render chips */
 function renderEmailChips(){
   if (!groupEmailList.length){
     emailChipContainer.innerHTML =
@@ -1017,8 +999,6 @@ function renderEmailChips(){
   `).join("");
 }
 
-
-/* Add email */
 function addEmailToList(){
   const email = newEmailInput.value.trim();
 
@@ -1037,15 +1017,13 @@ function addEmailToList(){
   renderEmailChips();
 }
 
-
-/* Remove email (global for inline onclick) */
+/* Remove email globally for inline onclick */
 window.removeEmail = function(email){
   groupEmailList = groupEmailList.filter(e=>e !== email);
   renderEmailChips();
 };
 
-
-/* Save group list to Firestore */
+/* Save group emails to Firestore */
 async function saveGroupEmails(){
   const group = groupSelect.value;
 
@@ -1066,6 +1044,7 @@ async function saveGroupEmails(){
 /* ============================================================
    HELPERS
 ============================================================ */
+
 function statusPill(s){
   const st = (s || "open").toLowerCase();
   if(st === "closed") return `<span class="pill pill-closed">Closed</span>`;
@@ -1090,8 +1069,5 @@ function escapeHtml(s){
 }
 
 </script>
-
 </body>
 </html>
-
-
