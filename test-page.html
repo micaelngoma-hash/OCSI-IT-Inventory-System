@@ -16,6 +16,7 @@
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
+  /* ===== TOP BAR ===== */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -23,6 +24,7 @@
     display:flex;justify-content:space-between;align-items:center;
   }
 
+  /* ===== LAYOUT ===== */
   .layout{
     display:grid;
     grid-template-columns:240px 1fr;
@@ -39,7 +41,6 @@
     font-size:.92rem;
   }
   .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
 
   .content{
     padding:18px;
@@ -51,9 +52,14 @@
   h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
 
+  /* ===== TOOLBAR ===== */
   .toolbar{
-    display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:10px;gap:10px;flex-wrap:wrap;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+    gap:10px;
+    flex-wrap:wrap;
   }
 
   .search-box{
@@ -69,27 +75,26 @@
 
   .filters{display:flex;gap:8px;flex-wrap:wrap;}
   select{
-    padding:6px 8px;border-radius:999px;border:1px solid var(--border);
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);
     font-size:.85rem;background:white;
   }
-
   .btn{
     border:none;cursor:pointer;
-    padding:6px 12px;border-radius:999px;
+    padding:6px 14px;border-radius:999px;
     font-size:.85rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:6px;
+    display:inline-flex;align-items:center;gap:5px;
     text-decoration:none;
   }
-  .btn-primary{
-    background:var(--brand);
-    color:white;
-  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-primary:hover{background:#1558b0;}
   .btn-ghost{
-    background:transparent;
+    background:white;
     border:1px solid #cbd5e1;
     color:#0f172a;
   }
 
+  /* ===== TABLE ===== */
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -108,45 +113,60 @@
   tr:hover td{background:#f9fafb;}
 
   .pill{
-    display:inline-flex;padding:2px 8px;border-radius:999px;
-    font-size:.75rem;
+    padding:2px 8px;border-radius:999px;font-size:.75rem;
+    display:inline-flex;
   }
   .pill-green{background:#dcfce7;color:#166534;}
   .pill-blue{background:#dbeafe;color:#1d4ed8;}
   .pill-gray{background:#e5e7eb;color:#374151;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
 
-  .chkCell{text-align:center;width:36px;}
+  /* ===== ROUND BLUE QR BUTTON ===== */
+  .qr-btn{
+    background:#1a73e8;
+    color:white;
+    border:none;
+    border-radius:999px;
+    padding:5px 14px;
+    font-size:.82rem;
+    cursor:pointer;
+    font-weight:500;
+  }
+  .qr-btn:hover{background:#1558b0;}
 
-  /* QR Modal */
+  /* ===== QR MODAL ===== */
   #qrModal{
     display:none;
     position:fixed;top:0;left:0;
     width:100%;height:100%;
     background:rgba(0,0,0,0.55);
     backdrop-filter:blur(3px);
-    justify-content:center;
-    align-items:center;
+    justify-content:center;align-items:center;
     z-index:9999;
   }
   #qrContainer{
-    background:white;
-    padding:22px;
-    width:340px;
-    border-radius:14px;
-    text-align:center;
+    background:white;padding:22px;width:340px;
+    border-radius:14px;text-align:center;
     box-shadow:0 8px 28px rgba(0,0,0,0.25);
   }
+
 </style>
 </head>
 <body>
 
+<!-- ========================================================= -->
+<!-- TOP BAR -->
+<!-- ========================================================= -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
+
 <div class="layout">
+  <!-- ========================================================= -->
+  <!-- SIDEBAR -->
+  <!-- ========================================================= -->
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span>Main Dashboard</a>
@@ -159,17 +179,24 @@
     </nav>
   </aside>
 
+
+  <!-- ========================================================= -->
+  <!-- MAIN CONTENT -->
+  <!-- ========================================================= -->
   <main class="content">
+
     <h1>Inventory</h1>
     <p class="subtitle">Browse, search, and manage all registered devices.</p>
 
-    <!-- Toolbar -->
     <div class="toolbar">
+
+      <!-- SEARCH -->
       <div class="search-box">
         <span>🔍</span>
         <input id="search" placeholder="Search by Asset ID, name, user, location…" />
       </div>
 
+      <!-- FILTERS -->
       <div class="filters">
         <select id="statusFilter">
           <option value="">All statuses</option>
@@ -182,10 +209,10 @@
 
         <button id="exportBtn" class="btn btn-ghost">⬇️ Export CSV</button>
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
-        <button id="addBtn" class="btn btn-primary">➕ New Device</button>
+        <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <!-- NEW solid-blue button -->
-        <button id="qrBulkBtn" class="btn-primary">🖨️ Download QR Codes</button>
+        <!-- NEW BLUE DOWNLOAD QR LABELS BUTTON -->
+        <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
 
@@ -194,7 +221,7 @@
       <table>
         <thead>
           <tr>
-            <th class="chkCell"><input type="checkbox" id="selectAll"></th>
+            <th style="width:36px;"></th>
             <th>Asset ID</th>
             <th>Device Name</th>
             <th>Type</th>
@@ -202,94 +229,104 @@
             <th>Assigned To</th>
             <th>Location</th>
             <th>IP</th>
-            <th style="width:160px;">Actions</th>
+            <th style="width:190px;">Actions</th>
           </tr>
         </thead>
+
         <tbody id="tbody">
           <tr><td colspan="9">Loading devices…</td></tr>
         </tbody>
       </table>
     </div>
+
   </main>
 </div>
 
-<!-- QR Modal -->
+
+<!-- ========================================================= -->
+<!-- QR MODAL -->
+<!-- ========================================================= -->
 <div id="qrModal">
   <div id="qrContainer">
-    <h3 style="margin-top:0;">Device QR Code</h3>
-    <div id="qrBox" style="margin:18px 0;"></div>
-
-    <button id="btnDownloadQR" class="btn-primary" style="width:100%;border-radius:9px;padding:10px;">
-      ⬇️ Download QR (SVG)
-    </button>
-
-    <button onclick="closeQR()" class="btn btn-ghost" style="margin-top:10px;width:100%;border-radius:9px;">
-      Close
-    </button>
+    <h3>Device QR Code</h3>
+    <div id="qrBox" style="margin:20px 0;"></div>
+    <button id="btnDownloadQR" class="btn-primary" style="width:100%;">⬇️ Download QR (SVG)</button>
+    <button onclick="closeQR()" class="btn btn-ghost" style="margin-top:12px;width:100%;">Close</button>
   </div>
 </div>
 
+
+<!-- QR LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl = document.getElementById("who");
-  const tbody = document.getElementById("tbody");
-  const searchInput = document.getElementById("search");
+  const whoEl        = document.getElementById("who");
+  const tbody        = document.getElementById("tbody");
+  const searchInput  = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
-  const qrBulkBtn = document.getElementById("qrBulkBtn");
-  const selectAll = document.getElementById("selectAll");
+  const addBtn       = document.getElementById("addBtn");
+  const importBtn    = document.getElementById("importBtn");
+  const exportBtn    = document.getElementById("exportBtn");
+  const btnBulkQR    = document.getElementById("btnBulkQR");
+
+  const qrModal   = document.getElementById("qrModal");
+  const qrBox     = document.getElementById("qrBox");
+  const btnDownloadQR = document.getElementById("btnDownloadQR");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
   let allItems = [];
 
+  /* -----------------------------
+     AUTHENTICATION
+  ------------------------------*/
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
     onReady: async (_user, role)=>{
       currentRole = role;
 
-      // Role access
       if(!EDIT_ROLES.includes(role)){
-        addBtn.style.display="none";
-        importBtn.style.display="none";
-        exportBtn.style.display="none";
-        qrBulkBtn.style.display="none";
+        addBtn.style.display = "none";
+        importBtn.style.display = "none";
+        exportBtn.style.display = "none";
       } else {
-        addBtn.onclick=()=>location.href="item-form.html";
-        importBtn.onclick=()=>location.href="import-devices.html";
-        exportBtn.onclick=()=>location.href="export-devices.html";
+        addBtn.onclick    = () => location.href="item-form.html";
+        importBtn.onclick = () => location.href="import-devices.html";
+        exportBtn.onclick = () => location.href="export-devices.html";
       }
 
       await loadItems();
     }
   });
 
+  /* -----------------------------
+     LOAD ITEMS
+  ------------------------------*/
   async function loadItems(){
     const snap = await getDocs(collection(db,"items"));
-    allItems = snap.docs.map(d=>({id:d.id,...d.data()}));
+    allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     render();
   }
 
+  /* -----------------------------
+     RENDER TABLE
+  ------------------------------*/
   function render(){
-    const term = (searchInput.value||"").toLowerCase();
+    const term = searchInput.value.toLowerCase();
     const filter = statusFilter.value;
 
     const rows = allItems.filter(it=>{
-      if(filter && (it.status||"") !== filter) return false;
+      if(filter && it.status !== filter) return false;
 
-      const hay = [
-        it.assetId,it.deviceName,it.assetType,
-        it.assignedTo,it.location,it.department,it.ipAddress
-      ].join(" ").toLowerCase();
-
+      const hay = `${it.assetId} ${it.deviceName} ${it.assetType} ${it.assignedTo} ${it.location} ${it.ipAddress}`.toLowerCase();
       return hay.includes(term);
     });
 
-    if(!rows.length){
+    if(rows.length === 0){
       tbody.innerHTML = `<tr><td colspan="9">No devices found.</td></tr>`;
       return;
     }
@@ -297,85 +334,95 @@
     tbody.innerHTML = rows.map(makeRow).join("");
   }
 
+  /* -----------------------------
+     TABLE ROW HTML
+  ------------------------------*/
   function makeRow(it){
-    const status = it.status || "unknown";
-    let pill="pill-gray";
-    if(status==="in-use") pill="pill-green";
-    if(status==="loaned") pill="pill-blue";
-    if(status==="retired"||status==="repair") pill="pill-red";
+    let pill = "pill-gray";
+    if(it.status==="in-use") pill="pill-green";
+    if(it.status==="loaned") pill="pill-blue";
+    if(it.status==="retired"||it.status==="repair") pill="pill-red";
 
     const viewURL = `item.html?id=${it.id}`;
     const editURL = `item-form.html?id=${it.id}`;
-    const locText = (it.location||"") + (it.buildingFloor?(" – "+it.buildingFloor):"");
 
-    let actions = `<a class="btn btn-ghost" href="${viewURL}" style="padding:3px 8px;">View</a>`;
-    if(EDIT_ROLES.includes(currentRole))
-      actions += `<a class="btn btn-ghost" href="${editURL}" style="padding:3px 8px;margin-left:4px;">Edit</a>`;
+    let actions = `<a class="btn btn-ghost" style="padding:4px 10px;" href="${viewURL}">View</a>`;
 
+    if(EDIT_ROLES.includes(currentRole)){
+      actions += `<a class="btn btn-ghost" style="padding:4px 10px;margin-left:4px;" href="${editURL}">Edit</a>`;
+    }
+
+    /* BLUE QR BUTTON */
     actions += `
-      <button class="btn btn-ghost" style="font-size:1rem;padding:3px 8px;margin-left:5px;"
-        onclick="openQR('${it.id}','${escapeHtml(it.assetId||"")}','${escapeHtml(it.deviceName||"")}')">📱</button>`;
+      <button class="qr-btn" style="margin-left:6px;"
+        onclick="openQR('${it.id}','${escapeHtml(it.assetId)}','${escapeHtml(it.deviceName)}')">
+        QR
+      </button>`;
 
     return `
       <tr>
-        <td class="chkCell"><input class="rowChk" type="checkbox" value="${it.id}"></td>
-        <td>${escapeHtml(it.assetId||"")}</td>
-        <td>${escapeHtml(it.deviceName||"")}</td>
-        <td>${escapeHtml(it.assetType||"")}</td>
-        <td><span class="pill ${pill}">${escapeHtml(status.replace(/-/g," "))}</span></td>
+        <td></td>
+        <td>${escapeHtml(it.assetId)}</td>
+        <td>${escapeHtml(it.deviceName)}</td>
+        <td>${escapeHtml(it.assetType)}</td>
+        <td><span class="pill ${pill}">${escapeHtml(it.status||"")}</span></td>
         <td>${escapeHtml(it.assignedTo||"")}</td>
-        <td>${escapeHtml(locText)}</td>
+        <td>${escapeHtml(it.location||"")}</td>
         <td>${escapeHtml(it.ipAddress||"")}</td>
         <td>${actions}</td>
       </tr>`;
   }
 
-  selectAll.addEventListener("change",()=>{
-    document.querySelectorAll(".rowChk").forEach(c=>c.checked=selectAll.checked);
-  });
-
-  qrBulkBtn.addEventListener("click",()=>{
-    const selected = [...document.querySelectorAll(".rowChk:checked")].map(x=>x.value);
-    if(selected.length===0) return alert("Select at least one device.");
-    location.href = `print-labels.html?ids=${selected.join(",")}`;
-  });
-
-  // QR MODAL + FIXED SVG WRAPPER
-  window.openQR = async function(id, assetId, name){
-    const qrBox = document.getElementById("qrBox");
+  /* -----------------------------
+     QR POPUP
+  ------------------------------*/
+  window.openQR = async (id, assetId, name)=>{
     qrBox.innerHTML = "";
 
     const url = `${location.origin}/item.html?id=${id}`;
 
-    let rawSVG = await QRCode.toString(url,{type:"svg",margin:1,width:600,errorCorrectionLevel:"H"});
+    const svg = await QRCode.toString(url,{
+      type:"svg",
+      margin:2,
+      scale:14,
+      errorCorrectionLevel:"H"
+    });
 
-    const svgWrapped =
-      `<?xml version="1.0" encoding="UTF-8"?>`+
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">`+
-      rawSVG.replace(/<svg[^>]+>|<\/svg>/g,"")+
-      `</svg>`;
+    qrBox.innerHTML = svg;
 
-    qrBox.innerHTML = svgWrapped;
-
-    document.getElementById("btnDownloadQR").onclick = ()=>{
-      const blob=new Blob([svgWrapped],{type:"image/svg+xml"});
-      const a=document.createElement("a");
-      a.href=URL.createObjectURL(blob);
-      a.download=`${assetId||name||"qr"}.svg`;
+    btnDownloadQR.onclick = ()=>{
+      const cleanSVG = svg.replace(/<path /g, '<path fill="black" stroke="none" ');
+      const blob = new Blob([cleanSVG],{type:"image/svg+xml"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${assetId || name || "qr"}.svg`;
       a.click();
     };
 
-    document.getElementById("qrModal").style.display="flex";
+    qrModal.style.display = "flex";
   };
 
-  window.closeQR = ()=>document.getElementById("qrModal").style.display="none";
+  window.closeQR = ()=> qrModal.style.display="none";
+
+  /* -----------------------------
+     BULK QR DOWNLOAD (open in print-labels.html)
+  ------------------------------*/
+  btnBulkQR.onclick = ()=>{
+    const ids = allItems.map(x=>x.id).join(",");
+    location.href = `print-labels.html?ids=${ids}`;
+  };
+
+  /* -----------------------------
+     SEARCH + FILTER EVENTS
+  ------------------------------*/
+  searchInput.oninput = render;
+  statusFilter.onchange = render;
 
   function escapeHtml(s){
-    return s?String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])):"";
+    return s ? String(s).replace(/[&<>"']/g,c=>(
+      {"&":"&amp;","<":"&lt;","⟩":"&gt;","\"":"&quot;","'":"&#39;"}[c]
+    )) : "";
   }
-
-  searchInput.addEventListener("input",render);
-  statusFilter.addEventListener("change",render);
 </script>
 
 </body>
