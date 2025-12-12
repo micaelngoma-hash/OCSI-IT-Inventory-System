@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>OCSI Inventory – Print QR Labels</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; }
+  h1 { margin-bottom: 5px; }
+  .preview {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
+    gap: 18px;
+    margin-top: 20px;
+  }
+  .label {
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+  }
+  .label svg {
+    width: 120px;
+    height: 120px;
+  }
+  #controls {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-top:10px;
+  }
+  select, button {
+    padding:6px 10px;
+    border-radius: 6px;
+    border:1px solid #bbb;
+    cursor:pointer;
+  }
+  @media print {
+    #controls { display:none; }
+    body { padding: 0; margin: 0; }
+    .label { page-break-inside: avoid; }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+
+<body>
+
+<h1>Print QR Labels</h1>
+<p>Select your label size and print.</p>
+
+<div id="controls">
+  <label>Label Size:</label>
+  <select id="labelSize">
+    <option value="6">Large – 6 per A4</option>
+    <option value="12">Medium – 12 per A4</option>
+    <option value="24">Small – 24 per A4</option>
+  </select>
+
+  <button onclick="window.print()">🖨 Print</button>
+</div>
+
+<div id="labelGrid" class="preview"></div>
+
+<script type="module">
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const grid = document.getElementById("labelGrid");
+const params = new URLSearchParams(location.search);
+const ids = params.get("ids")?.split(",") || [];
+
+async function loadLabels() {
+  grid.innerHTML = "";
+
+  for (let id of ids) {
+    const snap = await getDoc(doc(db, "items", id));
+    if (!snap.exists()) continue;
+
+    const it = snap.data();
+    const url = `${location.origin}/item.html?id=${id}`;
+    const svg = await QRCode.toString(url, {
+      type:"svg",
+      errorCorrectionLevel:"H",
+      scale:10,
+      margin:1
+    });
+
+    const div = document.createElement("div");
+    div.className = "label";
+    div.innerHTML = `
+      ${svg}
+      <div style="font-weight:bold;margin-top:8px;">${it.assetId || ""}</div>
+      <div style="font-size:.8rem;">${it.deviceName || ""}</div>
+      <div style="font-size:.75rem;color:#444;">${it.location || ""}</div>
+    `;
+
+    grid.appendChild(div);
+  }
+}
+
+loadLabels();
+</script>
+
+</body>
+</html>
