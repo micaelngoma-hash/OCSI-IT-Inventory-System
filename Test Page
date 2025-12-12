@@ -1,1 +1,305 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory – Inventory List</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .layout{
+    display:grid;grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1150px;
+    margin:0 auto;
+    width:100%;
+  }
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .toolbar{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:10px;gap:10px;flex-wrap:wrap;
+  }
+  .search-box{
+    display:flex;align-items:center;gap:6px;
+    background:white;border:1px solid var(--border);
+    border-radius:999px;padding:4px 10px;
+    max-width:320px;width:100%;
+  }
+  .search-box input{
+    border:none;outline:none;font-size:.88rem;width:100%;
+    background:transparent;
+  }
+  .filters{display:flex;gap:8px;flex-wrap:wrap;}
+  select{
+    padding:6px 8px;border-radius:999px;
+    border:1px solid var(--border);font-size:.85rem;background:white;
+  }
+  .btn{
+    border:none;cursor:pointer;
+    padding:6px 12px;border-radius:999px;
+    font-size:.85rem;font-weight:500;
+    display:inline-flex;align-items:center;gap:5px;
+    text-decoration:none;
+  }
+  .btn-primary{background:var(--brand);color:white;}
+  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+
+  .table-wrap{
+    background:white;border:1px solid var(--border);
+    border-radius:12px;overflow:auto;
+  }
+  table{border-collapse:collapse;width:100%;min-width:850px;}
+  th,td{
+    padding:8px 10px;border-bottom:1px solid #f1f5f9;
+    font-size:.88rem;text-align:left;
+  }
+  th{
+    background:#f8fafc;font-weight:600;color:#475569;
+    position:sticky;top:0;z-index:5;
+  }
+  tr:hover td{background:#f9fafb;}
+
+  .pill{
+    display:inline-flex;padding:2px 8px;border-radius:999px;
+    font-size:.75rem;
+  }
+  .pill-green{background:#dcfce7;color:#166534;}
+  .pill-blue{background:#dbeafe;color:#1d4ed8;}
+  .pill-gray{background:#e5e7eb;color:#374151;}
+  .pill-red{background:#fee2e2;color:#b91c1c;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
+      <a class="active" href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <h1>Inventory</h1>
+    <p class="subtitle">Browse, search, and manage all registered devices.</p>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input id="search" placeholder="Search by Asset ID, name, user, location…" />
+      </div>
+      <div class="filters">
+        <select id="statusFilter">
+          <option value="">All statuses</option>
+          <option value="in-use">In use</option>
+          <option value="in-storage">In storage</option>
+          <option value="loaned">Loaned</option>
+          <option value="retired">Retired</option>
+          <option value="repair">Under repair</option>
+        </select>
+        
+        <!-- Export Devices CSV -->
+        <button id="exportBtn" class="btn btn-ghost" type="button">
+          ⬇️ Export CSV
+        </button>
+
+        <!-- Import Devices CSV -->
+        <button id="importBtn" class="btn btn-ghost" type="button">
+          📤 Import CSV
+        </button>
+
+        <!-- New Device -->
+        <button id="addBtn" class="btn btn-primary" type="button">
+          ➕ New Device
+        </button>
+
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Asset ID</th>
+            <th>Device Name</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Assigned To</th>
+            <th>Location</th>
+            <th>IP</th>
+            <th style="width:120px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr><td colspan="8">Loading devices…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const whoEl        = document.getElementById("who");
+  const tbody        = document.getElementById("tbody");
+  const searchInput  = document.getElementById("search");
+  const statusFilter = document.getElementById("statusFilter");
+  const addBtn       = document.getElementById("addBtn");
+  const importBtn    = document.getElementById("importBtn");
+  const exportBtn    = document.getElementById("exportBtn");
+
+  const EDIT_ROLES = ["admin","it"];
+  let currentRole  = "viewer";
+  let allItems     = [];
+
+  watchAuth({
+    allowedRoles:["admin","it","viewer"],
+    whoEl,
+    onReady: async (_user, role)=>{
+      currentRole = role;
+
+      // Role-based visibility for action buttons
+      if(!EDIT_ROLES.includes(role)){
+        addBtn.style.display    = "none";
+        importBtn.style.display = "none";
+        exportBtn.style.display = "none";
+      }else{
+        addBtn.addEventListener("click", () => {
+          window.location.href = "item-form.html";
+        });
+        importBtn.addEventListener("click", () => {
+          window.location.href = "import-devices.html";
+        });
+        exportBtn.addEventListener("click", () => {
+          window.location.href = "export-devices.html";
+        });
+      }
+
+      await loadItems();
+    }
+  });
+
+  async function loadItems(){
+    try{
+      const snap = await getDocs(collection(db,"items"));
+      allItems = [];
+      snap.forEach(docSnap => {
+        allItems.push({ id: docSnap.id, ...docSnap.data() });
+      });
+      render();
+    }catch(err){
+      console.error(err);
+      tbody.innerHTML = `<tr><td colspan="8">Error loading devices: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  function render(){
+    const term = (searchInput.value || "").toLowerCase();
+    const st   = statusFilter.value;
+
+    const rows = allItems.filter(it=>{
+      if(st && (it.status || "") !== st) return false;
+      if(!term) return true;
+      const hay = [
+        it.assetId, it.deviceName, it.assetType,
+        it.assignedTo, it.location, it.department, it.ipAddress
+      ].join(" ").toLowerCase();
+      return hay.includes(term);
+    });
+
+    if(!rows.length){
+      tbody.innerHTML = `<tr><td colspan="8">No devices found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = rows.map(it=>{
+      const status = it.status || "unknown";
+      let pillClass = "pill-gray";
+      if(status === "in-use")      pillClass = "pill-green";
+      else if(status === "loaned") pillClass = "pill-blue";
+      else if(status === "retired" || status === "repair") pillClass = "pill-red";
+
+      const label   = status.replace(/-/g," ");
+      const viewUrl = `item.html?id=${encodeURIComponent(it.id)}`;
+      const editUrl = `item-form.html?id=${encodeURIComponent(it.id)}`;
+
+      const actions = EDIT_ROLES.includes(currentRole)
+        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;margin-right:4px;" href="${viewUrl}">View</a>
+           <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${editUrl}">Edit</a>`
+        : `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${viewUrl}">View</a>`;
+
+      const locText = (it.location || "") + (it.buildingFloor ? " – " + it.buildingFloor : "");
+
+      return `
+        <tr>
+          <td>${escapeHtml(it.assetId || "")}</td>
+          <td>${escapeHtml(it.deviceName || "")}</td>
+          <td>${escapeHtml(it.assetType || "")}</td>
+          <td><span class="pill ${pillClass}">${escapeHtml(label)}</span></td>
+          <td>${escapeHtml(it.assignedTo || "")}</td>
+          <td>${escapeHtml(locText)}</td>
+          <td>${escapeHtml(it.ipAddress || "")}</td>
+          <td>${actions}</td>
+        </tr>`;
+    }).join("");
+  }
+
+  function escapeHtml(s){
+    return s ? String(s).replace(/[&<>"']/g, c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    )) : "";
+  }
+
+  searchInput.addEventListener("input", render);
+  statusFilter.addEventListener("change", render);
+</script>
+
+</body>
+</html>
