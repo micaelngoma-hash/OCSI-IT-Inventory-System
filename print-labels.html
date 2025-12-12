@@ -2,105 +2,169 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>OCSI Inventory – Print QR Labels</title>
+<title>Print QR Labels – OCSI IT Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
-  body { font-family: Arial, sans-serif; padding: 20px; }
-  h1 { margin-bottom: 5px; }
-  .preview {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px,1fr));
-    gap: 18px;
-    margin-top: 20px;
+  body {
+    font-family: system-ui, sans-serif;
+    background: #f5f7fb;
+    margin: 0;
+    padding: 20px;
   }
-  .label {
-    border: 1px solid #ccc;
-    padding: 8px;
-    border-radius: 8px;
-    text-align: center;
+
+  h1 { margin-top: 0; }
+
+  .top-controls {
+    background: white;
+    padding: 14px 18px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 20px;
   }
-  .label svg {
-    width: 120px;
-    height: 120px;
-  }
-  #controls {
-    display:flex;
-    gap:12px;
-    align-items:center;
-    margin-top:10px;
-  }
-  select, button {
-    padding:6px 10px;
+
+  .layout-option {
+    padding: 6px 12px;
     border-radius: 6px;
-    border:1px solid #bbb;
-    cursor:pointer;
+    border: 1px solid #cbd5e1;
+    cursor: pointer;
+    margin-right: 6px;
+    background: white;
   }
+  .layout-option.active {
+    background: #1a73e8;
+    color: white;
+    border-color: #1a73e8;
+  }
+
+  #labelsArea {
+    display: grid;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .label {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 6px;
+    text-align: center;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .label svg {
+    width: 100%;
+  }
+
+  /* A4 print settings */
   @media print {
-    #controls { display:none; }
-    body { padding: 0; margin: 0; }
-    .label { page-break-inside: avoid; }
+    body { padding: 0; background: white; }
+
+    .top-controls { display: none !important; }
   }
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-</head>
+<script type="module">
+  import { db } from "./firebase.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+  const params = new URLSearchParams(location.search);
+  const idList = (params.get("ids") || "").split(",").filter(v => v.trim() !== "");
+
+  const labelsArea = document.getElementById("labelsArea");
+
+  let layout = 12; // default grid count
+  updateGrid();
+
+  // -------------------------
+  //  GRID LAYOUT SWITCHING
+  // -------------------------
+  function updateGrid() {
+    if (layout === 6) labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
+    if (layout === 12) labelsArea.style.gridTemplateColumns = "repeat(3, 1fr)";
+    if (layout === 24) labelsArea.style.gridTemplateColumns = "repeat(4, 1fr)";
+  }
+
+  window.setLayout = function(count) {
+    layout = count;
+    document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("btn" + count).classList.add("active");
+    updateGrid();
+  };
+
+  // -------------------------
+  // LOAD ITEMS + RENDER LABELS
+  // -------------------------
+  async function loadAndRender() {
+    labelsArea.innerHTML = "<p>Loading labels…</p>";
+
+    const items = [];
+    for (const id of idList) {
+      const snap = await getDoc(doc(db, "items", id));
+      if (snap.exists()) items.push({ id, ...snap.data() });
+    }
+
+    if (items.length === 0) {
+      labelsArea.innerHTML = "<p>No items found.</p>";
+      return;
+    }
+
+    labelsArea.innerHTML = ""; // clear
+
+    for (const item of items) {
+      const container = document.createElement("div");
+      container.className = "label";
+
+      // QR Data
+      const qrData = `${location.origin}/item.html?id=${item.id}`;
+
+      // Generate SVG QR
+      const svg = await QRCode.toString(qrData, {
+        type: "svg",
+        margin: 0,
+        scale: 10,
+        errorCorrectionLevel: "H"
+      });
+
+      container.innerHTML = `
+        <div class="qr">${svg}</div>
+        <div style="font-size:.8rem;margin-top:4px;font-weight:600;">
+          ${item.assetId || ""}
+        </div>
+        <div style="font-size:.7rem;color:#555;">${item.deviceName || ""}</div>
+      `;
+
+      labelsArea.appendChild(container);
+    }
+  }
+
+  loadAndRender();
+</script>
+
+</head>
 <body>
 
-<h1>Print QR Labels</h1>
-<p>Select your label size and print.</p>
+<h1>Bulk QR Label Printing</h1>
 
-<div id="controls">
-  <label>Label Size:</label>
-  <select id="labelSize">
-    <option value="6">Large – 6 per A4</option>
-    <option value="12">Medium – 12 per A4</option>
-    <option value="24">Small – 24 per A4</option>
-  </select>
+<div class="top-controls">
+  <strong>Choose label layout:</strong><br><br>
 
-  <button onclick="window.print()">🖨 Print</button>
+  <button id="btn6"  class="layout-option" onclick="setLayout(6)">6 per page (Large)</button>
+  <button id="btn12" class="layout-option active" onclick="setLayout(12)">12 per page (Medium)</button>
+  <button id="btn24" class="layout-option" onclick="setLayout(24)">24 per page (Small)</button>
+
+  <br><br>
+  <button onclick="window.print()"
+          style="padding:10px 20px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;">
+    🖨 Print Labels
+  </button>
 </div>
 
-<div id="labelGrid" class="preview"></div>
-
-<script type="module">
-import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const grid = document.getElementById("labelGrid");
-const params = new URLSearchParams(location.search);
-const ids = params.get("ids")?.split(",") || [];
-
-async function loadLabels() {
-  grid.innerHTML = "";
-
-  for (let id of ids) {
-    const snap = await getDoc(doc(db, "items", id));
-    if (!snap.exists()) continue;
-
-    const it = snap.data();
-    const url = `${location.origin}/item.html?id=${id}`;
-    const svg = await QRCode.toString(url, {
-      type:"svg",
-      errorCorrectionLevel:"H",
-      scale:10,
-      margin:1
-    });
-
-    const div = document.createElement("div");
-    div.className = "label";
-    div.innerHTML = `
-      ${svg}
-      <div style="font-weight:bold;margin-top:8px;">${it.assetId || ""}</div>
-      <div style="font-size:.8rem;">${it.deviceName || ""}</div>
-      <div style="font-size:.75rem;color:#444;">${it.location || ""}</div>
-    `;
-
-    grid.appendChild(div);
-  }
-}
-
-loadLabels();
-</script>
+<div id="labelsArea"></div>
 
 </body>
 </html>
