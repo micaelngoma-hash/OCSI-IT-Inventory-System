@@ -4,9 +4,16 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Inventory List</title>
+
+<!-- QR Library -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
   :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --bg:#0f172a;
+    --bg2:#0b1020;
+    --brand:#1a73e8;
+    --border:#e5e7eb;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
@@ -28,54 +35,16 @@
     display:flex;align-items:center;gap:8px;
     padding:9px 11px;border-radius:9px;
     color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:.92rem;
   }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .nav a.active,.nav a:hover{background:#111a33;}
 
-  .content{
-    padding:18px;
-    max-width:1150px;
-    margin:0 auto;
-    width:100%;
-  }
-  h1{margin:0 0 4px;font-size:1.4rem;}
-  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-
-  .toolbar{
-    display:flex;justify-content:space-between;align-items:center;
-    margin-bottom:10px;gap:10px;flex-wrap:wrap;
-  }
-  .search-box{
-    display:flex;align-items:center;gap:6px;
-    background:white;border:1px solid var(--border);
-    border-radius:999px;padding:4px 10px;
-    max-width:320px;width:100%;
-  }
-  .search-box input{
-    border:none;outline:none;font-size:.88rem;width:100%;
-    background:transparent;
-  }
-  .filters{display:flex;gap:8px;flex-wrap:wrap;}
-  select{
-    padding:6px 8px;border-radius:999px;
-    border:1px solid var(--border);font-size:.85rem;background:white;
-  }
-  .btn{
-    border:none;cursor:pointer;
-    padding:6px 12px;border-radius:999px;
-    font-size:.85rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:5px;
-    text-decoration:none;
-  }
-  .btn-primary{background:var(--brand);color:white;}
-  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+  .content{padding:18px;max-width:1150px;margin:0 auto;}
 
   .table-wrap{
     background:white;border:1px solid var(--border);
-    border-radius:12px;overflow:auto;
+    border-radius:12px;overflow:auto;margin-top:10px;
   }
-  table{border-collapse:collapse;width:100%;min-width:850px;}
+  table{border-collapse:collapse;width:100%;min-width:950px;}
   th,td{
     padding:8px 10px;border-bottom:1px solid #f1f5f9;
     font-size:.88rem;text-align:left;
@@ -86,111 +55,126 @@
   }
   tr:hover td{background:#f9fafb;}
 
-  .pill{
-    display:inline-flex;padding:2px 8px;border-radius:999px;
-    font-size:.75rem;
-  }
-  .pill-green{background:#dcfce7;color:#166534;}
-  .pill-blue{background:#dbeafe;color:#1d4ed8;}
-  .pill-gray{background:#e5e7eb;color:#374151;}
-  .pill-red{background:#fee2e2;color:#b91c1c;}
-
-  /* QR MODAL */
-  #qrModal {
+  /* QR Modal */
+  #qrModal{
     display:none;position:fixed;top:0;left:0;width:100%;height:100%;
     background:rgba(0,0,0,0.55);backdrop-filter:blur(3px);
-    justify-content:center;align-items:center;z-index:9999;
+    justify-content:center;align-items:center;z-index:5000;
   }
-  #qrBox {
-    margin:15px auto;
+  #qrBox svg{width:100%;}
+
+  /* Floating Print Button (FAB) */
+  #fabPrint{
+    position:fixed;
+    bottom:24px;right:24px;
+    width:62px;height:62px;
+    background:var(--brand);
+    border-radius:50%;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:white;
+    font-size:28px;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,0.25);
+    transition:transform .2s ease, opacity .2s;
+    opacity:0;
+    visibility:hidden;
+    z-index:4000;
+  }
+  #fabPrint:hover{
+    transform:scale(1.08);
+  }
+  /* Tooltip */
+  #fabPrint::after{
+    content:"Print Selected Labels";
+    position:absolute;
+    right:75px;
+    background:black;
+    color:white;
+    padding:6px 12px;
+    border-radius:6px;
+    font-size:.78rem;
+    white-space:nowrap;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .2s, transform .2s;
+    pointer-events:none;
+  }
+  #fabPrint:hover::after{
+    opacity:1;
+    transform:translateY(0);
   }
 </style>
 </head>
 
 <body>
 
+<!-- 🔹 TOP BAR -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+  <div id="who" style="opacity:.9;font-size:.85rem;">Checking session…</div>
 </div>
 
 <div class="layout">
+
+  <!-- 🔹 SIDEBAR -->
   <aside class="sidebar">
     <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span>Main Dashboard</a>
-      <a href="software-licenses.html"><span class="icon">🔑</span>Software Licenses</a>
-      <a class="active" href="inventory-list.html"><span class="icon">💻</span>Hardware</a>
-      <a href="scan.html"><span class="icon">📱</span>QR Scan Device</a>
-      <a href="audits.html"><span class="icon">🕒</span>Audits</a>
-      <a href="admin-console.html"><span class="icon">⚙️</span>Admin Console</a>
-      <a href="login.html"><span class="icon">🚪</span>Logout</a>
+      <a href="index.html">📊 Main Dashboard</a>
+      <a href="software-licenses.html">🔑 Software Licenses</a>
+      <a class="active" href="inventory-list.html">💻 Hardware</a>
+      <a href="scan.html">📱 QR Scan Device</a>
+      <a href="audits.html">🕒 Audits</a>
+      <a href="admin-console.html">⚙️ Admin Console</a>
+      <a href="login.html">🚪 Logout</a>
     </nav>
   </aside>
 
+  <!-- 🔹 MAIN CONTENT -->
   <main class="content">
+
     <h1>Inventory</h1>
-    <p class="subtitle">Browse, search, and manage all registered devices.</p>
-
-    <div class="toolbar">
-      <div class="search-box">
-        <span>🔍</span>
-        <input id="search" placeholder="Search by Asset ID, name, user, location…" />
-      </div>
-
-      <div class="filters">
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="in-use">In use</option>
-          <option value="in-storage">In storage</option>
-          <option value="loaned">Loaned</option>
-          <option value="retired">Retired</option>
-          <option value="repair">Under repair</option>
-        </select>
-
-        <button id="exportBtn" class="btn btn-ghost">⬇️ Export CSV</button>
-        <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
-        <button id="addBtn" class="btn btn-primary">➕ New Device</button>
-      </div>
-    </div>
+    <p class="subtitle">Browse, search, manage devices, and generate QR labels.</p>
 
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
+            <th><input type="checkbox" id="checkAll"/></th>
             <th>Asset ID</th>
-            <th>Device Name</th>
+            <th>Name</th>
             <th>Type</th>
             <th>Status</th>
-            <th>Assigned To</th>
+            <th>Assigned</th>
             <th>Location</th>
-            <th>IP</th>
-            <th style="width:160px;">Actions</th>
+            <th>QR</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="tbody">
-          <tr><td colspan="8">Loading devices…</td></tr>
+          <tr><td colspan="9">Loading...</td></tr>
         </tbody>
       </table>
     </div>
+
   </main>
 </div>
 
-<!-- HIGH-RES QR LIBRARY -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<!-- 🔹 Floating Print FAB -->
+<div id="fabPrint" onclick="bulkPrint()">🖨</div>
 
-<!-- QR MODAL -->
+<!-- 🔹 QR Modal UI -->
 <div id="qrModal">
-  <div style="background:white;padding:20px;border-radius:14px;width:320px;
-              text-align:center;box-shadow:0 6px 20px rgba(0,0,0,0.25);">
-    <h3 style="margin-top:0;">Device QR Code</h3>
-    <div id="qrBox"></div>
+  <div style="background:white;padding:20px;border-radius:14px;width:320px;text-align:center;">
+    <h3>Device QR Code</h3>
+    <div id="qrBox" style="margin:15px auto;"></div>
 
     <button id="btnDownloadQR"
-            style="padding:8px 14px;border:none;background:#1a73e8;color:white;
-                   border-radius:999px;cursor:pointer;margin-top:10px;">
-      ⬇️ Download QR (SVG)
+            style="padding:8px 16px;background:#1a73e8;color:white;border-radius:999px;border:none;cursor:pointer;">
+      ⬇️ Download SVG
     </button>
-
+    <br/>
     <button onclick="closeQR()"
             style="margin-top:10px;padding:6px 12px;border-radius:999px;
                    border:1px solid #cbd5e1;background:white;cursor:pointer;">
@@ -199,143 +183,125 @@
   </div>
 </div>
 
+<!-- ------------------------------- -->
+<!-- 🔹 JAVASCRIPT SECTION -->
+<!-- ------------------------------- -->
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl = document.getElementById("who");
   const tbody = document.getElementById("tbody");
-  const searchInput = document.getElementById("search");
-  const statusFilter = document.getElementById("statusFilter");
-  const addBtn = document.getElementById("addBtn");
-  const importBtn = document.getElementById("importBtn");
-  const exportBtn = document.getElementById("exportBtn");
-
-  const EDIT_ROLES = ["admin","it"];
-  let currentRole = "viewer";
+  const checkAll = document.getElementById("checkAll");
+  const fabPrint = document.getElementById("fabPrint");
+  let selected = new Set();
   let allItems = [];
 
   watchAuth({
     allowedRoles:["admin","it","viewer"],
-    whoEl,
-    onReady: async (_user, role)=>{
-      currentRole = role;
-
-      if(!EDIT_ROLES.includes(role)){
-        addBtn.style.display = "none";
-        importBtn.style.display = "none";
-        exportBtn.style.display = "none";
-      } else {
-        addBtn.onclick = () => location.href = "item-form.html";
-        importBtn.onclick = () => location.href = "import-devices.html";
-        exportBtn.onclick = () => location.href = "export-devices.html";
-      }
-
-      await loadItems();
-    }
+    whoEl: document.getElementById("who"),
+    onReady: async () => loadItems()
   });
 
   async function loadItems(){
     const snap = await getDocs(collection(db,"items"));
     allItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    render();
+    renderTable();
   }
 
-  function render(){
-    const term = searchInput.value.toLowerCase();
-    const filter = statusFilter.value;
-
-    const rows = allItems.filter(it => {
-      if(filter && it.status !== filter) return false;
-      const text = [
-        it.assetId, it.deviceName, it.assetType, it.assignedTo,
-        it.location, it.department, it.ipAddress
-      ].join(" ").toLowerCase();
-      return text.includes(term);
-    });
-
-    tbody.innerHTML = rows.length ? rows.map(makeRow).join("") :
-      `<tr><td colspan="8">No devices found.</td></tr>`;
-  }
-
-  function makeRow(it){
-    const status = it.status || "unknown";
-    let pill = "pill-gray";
-    if(status === "in-use") pill = "pill-green";
-    else if(status === "loaned") pill = "pill-blue";
-    else if(status === "retired" || status === "repair") pill = "pill-red";
-
-    const viewURL = `item.html?id=${encodeURIComponent(it.id)}`;
-    const editURL = `item-form.html?id=${encodeURIComponent(it.id)}`;
-
-    const actions =
-      EDIT_ROLES.includes(currentRole)
-        ? `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${viewURL}">View</a>
-           <a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${editURL}">Edit</a>`
-        : `<a class="btn btn-ghost" style="font-size:.8rem;padding:3px 8px;" href="${viewURL}">View</a>`;
-
-    return `
+  function renderTable(){
+    tbody.innerHTML = allItems.map(item => {
+      return `
       <tr>
-        <td>${escapeHtml(it.assetId || "")}</td>
-        <td>${escapeHtml(it.deviceName || "")}</td>
-        <td>${escapeHtml(it.assetType || "")}</td>
-        <td><span class="pill ${pill}">${escapeHtml(status.replace(/-/g," "))}</span></td>
-        <td>${escapeHtml(it.assignedTo || "")}</td>
-        <td>${escapeHtml(it.location || "")}</td>
-        <td>${escapeHtml(it.ipAddress || "")}</td>
+        <td><input type="checkbox" class="chk" data-id="${item.id}"></td>
+        <td>${item.assetId || ""}</td>
+        <td>${item.deviceName || ""}</td>
+        <td>${item.assetType || ""}</td>
+        <td>${item.status || ""}</td>
+        <td>${item.assignedTo || ""}</td>
+        <td>${item.location || ""}</td>
+
+        <!-- QR Button -->
         <td>
-          ${actions}
-          <button class="btn btn-ghost"
-                  style="font-size:.8rem;padding:3px 8px;margin-left:4px;"
-                  onclick="openQR('${it.id}', '${escapeHtml(it.assetId||"")}', '${escapeHtml(it.deviceName||"")}')">
-            📱 QR
+          <button onclick="openQR('${item.id}', '${item.assetId}', '${item.deviceName}')"
+                  style="padding:4px 8px;border-radius:8px;border:1px solid #cbd5e1;background:white;cursor:pointer;">
+            📱
           </button>
         </td>
+
+        <!-- View/Edit -->
+        <td>
+          <a href="item.html?id=${item.id}" class="btn btn-ghost" style="padding:4px 8px;">View</a>
+        </td>
       </tr>`;
-  }
+    }).join("");
 
-  window.openQR = async function(id, assetId, name) {
-    const qrModal = document.getElementById("qrModal");
-    const qrBox = document.getElementById("qrBox");
-    const btnDL = document.getElementById("btnDownloadQR");
-
-    qrBox.innerHTML = "";
-
-    const url = `${location.origin}/item.html?id=${id}`;
-
-    const svg = await QRCode.toString(url, {
-      type: "svg",
-      errorCorrectionLevel: "H",
-      margin: 2,
-      scale: 14
+    document.querySelectorAll(".chk").forEach(chk => {
+      chk.addEventListener("change", () => updateSelection(chk));
     });
 
-    qrBox.innerHTML = svg;
+    checkAll.onchange = () => {
+      selected.clear();
+      document.querySelectorAll(".chk").forEach(chk => {
+        chk.checked = checkAll.checked;
+        if(chk.checked) selected.add(chk.dataset.id);
+      });
+      updateFAB();
+    };
+  }
 
-    btnDL.onclick = () => {
-      const blob = new Blob([svg], { type: "image/svg+xml" });
+  function updateSelection(chk){
+    if(chk.checked) selected.add(chk.dataset.id);
+    else selected.delete(chk.dataset.id);
+    updateFAB();
+  }
+
+  function updateFAB(){
+    if(selected.size > 0){
+      fabPrint.style.opacity = "1";
+      fabPrint.style.visibility = "visible";
+    } else {
+      fabPrint.style.opacity = "0";
+      fabPrint.style.visibility = "hidden";
+    }
+  }
+
+  /* ---------------------------
+      QR CODE MODAL
+  ----------------------------*/
+  window.openQR = async function(id, assetId, name){
+    const qrData = `${location.origin}/item.html?id=${id}`;
+    const svg = await QRCode.toString(qrData, {
+      type:"svg",
+      margin:2,
+      scale:12,
+      errorCorrectionLevel:"H"
+    });
+    document.getElementById("qrBox").innerHTML = svg;
+
+    document.getElementById("btnDownloadQR").onclick = () => {
+      const blob = new Blob([svg], { type:"image/svg+xml" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `${assetId || name || "qr"}.svg`;
       a.click();
     };
 
-    qrModal.style.display = "flex";
+    document.getElementById("qrModal").style.display = "flex";
   };
 
   window.closeQR = () => {
     document.getElementById("qrModal").style.display = "none";
   };
 
-  function escapeHtml(str){
-    return str ? String(str).replace(/[&<>"']/g, m => (
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]
-    )) : "";
-  }
-
-  searchInput.oninput = render;
-  statusFilter.onchange = render;
-
+  /* ---------------------------
+      BULK PRINT LABELS
+  ----------------------------*/
+  window.bulkPrint = () => {
+    if(selected.size === 0) return;
+    const ids = Array.from(selected);
+    window.location.href = `print-labels.html?ids=${ids.join(",")}`;
+  };
 </script>
+
 </body>
 </html>
