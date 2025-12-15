@@ -5,7 +5,6 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- html2canvas + jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -16,9 +15,7 @@
     margin: 0;
     padding: 20px;
   }
-
   h1 { margin-top: 0; font-size: 2rem; }
-
   .top-controls {
     background: white;
     padding: 14px 18px;
@@ -26,7 +23,6 @@
     border: 1px solid #e5e7eb;
     margin-bottom: 20px;
   }
-
   .layout-option {
     padding: 8px 16px;
     border-radius: 12px;
@@ -41,13 +37,11 @@
     color: white;
     border-color: #1a73e8;
   }
-
   #labelsArea {
     display: grid;
     gap: 12px;
     justify-content: center;
   }
-
   .label {
     background: white;
     border: 1px solid #e5e7eb;
@@ -56,19 +50,14 @@
     border-radius: 8px;
     width: 100%;
   }
-
   .label svg {
     width: 100%;
     height: auto;
   }
-
-  /* PRINT OPTIMIZATION */
   @media print {
     body { background: white; padding: 0; margin: 0; }
     .top-controls { display: none !important; }
   }
-
-  /* Alignment test grid */
   .grid-test {
     width: 100%;
     height: 90%;
@@ -110,140 +99,129 @@
   </button>
 </div>
 
-<!-- TEST GRID -->
 <div id="testGrid" style="display:none;">
   <div class="grid-test"></div>
 </div>
 
 <div id="labelsArea"></div>
 
-<!-- ====================== -->
-<!-- MAIN SCRIPT (FINAL)   -->
-<!-- ====================== -->
 <script type="module">
-/* IMPORTS */
-import { watchAuth, db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { db } from "./firebase.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
-/* ⭐⭐⭐ CRITICAL FIX — use ESM QRCode module ⭐⭐⭐ */
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
+  const labelsArea = document.getElementById("labelsArea");
+  const btnPDF     = document.getElementById("btnPDF");
+  const btnTest    = document.getElementById("btnTest");
+  const testGrid   = document.getElementById("testGrid");
 
+  const params = new URLSearchParams(location.search);
+  const rawIds = params.get("ids") || "";
+  const idList = rawIds.split(",").map(s => s.trim()).filter(Boolean);
 
-/* DOM */
-const labelsArea = document.getElementById("labelsArea");
-const btnPDF     = document.getElementById("btnPDF");
-const btnTest    = document.getElementById("btnTest");
-const testGrid   = document.getElementById("testGrid");
-
-const params = new URLSearchParams(location.search);
-const idList = (params.get("ids") || "").split(",").filter(id => id.trim() !== "");
-
-let layout = 12;
-updateGrid();
-
-/* GRID BUTTONS */
-document.getElementById("btn6").onclick  = () => setLayout(6);
-document.getElementById("btn12").onclick = () => setLayout(12);
-document.getElementById("btn24").onclick = () => setLayout(24);
-
-function setLayout(n) {
-  layout = n;
-  document.querySelectorAll(".layout-option").forEach(b => b.classList.remove("active"));
-  document.getElementById("btn" + n).classList.add("active");
+  let layout = 12;
   updateGrid();
-}
 
-function updateGrid() {
-  labelsArea.style.gridTemplateColumns =
-    layout === 6  ? "repeat(2, 1fr)" :
-    layout === 12 ? "repeat(3, 1fr)" :
-                    "repeat(4, 1fr)";
-}
+  document.getElementById("btn6").onclick  = () => setLayout(6);
+  document.getElementById("btn12").onclick = () => setLayout(12);
+  document.getElementById("btn24").onclick = () => setLayout(24);
 
-/* AUTHENTICATE FIRST */
-watchAuth({
-  allowedRoles: ["admin", "it", "viewer"],
-  whoEl: null,
-  onReady: () => loadLabels()
-});
-
-/* LOAD LABELS */
-async function loadLabels() {
-
-  labelsArea.innerHTML = "<p>Loading labels…</p>";
-
-  const items = [];
-
-  for (const id of idList) {
-    const snap = await getDoc(doc(db, "items", id));
-    if (snap.exists()) items.push({ id, ...snap.data() });
+  function setLayout(n) {
+    layout = n;
+    document.querySelectorAll(".layout-option").forEach(b => b.classList.remove("active"));
+    document.getElementById("btn" + n).classList.add("active");
+    updateGrid();
   }
 
-  if (items.length === 0) {
-    labelsArea.innerHTML = "<p>No items found.</p>";
-    return;
+  function updateGrid() {
+    labelsArea.style.gridTemplateColumns =
+      layout === 6  ? "repeat(2, 1fr)" :
+      layout === 12 ? "repeat(3, 1fr)" :
+                      "repeat(4, 1fr)";
   }
 
-  labelsArea.innerHTML = "";
+  // No auth gate here – label printing can be public-read if rules allow.
+  loadLabels();
 
-  for (const item of items) {
-    const div = document.createElement("div");
-    div.className = "label";
+  async function loadLabels() {
+    if (idList.length === 0) {
+      labelsArea.innerHTML = "<p>No item IDs specified.</p>";
+      return;
+    }
 
-    const qrURL = `${location.origin}/item.html?id=${item.id}`;
+    labelsArea.innerHTML = "<p>Loading labels…</p>";
 
-    /* ⭐ QRCode now works because we imported ESM version ⭐ */
-    const svg = await QRCode.toString(qrURL, {
-      type: "svg",
-      margin: 0,
-      scale: 10,
-      errorCorrectionLevel: "H"
-    });
+    const items = [];
+    for (const id of idList) {
+      try {
+        const snap = await getDoc(doc(db, "items", id));
+        if (snap.exists()) {
+          items.push({ id, ...snap.data() });
+        }
+      } catch (e) {
+        console.error("Error fetching item", id, e);
+      }
+    }
 
-    div.innerHTML = `
-      <div>${svg}</div>
-      <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-        ${item.assetId || ""}
-      </div>
-      <div style="font-size:.75rem;color:#444;">
-        ${item.deviceName || ""}
-      </div>
-    `;
+    if (items.length === 0) {
+      labelsArea.innerHTML = "<p>No items found.</p>";
+      return;
+    }
 
-    labelsArea.appendChild(div);
+    labelsArea.innerHTML = "";
+
+    for (const item of items) {
+      const div = document.createElement("div");
+      div.className = "label";
+
+      const qrURL = `${location.origin}${location.pathname.replace("print-labels.html","item.html")}?id=${item.id}`;
+
+      const svg = await QRCode.toString(qrURL, {
+        type: "svg",
+        margin: 0,
+        scale: 10,
+        errorCorrectionLevel: "H"
+      });
+
+      div.innerHTML = `
+        <div>${svg}</div>
+        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+          ${item.assetId || ""}
+        </div>
+        <div style="font-size:.75rem;color:#444;">
+          ${item.deviceName || ""}
+        </div>
+      `;
+
+      labelsArea.appendChild(div);
+    }
   }
-}
 
-/* PDF EXPORT */
-btnPDF.onclick = async () => {
+  btnPDF.onclick = async () => {
+    await new Promise(r => setTimeout(r, 300));
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
 
-  await new Promise(r => setTimeout(r, 300));
+    const canvas = await html2canvas(labelsArea, { scale: 2 });
+    const img = canvas.toDataURL("image/png");
 
-  const { jsPDF } = window.jspdf;
+    const pageWidth = 210;
+    const imgWidth = pageWidth - 10;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-  const pdf = new jsPDF("p", "mm", "a4");
+    pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
+    pdf.save("QR-labels.pdf");
+  };
 
-  const canvas = await html2canvas(labelsArea, { scale: 2 });
-  const img = canvas.toDataURL("image/png");
-
-  const pageWidth = 210;
-  const imgWidth = pageWidth - 10;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-  pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
-  pdf.save("QR-labels.pdf");
-};
-
-/* TEST PAGE GRID */
-btnTest.onclick = () => {
-  labelsArea.style.display = "none";
-  testGrid.style.display = "block";
-  window.print();
-  setTimeout(() => {
-    testGrid.style.display = "none";
-    labelsArea.style.display = "grid";
-  }, 500);
-};
+  btnTest.onclick = () => {
+    labelsArea.style.display = "none";
+    testGrid.style.display = "block";
+    window.print();
+    setTimeout(() => {
+      testGrid.style.display = "none";
+      labelsArea.style.display = "grid";
+    }, 500);
+  };
 </script>
 
 </body>
