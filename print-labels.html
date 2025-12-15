@@ -57,8 +57,6 @@
     padding: 10px;
     text-align: center;
     border-radius: 8px;
-    display: flex;
-    flex-direction: column;
   }
 
   .label svg {
@@ -66,13 +64,14 @@
     height: auto;
   }
 
-  /* Print optimization */
+  /* PRINT OPTIMIZATION */
   @media print {
     body { background: white; padding: 0; margin: 0; }
     .top-controls { display: none !important; }
   }
 </style>
 </head>
+
 <body>
 
 <h1>Bulk QR Label Printing</h1>
@@ -86,14 +85,12 @@
 
   <br><br>
 
-  <!-- PRINT -->
   <button onclick="window.print()"
           style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
     🖨 Print Labels
   </button>
 
-  <!-- PDF EXPORT -->
-  <button onclick="exportPDF()"
+  <button id="btnPDF"
           style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
     📄 Download PDF
   </button>
@@ -102,29 +99,34 @@
 <div id="labelsArea"></div>
 
 
+<!-- ====================== -->
+<!-- MAIN SCRIPT (FIXED)   -->
+<!-- ====================== -->
 <script type="module">
-  import { db } from "./firebase.js";
-  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+window.onload = function () {
+
+  /* DOM REFERENCES */
+  const labelsArea = document.getElementById("labelsArea");
+  const btnPDF = document.getElementById("btnPDF");
 
   const params = new URLSearchParams(location.search);
   const idList = (params.get("ids") || "").split(",").filter(v => v.trim() !== "");
 
-  const labelsArea = document.getElementById("labelsArea");
-
-  /* -------------------------
-     GRID BEHAVIOR
-  --------------------------*/
   let layout = 12;
   updateGrid();
 
+  /* ---------------- GRID SWITCH ---------------- */
   document.getElementById("btn6").onclick  = () => setLayout(6);
   document.getElementById("btn12").onclick = () => setLayout(12);
   document.getElementById("btn24").onclick = () => setLayout(24);
 
-  function setLayout(num) {
-    layout = num;
+  function setLayout(n) {
+    layout = n;
     document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
-    document.getElementById("btn" + num).classList.add("active");
+    document.getElementById("btn" + n).classList.add("active");
     updateGrid();
   }
 
@@ -134,13 +136,13 @@
     if (layout === 24) labelsArea.style.gridTemplateColumns = "repeat(4, 1fr)";
   }
 
-  /* -------------------------
-     LOAD ITEMS + RENDER LABELS
-  --------------------------*/
-  async function loadAndRender() {
+  /* ---------------- LOAD + RENDER LABELS ---------------- */
+  async function loadLabels() {
+
     labelsArea.innerHTML = "<p>Loading labels…</p>";
 
     const items = [];
+
     for (const id of idList) {
       const snap = await getDoc(doc(db, "items", id));
       if (snap.exists()) items.push({ id, ...snap.data() });
@@ -152,68 +154,56 @@
     }
 
     labelsArea.innerHTML = "";
-    const jobs = [];
 
     for (const item of items) {
-      const container = document.createElement("div");
-      container.className = "label";
+      const div = document.createElement("div");
+      div.className = "label";
 
-      const url = `${location.origin}/item.html?id=${item.id}`;
+      const qrData = `${location.origin}/item.html?id=${item.id}`;
 
-      const job = QRCode.toString(url, {
+      const svg = await QRCode.toString(qrData, {
         type: "svg",
-        scale: 10,
         margin: 0,
+        scale: 10,
         errorCorrectionLevel: "H"
-      }).then(svg => {
-        container.innerHTML = `
-          <div>${svg}</div>
-          <div style="font-size:.85rem;margin-top:6px;font-weight:600;">${item.assetId || ""}</div>
-          <div style="font-size:.75rem;color:#444;">${item.deviceName || ""}</div>
-        `;
-        labelsArea.appendChild(container);
       });
 
-      jobs.push(job);
-    }
+      div.innerHTML = `
+        <div>${svg}</div>
+        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+          ${item.assetId || ""}
+        </div>
+        <div style="font-size:.75rem;color:#444;">
+          ${item.deviceName || ""}
+        </div>
+      `;
 
-    await Promise.all(jobs);
-    console.log("All labels rendered.");
+      labelsArea.appendChild(div);
+    }
   }
 
-  loadAndRender();
+  loadLabels();
 
-  /* -------------------------
-     PDF EXPORT FUNCTION
-  --------------------------*/
-  async function exportPDF() {
+  /* ---------------- PDF EXPORT ---------------- */
+  btnPDF.onclick = async function () {
+
+    await new Promise(r => setTimeout(r, 300)); // allow SVG to render
+
     const { jsPDF } = window.jspdf;
-
-    // Wait a moment for SVGs to settle
-    await new Promise(r => setTimeout(r, 300));
-
     const pdf = new jsPDF("p", "mm", "a4");
 
-    // Capture the labels container
-    const canvas = await html2canvas(labelsArea, {
-      scale: 2,
-      useCORS: true
-    });
-
+    const canvas = await html2canvas(labelsArea, { scale: 2 });
     const img = canvas.toDataURL("image/png");
 
     const pageWidth = 210;
-    const pageHeight = 297;
+    const imgWidth = pageWidth - 10;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-    const ratio = canvas.width / canvas.height;
-    const pdfWidth = pageWidth - 10;
-    const pdfHeight = pdfWidth / ratio;
-
-    pdf.addImage(img, "PNG", 5, 5, pdfWidth, pdfHeight);
-
+    pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
     pdf.save("QR-labels.pdf");
-  }
+  };
 
+};
 </script>
 
 </body>
