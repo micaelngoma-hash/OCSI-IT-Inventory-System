@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Device Details</title>
+
 <style>
   :root{
     --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
@@ -26,13 +27,13 @@
   }
   .nav a:hover,.nav a.active{background:#111a33;}
   .nav .icon{width:18px;text-align:center;opacity:.8;}
-  .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
+
+  .content{
+    padding:18px;max-width:1100px;margin:0 auto;width:100%;
+  }
   h1{margin:0 0 6px;font-size:1.4rem;}
   .sub{color:#64748b;font-size:.9rem;margin-bottom:12px;}
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
   .status-pill{
     display:inline-flex;align-items:center;gap:6px;
     padding:3px 9px;border-radius:999px;font-size:.78rem;
@@ -43,11 +44,21 @@
     border-radius:12px;padding:14px 16px;margin-bottom:12px;
   }
   .card h2{margin:0 0 8px;font-size:1.05rem;}
-  .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:6px 16px;}
+
+  .grid-2{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:6px 16px;
+  }
+
   .field-label{font-size:.78rem;color:#94a3b8;}
   .field-value{font-size:.92rem;color:#0f172a;}
+
   .notes{white-space:pre-wrap;font-size:.92rem;color:#0f172a;margin-top:4px;}
-  .toolbar{display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;}
+
+  .toolbar{
+    display:flex;justify-content:flex-end;gap:8px;margin-bottom:12px;
+  }
   .btn{
     border:none;cursor:pointer;
     padding:6px 12px;border-radius:999px;
@@ -55,9 +66,29 @@
     text-decoration:none;display:inline-flex;align-items:center;gap:4px;
   }
   .btn-primary{background:var(--brand);color:white;}
-  .btn-ghost{background:transparent;color:#0f172a;border:1px solid #cbd5e1;}
+  .btn-ghost{background:white;border:1px solid #cbd5e1;color:#0f172a;}
+
+  /* ===== QR BLOCK ===== */
+  .qr-card{
+    margin-top:16px;
+    background:white;
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+  }
+  .qr-card h2{
+    font-size:1.05rem;
+    margin-top:0;
+  }
+  .qr-box svg{
+    width:180px;
+    height:auto;
+  }
+
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
@@ -66,133 +97,89 @@
 </div>
 
 <div class="layout">
+
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar-root"></aside>
 
+  <!-- MAIN -->
   <main class="content">
     <h1 id="title">Device</h1>
     <div class="sub" id="subtitle">Loading device…</div>
 
     <div class="toolbar">
-      <a id="editLink" class="btn btn-primary" href="#"><span>✏️</span><span>Edit</span></a>
-      <button type="button" class="btn btn-ghost" onclick="history.back()">Back</button>
+      <a id="editLink" class="btn btn-primary" href="#">✏️ Edit</a>
+      <button type="button" class="btn btn-ghost" onclick="history.back()">← Back</button>
     </div>
 
-    <!-- Identification -->
+    <!-- IDENTIFICATION -->
     <section class="card">
       <h2>Identification</h2>
       <div class="grid-2">
-        <div>
-          <div class="field-label">Asset ID</div>
-          <div class="field-value" id="f_assetId">–</div>
-        </div>
-        <div>
-          <div class="field-label">Device Name</div>
-          <div class="field-value" id="f_deviceName">–</div>
-        </div>
-        <div>
-          <div class="field-label">Asset Type / Device Type</div>
-          <div class="field-value" id="f_assetType">–</div>
-        </div>
-        <div>
-          <div class="field-label">Manufacturer &amp; Model</div>
-          <div class="field-value" id="f_manufacturer">–</div>
-        </div>
-        <div>
-          <div class="field-label">Serial Number</div>
-          <div class="field-value" id="f_serialNumber">–</div>
-        </div>
-        <div>
-          <div class="field-label">Status</div>
-          <div class="field-value"><span id="f_status" class="status-pill">–</span></div>
-        </div>
+        <div><div class="field-label">Asset ID</div><div class="field-value" id="f_assetId">–</div></div>
+        <div><div class="field-label">Device Name</div><div class="field-value" id="f_deviceName">–</div></div>
+        <div><div class="field-label">Asset Type</div><div class="field-value" id="f_assetType">–</div></div>
+        <div><div class="field-label">Manufacturer</div><div class="field-value" id="f_manufacturer">–</div></div>
+        <div><div class="field-label">Serial Number</div><div class="field-value" id="f_serialNumber">–</div></div>
+        <div><div class="field-label">Status</div><div class="field-value"><span id="f_status" class="status-pill">–</span></div></div>
       </div>
     </section>
 
-    <!-- Location & Assignment -->
+    <!-- LOCATION -->
     <section class="card">
-      <h2>Location &amp; Assignment</h2>
+      <h2>Location & Assignment</h2>
       <div class="grid-2">
-        <div>
-          <div class="field-label">Assigned To</div>
-          <div class="field-value" id="f_assignedTo">–</div>
-        </div>
-        <div>
-          <div class="field-label">Department</div>
-          <div class="field-value" id="f_department">–</div>
-        </div>
-        <div>
-          <div class="field-label">Location</div>
-          <div class="field-value" id="f_location">–</div>
-        </div>
-        <div>
-          <div class="field-label">Building / Floor</div>
-          <div class="field-value" id="f_buildingFloor">–</div>
-        </div>
+        <div><div class="field-label">Assigned To</div><div class="field-value" id="f_assignedTo">–</div></div>
+        <div><div class="field-label">Department</div><div class="field-value" id="f_department">–</div></div>
+        <div><div class="field-label">Location</div><div class="field-value" id="f_location">–</div></div>
+        <div><div class="field-label">Building / Floor</div><div class="field-value" id="f_buildingFloor">–</div></div>
       </div>
     </section>
 
-    <!-- Network & System -->
+    <!-- NETWORK -->
     <section class="card">
-      <h2>Network &amp; System Info</h2>
+      <h2>Network & System Info</h2>
       <div class="grid-2">
-        <div>
-          <div class="field-label">IP Address</div>
-          <div class="field-value" id="f_ipAddress">–</div>
-        </div>
-        <div>
-          <div class="field-label">MAC Address</div>
-          <div class="field-value" id="f_macAddress">–</div>
-        </div>
-        <div>
-          <div class="field-label">Operating System / Version</div>
-          <div class="field-value" id="f_osVersion">–</div>
-        </div>
+        <div><div class="field-label">IP Address</div><div class="field-value" id="f_ipAddress">–</div></div>
+        <div><div class="field-label">MAC Address</div><div class="field-value" id="f_macAddress">–</div></div>
+        <div><div class="field-label">OS / Version</div><div class="field-value" id="f_osVersion">–</div></div>
       </div>
     </section>
 
-    <!-- Procurement & Lifecycle -->
+    <!-- PROCUREMENT -->
     <section class="card">
-      <h2>Procurement &amp; Lifecycle</h2>
+      <h2>Procurement & Lifecycle</h2>
       <div class="grid-2">
-        <div>
-          <div class="field-label">Purchase Date</div>
-          <div class="field-value" id="f_purchaseDate">–</div>
-        </div>
-        <div>
-          <div class="field-label">Date of Installation</div>
-          <div class="field-value" id="f_installationDate">–</div>
-        </div>
-        <div>
-          <div class="field-label">Vendor / Supplier</div>
-          <div class="field-value" id="f_vendor">–</div>
-        </div>
-        <div>
-          <div class="field-label">Warranty End Date</div>
-          <div class="field-value" id="f_warrantyEndDate">–</div>
-        </div>
-        <div>
-          <div class="field-label">Estimated Replacement Date</div>
-          <div class="field-value" id="f_replacementDate">–</div>
-        </div>
-        <div>
-          <div class="field-label">Replacement Alert</div>
-          <div class="field-value" id="f_replacementAlert">–</div>
-        </div>
-        <div>
-          <div class="field-label">Removed Date</div>
-          <div class="field-value" id="f_removedDate">–</div>
-        </div>
+        <div><div class="field-label">Purchase Date</div><div class="field-value" id="f_purchaseDate">–</div></div>
+        <div><div class="field-label">Installation Date</div><div class="field-value" id="f_installationDate">–</div></div>
+        <div><div class="field-label">Vendor</div><div class="field-value" id="f_vendor">–</div></div>
+        <div><div class="field-label">Warranty End</div><div class="field-value" id="f_warrantyEndDate">–</div></div>
+        <div><div class="field-label">Replacement Date</div><div class="field-value" id="f_replacementDate">–</div></div>
+        <div><div class="field-label">Replacement Alert</div><div class="field-value" id="f_replacementAlert">–</div></div>
+        <div><div class="field-label">Removed Date</div><div class="field-value" id="f_removedDate">–</div></div>
       </div>
     </section>
 
-    <!-- Notes -->
+    <!-- NOTES -->
     <section class="card">
-      <h2>Notes &amp; Misc</h2>
+      <h2>Notes</h2>
       <div class="notes" id="f_notes">No notes recorded.</div>
+    </section>
+
+    <!-- QR CODE BLOCK -->
+    <section class="qr-card">
+      <h2>QR Code</h2>
+      <div id="qrBox" class="qr-box"></div>
+
+      <button id="btnDownloadQR" class="btn btn-primary" style="margin-top:12px;">
+        ⬇️ Download QR (SVG)
+      </button>
     </section>
 
   </main>
 </div>
+
+<!-- QR LIBRARY -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <script src="sidebar.js"></script>
 
@@ -200,10 +187,12 @@
   import { db, watchAuth } from "./firebase.js";
   import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const who   = document.getElementById("who");
-  const params= new URLSearchParams(location.search);
-  const itemId= params.get("id");
-  const editLink = document.getElementById("editLink");
+  const who        = document.getElementById("who");
+  const params     = new URLSearchParams(location.search);
+  const itemId     = params.get("id");
+  const editLink   = document.getElementById("editLink");
+  const qrBox      = document.getElementById("qrBox");
+  const btnQR      = document.getElementById("btnDownloadQR");
 
   const field = id => document.getElementById(id);
 
@@ -211,71 +200,103 @@
     allowedRoles:["admin","it","viewer"],
     whoEl: who,
     onReady: async (_user, role)=>{
-      if(itemId){
-        if(role==="viewer") editLink.style.display="none";
-        else editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
-        await loadItem();
-      }else{
+      if(!itemId){
         document.getElementById("subtitle").textContent = "No device ID provided.";
         editLink.style.display="none";
+        return;
       }
+      if(role==="viewer") editLink.style.display="none";
+      else editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
+
+      await loadItem();
+      await loadQR();
     }
   });
 
-  function show(v){ return v || "–"; }
-  function showDate(v){
-    if(!v) return "–";
-    if(v.toDate) return v.toDate().toISOString().slice(0,10);
-    return String(v).slice(0,10);
-  }
 
+  /* LOAD ITEM */
   async function loadItem(){
     const snap = await getDoc(doc(db,"items",itemId));
-    if(!snap.exists()){
+    if(!snap.exists()){ 
       document.getElementById("subtitle").textContent = "Device not found.";
       return;
     }
     const d = snap.data();
 
-    document.getElementById("title").textContent = d.deviceName || d.assetId || "Device";
-    document.getElementById("subtitle").textContent = (d.assetType||"") + (d.location? " • "+d.location:"");
+    // Title + Subtitle
+    document.getElementById("title").textContent =
+      d.deviceName || d.assetId || "Device";
 
-    field("f_assetId").textContent = show(d.assetId);
-    field("f_deviceName").textContent = show(d.deviceName);
-    field("f_assetType").textContent = show(d.assetType);
-    field("f_manufacturer").textContent = show(d.manufacturer);
-    field("f_serialNumber").textContent = show(d.serialNumber);
+    document.getElementById("subtitle").textContent =
+      (d.assetType||"") + (d.location? " • "+d.location:"");
 
+    // Basic fields
+    field("f_assetId").textContent = d.assetId || "–";
+    field("f_deviceName").textContent = d.deviceName || "–";
+    field("f_assetType").textContent = d.assetType || "–";
+    field("f_manufacturer").textContent = d.manufacturer || "–";
+    field("f_serialNumber").textContent = d.serialNumber || "–";
+
+    // Status
     const st = d.status || "unknown";
-    const stLabel = st.replace(/-/g," ");
-    const stElt = field("f_status");
-    stElt.textContent = stLabel;
-    if(st==="retired" || st==="repair"){
-      stElt.style.background="#fee2e2";
-      stElt.style.color="#b91c1c";
+    const stElem = field("f_status");
+    stElem.textContent = st.replace(/-/g," ");
+    if(["retired","repair"].includes(st)){
+      stElem.style.background="#fee2e2";
+      stElem.style.color="#b91c1c";
     }
 
-    field("f_assignedTo").textContent = show(d.assignedTo);
-    field("f_department").textContent = show(d.department);
-    field("f_location").textContent = show(d.location);
-    field("f_buildingFloor").textContent = show(d.buildingFloor);
+    // Assignment
+    field("f_assignedTo").textContent = d.assignedTo || "–";
+    field("f_department").textContent = d.department || "–";
+    field("f_location").textContent = d.location || "–";
+    field("f_buildingFloor").textContent = d.buildingFloor || "–";
 
-    field("f_ipAddress").textContent = show(d.ipAddress);
-    field("f_macAddress").textContent = show(d.macAddress);
-    field("f_osVersion").textContent  = show(d.osVersion);
+    // Network
+    field("f_ipAddress").textContent = d.ipAddress || "–";
+    field("f_macAddress").textContent = d.macAddress || "–";
+    field("f_osVersion").textContent = d.osVersion || "–";
 
-    field("f_purchaseDate").textContent      = showDate(d.purchaseDate);
-    field("f_installationDate").textContent  = showDate(d.installationDate);
-    field("f_vendor").textContent            = show(d.vendor);
-    field("f_warrantyEndDate").textContent   = showDate(d.warrantyEndDate);
-    field("f_replacementDate").textContent   = showDate(d.replacementDate);
-    field("f_replacementAlert").textContent  = d.replacementAlert ? "Yes" : "No";
-    field("f_removedDate").textContent       = showDate(d.removedDate);
+    // Dates helper
+    const toDate = v => v?.toDate ? v.toDate().toISOString().slice(0,10) : (v || "–");
 
-    field("f_notes").textContent = d.notes ? d.notes : "No notes recorded.";
+    field("f_purchaseDate").textContent     = toDate(d.purchaseDate);
+    field("f_installationDate").textContent = toDate(d.installationDate);
+    field("f_vendor").textContent           = d.vendor || "–";
+    field("f_warrantyEndDate").textContent  = toDate(d.warrantyEndDate);
+    field("f_replacementDate").textContent  = toDate(d.replacementDate);
+    field("f_replacementAlert").textContent = d.replacementAlert ? "Yes" : "No";
+    field("f_removedDate").textContent      = toDate(d.removedDate);
+
+    field("f_notes").textContent = d.notes || "No notes recorded.";
   }
+
+
+  /* LOAD QR CODE */
+  async function loadQR(){
+    qrBox.innerHTML = "";
+
+    const url = `${location.origin}/item.html?id=${itemId}`;
+
+    const svg = await QRCode.toString(url,{
+      type:"svg",
+      margin:2,
+      scale:12,
+      errorCorrectionLevel:"H"
+    });
+
+    qrBox.innerHTML = svg;
+
+    btnQR.onclick = () => {
+      const blob = new Blob([svg], { type:"image/svg+xml" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `QR-${itemId}.svg`;
+      a.click();
+    };
+  }
+
 </script>
 
 </body>
 </html>
-
