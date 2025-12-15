@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Inventory List</title>
-
 <style>
   :root{
     --bg:#0f172a;
@@ -12,25 +11,19 @@
     --brand:#1a73e8;
     --border:#e5e7eb;
   }
-
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
-  /* ===== TOP BAR ===== */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
     padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-
-  /* ===== LAYOUT ===== */
   .layout{
     display:grid;
     grid-template-columns:240px 1fr;
     min-height:calc(100vh - 52px);
   }
-
   .sidebar{
     background:var(--bg2);color:white;padding:14px;
   }
@@ -42,19 +35,14 @@
   }
   .sidebar .nav a:hover,
   .sidebar .nav a.active{background:#111a33;}
-
-  /* ===== MAIN CONTENT ===== */
   .content{
     padding:18px;
     max-width:1150px;
     margin:0 auto;
     width:100%;
   }
-
   h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-
-  /* ===== TOOLBAR ===== */
   .toolbar{
     display:flex;
     justify-content:space-between;
@@ -63,7 +51,6 @@
     gap:12px;
     flex-wrap:wrap;
   }
-
   .search-box{
     display:flex;align-items:center;gap:6px;
     background:white;border:1px solid var(--border);
@@ -74,7 +61,6 @@
     border:none;outline:none;font-size:.88rem;width:100%;
     background:transparent;
   }
-
   .filters{display:flex;gap:8px;flex-wrap:wrap;}
   select{
     padding:6px 10px;border-radius:999px;
@@ -95,8 +81,6 @@
     border:1px solid #cbd5e1;
     color:#0f172a;
   }
-
-  /* ===== TABLE ===== */
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -113,7 +97,6 @@
     position:sticky;top:0;z-index:4;
   }
   tr:hover td{background:#f9fafb;}
-
   .pill{
     padding:2px 8px;border-radius:999px;font-size:.75rem;
     display:inline-flex;
@@ -122,20 +105,16 @@
   .pill-blue{background:#dbeafe;color:#1d4ed8;}
   .pill-gray{background:#e5e7eb;color:#374151;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
-
 </style>
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html">📊 Main Dashboard</a>
@@ -148,14 +127,11 @@
     </nav>
   </aside>
 
-  <!-- CONTENT -->
   <main class="content">
-
     <h1>Inventory</h1>
     <p class="subtitle">Browse, search, and manage all registered devices.</p>
 
     <div class="toolbar">
-
       <div class="search-box">
         <span>🔍</span>
         <input id="search" placeholder="Search device…" />
@@ -175,12 +151,10 @@
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <!-- Bulk QR Button -->
         <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
 
-    <!-- TABLE -->
     <div class="table-wrap">
       <table>
         <thead>
@@ -198,13 +172,11 @@
             <th style="width:160px;">Actions</th>
           </tr>
         </thead>
-
         <tbody id="tbody">
           <tr><td colspan="9">Loading devices…</td></tr>
         </tbody>
       </table>
     </div>
-
   </main>
 </div>
 
@@ -216,11 +188,9 @@
   const tbody        = document.getElementById("tbody");
   const searchInput  = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
-
   const addBtn       = document.getElementById("addBtn");
   const importBtn    = document.getElementById("importBtn");
   const exportBtn    = document.getElementById("exportBtn");
-
   const selectAll    = document.getElementById("selectAll");
   const btnBulkQR    = document.getElementById("btnBulkQR");
 
@@ -228,8 +198,6 @@
   let currentRole = "viewer";
   let allItems = [];
 
-
-  /* AUTHENTICATION */
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
@@ -250,27 +218,20 @@
     }
   });
 
-
-  /* LOAD ITEMS */
   async function loadItems(){
     const snap = await getDocs(collection(db,"items"));
     allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     render();
   }
 
-
-  /* RENDER TABLE */
   function render(){
-    const term   = searchInput.value.toLowerCase();
+    const term   = (searchInput.value || "").toLowerCase();
     const filter = statusFilter.value;
 
     const rows = allItems.filter(it=>{
       if(filter && it.status !== filter) return false;
-      return (
-        `${it.assetId} ${it.deviceName} ${it.assetType} ${it.assignedTo} ${it.location} ${it.ipAddress}`
-        .toLowerCase()
-        .includes(term)
-      );
+      const blob = `${it.assetId || ""} ${it.deviceName || ""} ${it.assetType || ""} ${it.assignedTo || ""} ${it.location || ""} ${it.ipAddress || ""}`;
+      return blob.toLowerCase().includes(term);
     });
 
     if(rows.length === 0){
@@ -281,8 +242,6 @@
     tbody.innerHTML = rows.map(makeRow).join("");
   }
 
-
-  /* TABLE ROW */
   function makeRow(it){
     const pill =
       it.status === "in-use"   ? "pill-green" :
@@ -293,9 +252,7 @@
     const viewURL = `item.html?id=${it.id}`;
     const editURL = `item-form.html?id=${it.id}`;
 
-    let actions =
-      `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
-
+    let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
     if(EDIT_ROLES.includes(currentRole)){
       actions += `<a class="btn btn-ghost" style="margin-left:6px;" href="${editURL}">Edit</a>`;
     }
@@ -303,9 +260,9 @@
     return `
       <tr>
         <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
-        <td>${escapeHtml(it.assetId)}</td>
-        <td>${escapeHtml(it.deviceName)}</td>
-        <td>${escapeHtml(it.assetType)}</td>
+        <td>${escapeHtml(it.assetId || "")}</td>
+        <td>${escapeHtml(it.deviceName || "")}</td>
+        <td>${escapeHtml(it.assetType || "")}</td>
         <td><span class="pill ${pill}">${escapeHtml(it.status || "")}</span></td>
         <td>${escapeHtml(it.assignedTo || "")}</td>
         <td>${escapeHtml(it.location || "")}</td>
@@ -314,39 +271,30 @@
       </tr>`;
   }
 
-
-  /* SELECT ALL */
   selectAll.onclick = () => {
     document.querySelectorAll(".rowChk").forEach(chk =>
       chk.checked = selectAll.checked
     );
   };
 
-
-  /* BULK QR DOWNLOAD */
   btnBulkQR.onclick = () => {
-    const selected = [...document.querySelectorAll(".rowChk:checked")]
-      .map(x => x.value);
-
+    const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
     if(selected.length === 0){
       alert("Please select at least one device.");
       return;
     }
-
-    location.href = `print-labels.html?ids=${selected.join(",")}`;
+    // clean query string with comma-separated IDs
+    location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
   };
 
-
-  /* UTILS */
   function escapeHtml(s){
-    return s ? String(s).replace(/[&<>"']/g,c=>(
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]
-    )) : "";
+    return String(s).replace(/[&<>"']/g,c=>(
+      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]
+    ));
   }
 
-  searchInput.oninput  = render;
+  searchInput.oninput   = render;
   statusFilter.onchange = render;
-
 </script>
 
 </body>
