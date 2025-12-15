@@ -69,6 +69,19 @@
     body { background: white; padding: 0; margin: 0; }
     .top-controls { display: none !important; }
   }
+
+  /* Test grid style */
+  .test-grid {
+    border: 1px dashed #999;
+    height: 100%;
+    width: 100%;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #444;
+    padding: 4px;
+  }
 </style>
 </head>
 
@@ -91,118 +104,167 @@
   </button>
 
   <button id="btnPDF"
-          style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
+          style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;margin-right:10px;">
     📄 Download PDF
+  </button>
+
+  <button id="btnTest"
+          style="padding:10px 22px;border-radius:999px;background:#f59e0b;color:white;border:none;cursor:pointer;">
+    📏 Print Test Page
   </button>
 </div>
 
 <div id="labelsArea"></div>
 
-
 <!-- ====================== -->
-<!-- MAIN SCRIPT (FIXED)   -->
+<!-- MAIN SCRIPT — FINAL   -->
 <!-- ====================== -->
 <script type="module">
 import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-window.onload = function () {
+/* DOM references */
+const labelsArea = document.getElementById("labelsArea");
+const btnPDF     = document.getElementById("btnPDF");
+const btnTest    = document.getElementById("btnTest");
 
-  /* DOM REFERENCES */
-  const labelsArea = document.getElementById("labelsArea");
-  const btnPDF = document.getElementById("btnPDF");
+const params = new URLSearchParams(location.search);
+const idList = (params.get("ids") || "").split(",").filter(v => v.trim() !== "");
 
-  const params = new URLSearchParams(location.search);
-  const idList = (params.get("ids") || "").split(",").filter(v => v.trim() !== "");
+let layout = 12;
 
-  let layout = 12;
+/* ---------------- GRID SWITCH ---------------- */
+document.getElementById("btn6").onclick  = () => setLayout(6);
+document.getElementById("btn12").onclick = () => setLayout(12);
+document.getElementById("btn24").onclick = () => setLayout(24);
+
+function setLayout(n) {
+  layout = n;
+  document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
+  document.getElementById("btn" + n).classList.add("active");
   updateGrid();
+}
 
-  /* ---------------- GRID SWITCH ---------------- */
-  document.getElementById("btn6").onclick  = () => setLayout(6);
-  document.getElementById("btn12").onclick = () => setLayout(12);
-  document.getElementById("btn24").onclick = () => setLayout(24);
+function updateGrid() {
+  if (layout === 6)  labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
+  if (layout === 12) labelsArea.style.gridTemplateColumns = "repeat(3, 1fr)";
+  if (layout === 24) labelsArea.style.gridTemplateColumns = "repeat(4, 1fr)";
+}
 
-  function setLayout(n) {
-    layout = n;
-    document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
-    document.getElementById("btn" + n).classList.add("active");
-    updateGrid();
+updateGrid();
+
+/* ---------------- LOAD + RENDER LABELS ---------------- */
+async function loadLabels() {
+  labelsArea.innerHTML = "<p>Loading labels…</p>";
+
+  const items = [];
+
+  for (const id of idList) {
+    const snap = await getDoc(doc(db, "items", id));
+    if (snap.exists()) items.push({ id, ...snap.data() });
   }
 
-  function updateGrid() {
-    if (layout === 6)  labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
-    if (layout === 12) labelsArea.style.gridTemplateColumns = "repeat(3, 1fr)";
-    if (layout === 24) labelsArea.style.gridTemplateColumns = "repeat(4, 1fr)";
+  if (items.length === 0) {
+    labelsArea.innerHTML = "<p>No items found.</p>";
+    return;
   }
 
-  /* ---------------- LOAD + RENDER LABELS ---------------- */
-  async function loadLabels() {
+  labelsArea.innerHTML = "";
 
-    labelsArea.innerHTML = "<p>Loading labels…</p>";
+  for (const item of items) {
+    const div = document.createElement("div");
+    div.className = "label";
 
-    const items = [];
+    const qrData = `${location.origin}/item.html?id=${item.id}`;
 
-    for (const id of idList) {
-      const snap = await getDoc(doc(db, "items", id));
-      if (snap.exists()) items.push({ id, ...snap.data() });
-    }
+    // Must await SVG (this was the fix!)
+    const svg = await QRCode.toString(qrData, {
+      type: "svg",
+      margin: 1,
+      scale: 8,
+      errorCorrectionLevel: "H"
+    });
 
-    if (items.length === 0) {
-      labelsArea.innerHTML = "<p>No items found.</p>";
-      return;
-    }
+    div.innerHTML = `
+      <div>${svg}</div>
+      <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+        ${item.assetId || ""}
+      </div>
+      <div style="font-size:.75rem;color:#444;">
+        ${item.deviceName || ""}
+      </div>
+    `;
 
-    labelsArea.innerHTML = "";
+    labelsArea.appendChild(div);
+  }
+}
 
-    for (const item of items) {
-      const div = document.createElement("div");
-      div.className = "label";
+loadLabels();
 
-      const qrData = `${location.origin}/item.html?id=${item.id}`;
+/* ---------------- PDF EXPORT ---------------- */
+btnPDF.onclick = async function () {
 
-      const svg = await QRCode.toString(qrData, {
-        type: "svg",
-        margin: 0,
-        scale: 10,
-        errorCorrectionLevel: "H"
-      });
+  await new Promise(r => setTimeout(r, 400)); // allow render
 
-      div.innerHTML = `
-        <div>${svg}</div>
-        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-          ${item.assetId || ""}
-        </div>
-        <div style="font-size:.75rem;color:#444;">
-          ${item.deviceName || ""}
-        </div>
-      `;
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p", "mm", "a4");
 
-      labelsArea.appendChild(div);
-    }
+  const canvas = await html2canvas(labelsArea, { scale: 3, useCORS: true });
+  const img = canvas.toDataURL("image/png");
+
+  const pageWidth = 210;
+  const margin = 8;
+  const imgWidth = pageWidth - margin * 2;
+  const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+  pdf.addImage(img, "PNG", margin, margin, imgWidth, imgHeight);
+  pdf.save("QR-labels.pdf");
+};
+
+/* ---------------- TEST PAGE GENERATOR ---------------- */
+btnTest.onclick = () => {
+  const testPage = document.createElement("div");
+  testPage.style.display = "grid";
+  testPage.style.gap = "10px";
+  testPage.style.padding = "20px";
+
+  if (layout === 6)  testPage.style.gridTemplateColumns = "repeat(2,1fr)";
+  if (layout === 12) testPage.style.gridTemplateColumns = "repeat(3,1fr)";
+  if (layout === 24) testPage.style.gridTemplateColumns = "repeat(4,1fr)";
+
+  for (let i = 0; i < layout; i++) {
+    const box = document.createElement("div");
+    box.className = "test-grid";
+    box.innerHTML = `Label ${i + 1}`;
+    testPage.appendChild(box);
   }
 
-  loadLabels();
+  const w = window.open("", "_blank");
+  w.document.write(`
+    <html>
+    <head>
+      <title>Test Alignment Page</title>
+      <style>
+        body { margin:0; padding:20px; font-family:sans-serif; }
+        .test-grid {
+          border: 1px dashed #555;
+          height: 100%; width: 100%;
+          display:flex; align-items:center; justify-content:center;
+          font-size:12px; box-sizing:border-box;
+          padding:6px;
+        }
+        @media print {
+          body { padding:0; margin:0; }
+        }
+      </style>
+    </head>
+    <body></body>
+    </html>
+  `);
 
-  /* ---------------- PDF EXPORT ---------------- */
-  btnPDF.onclick = async function () {
-
-    await new Promise(r => setTimeout(r, 300)); // allow SVG to render
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const canvas = await html2canvas(labelsArea, { scale: 2 });
-    const img = canvas.toDataURL("image/png");
-
-    const pageWidth = 210;
-    const imgWidth = pageWidth - 10;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
-    pdf.save("QR-labels.pdf");
-  };
-
+  w.document.body.appendChild(testPage);
+  w.document.close();
+  setTimeout(() => w.print(), 300);
 };
 </script>
 
