@@ -5,6 +5,7 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- html2canvas + jsPDF (UMD on window) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -16,6 +17,7 @@
     padding: 20px;
   }
   h1 { margin-top: 0; font-size: 2rem; }
+
   .top-controls {
     background: white;
     padding: 14px 18px;
@@ -23,6 +25,7 @@
     border: 1px solid #e5e7eb;
     margin-bottom: 20px;
   }
+
   .layout-option {
     padding: 8px 16px;
     border-radius: 12px;
@@ -37,49 +40,7 @@
     color: white;
     border-color: #1a73e8;
   }
-  #status {
-    background: white;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 20px;
-    text-align: center;
-    font-weight: 500;
-  }
-  #labelsArea {
-    display: grid;
-    gap: 12px;
-    justify-content: center;
-  }
-  .label {
-    background: white;
-    border: 1px solid #e5e7eb;
-    padding: 12px;
-    text-align: center;
-    border-radius: 8px;
-    width: 100%;
-    page-break-inside: avoid;
-  }
-  .label svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
-  @media print {
-    body { background: white; padding: 0; margin: 0; }
-    .top-controls, #status { display: none !important; }
-    #labelsArea { gap: 0; }
-  }
-  .grid-test {
-    width: 100%;
-    height: 90vh;
-    border: 1px dashed #999;
-    background-size: 20px 20px;
-    background-image:
-      linear-gradient(to right, #ccc 1px, transparent 1px),
-      linear-gradient(to bottom, #ccc 1px, transparent 1px);
-    page-break-inside: avoid;
-  }
+
   .btn {
     padding:10px 22px;
     border-radius:999px;
@@ -91,6 +52,55 @@
   .btn-primary { background:#1a73e8; color:white; }
   .btn-success { background:#16a34a; color:white; }
   .btn-secondary { background:#6b7280; color:white; }
+
+  #status {
+    background: white;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 16px;
+    display:none;
+    font-size: .9rem;
+  }
+
+  #labelsArea {
+    display: grid;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .label {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 12px;
+    text-align: center;
+    border-radius: 8px;
+    width: 100%;
+    page-break-inside: avoid;
+  }
+
+  .label svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  @media print {
+    body { background: white; padding: 0; margin: 0; }
+    .top-controls, #status { display: none !important; }
+    #labelsArea { gap: 0; }
+  }
+
+  .grid-test {
+    width: 100%;
+    height: 90vh;
+    border: 1px dashed #999;
+    background-size: 20px 20px;
+    background-image:
+      linear-gradient(to right, #ccc 1px, transparent 1px),
+      linear-gradient(to bottom, #ccc 1px, transparent 1px);
+    page-break-inside: avoid;
+  }
 </style>
 </head>
 
@@ -108,8 +118,8 @@
   <br><br>
 
   <button id="btnPreview" class="btn btn-primary">👁️ Preview Labels</button>
-  
-  <button onclick="window.print()" class="btn btn-primary">
+
+  <button id="btnPrint" class="btn btn-primary">
     🖨 Print Labels
   </button>
 
@@ -122,7 +132,7 @@
   </button>
 </div>
 
-<div id="status" style="display:none;"></div>
+<div id="status"></div>
 
 <div id="testGrid" style="display:none;">
   <div class="grid-test"></div>
@@ -131,16 +141,20 @@
 <div id="labelsArea"></div>
 
 <script type="module">
-  import { db } from "./firebase.js";
-  import { doc, getDoc } from "https://www.gstatic.com/firebase-firestore.js";
+  /* Firestore (no auth guard here) */
+  import { app, db } from "./firebase.js";
+  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  /* QRCode ESM */
   import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
   const labelsArea = document.getElementById("labelsArea");
-  const statusEl = document.getElementById("status");
+  const statusEl   = document.getElementById("status");
   const btnPreview = document.getElementById("btnPreview");
-  const btnPDF = document.getElementById("btnPDF");
-  const btnTest = document.getElementById("btnTest");
-  const testGrid = document.getElementById("testGrid");
+  const btnPrint   = document.getElementById("btnPrint");
+  const btnPDF     = document.getElementById("btnPDF");
+  const btnTest    = document.getElementById("btnTest");
+  const testGrid   = document.getElementById("testGrid");
 
   const params = new URLSearchParams(location.search);
   const rawIds = params.get("ids") || "";
@@ -148,9 +162,8 @@
 
   let layout = 12;
   let labelsData = [];
-  updateGrid();
 
-  // Layout buttons
+  // ----- layout buttons -----
   document.getElementById("btn6").onclick  = () => setLayout(6);
   document.getElementById("btn12").onclick = () => setLayout(12);
   document.getElementById("btn24").onclick = () => setLayout(24);
@@ -160,7 +173,7 @@
     document.querySelectorAll(".layout-option").forEach(b => b.classList.remove("active"));
     document.getElementById("btn" + n).classList.add("active");
     updateGrid();
-    if (labelsData.length > 0) renderLabels();
+    if (labelsData.length) renderLabels();
   }
 
   function updateGrid() {
@@ -169,21 +182,74 @@
       layout === 12 ? "repeat(3, 1fr)" :
                       "repeat(4, 1fr)";
   }
+  updateGrid();
 
-  // Load data on page load
-  loadData();
+  // ----- wire buttons -----
+  btnPreview.onclick = () => {
+    if (!labelsData.length) {
+      alert("Still loading items or none found. Please wait and try again.");
+      return;
+    }
+    renderLabels();
+  };
 
-  async function loadData() {
-    console.log("🔍 Loading IDs:", idList);
-    
-    if (idList.length === 0) {
+  btnPrint.onclick = () => {
+    if (!labelsData.length) {
+      alert("No labels to print. Click Preview first.");
+      return;
+    }
+    window.print();
+  };
+
+  btnPDF.onclick = async () => {
+    if (!labelsData.length) {
+      alert("No labels to export. Click Preview first.");
+      return;
+    }
+    if (!window.jspdf || !window.html2canvas) {
+      alert("PDF libraries failed to load.");
+      return;
+    }
+
+    // Ensure labels are visible
+    renderLabels();
+    await new Promise(r => setTimeout(r, 400));
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const canvas = await html2canvas(labelsArea, { scale: 2 });
+    const img = canvas.toDataURL("image/png");
+    const pageWidth = 210;
+    const imgWidth  = pageWidth - 10;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
+    pdf.save("OCSI-QR-Labels.pdf");
+  };
+
+  btnTest.onclick = () => {
+    labelsArea.style.display = "none";
+    statusEl.style.display   = "none";
+    testGrid.style.display   = "block";
+    window.print();
+    setTimeout(() => {
+      testGrid.style.display = "none";
+      labelsArea.style.display = "grid";
+      statusEl.style.display = labelsData.length ? "block" : "none";
+    }, 800);
+  };
+
+  // ----- load Firestore data -----
+  (async function loadData() {
+    if (!idList.length) {
       statusEl.textContent = "No item IDs specified in URL.";
       statusEl.style.display = "block";
       statusEl.style.background = "#fee2e2";
       return;
     }
 
-    statusEl.textContent = "Loading items...";
+    statusEl.textContent = "Loading items…";
     statusEl.style.display = "block";
     statusEl.style.background = "#dbeafe";
 
@@ -192,142 +258,59 @@
       try {
         const snap = await getDoc(doc(db, "items", id));
         if (snap.exists()) {
-          const data = snap.data();
-          items.push({ id, ...data });
+          items.push({ id, ...snap.data() });
+        } else {
+          console.warn("Item not found:", id);
         }
       } catch (e) {
-        console.error("Error fetching", id, ":", e);
+        console.error("Error fetching", id, e);
       }
     }
 
-    if (items.length === 0) {
-      statusEl.textContent = "No items found. Check Firestore rules.";
+    if (!items.length) {
+      statusEl.textContent = "No items found for these IDs (check Firestore and rules).";
       statusEl.style.background = "#fee2e2";
       return;
     }
 
     labelsData = items;
-    statusEl.textContent = `Loaded ${items.length} labels. Click Preview to generate QR codes.`;
+    statusEl.textContent = `Loaded ${items.length} items. Click “Preview Labels” to generate QR codes.`;
     statusEl.style.background = "#dcfce7";
-    console.log("✅ Loaded items:", items.length);
-  }
+  })();
 
+  // ----- render labels (asset ID QR) -----
   function renderLabels() {
-    if (labelsData.length === 0) return;
-
     labelsArea.innerHTML = "";
-    statusEl.style.display = "none";
 
     for (const item of labelsData) {
       const div = document.createElement("div");
       div.className = "label";
 
-      // QR encodes ASSET ID only
-      const qrText = item.assetId || item.id || "No ID";
-      
-      // Generate QR (async but we don't await here for preview speed)
+      const qrText = item.assetId || item.id || "NO-ID";
+
       QRCode.toString(qrText, {
         type: "svg",
         margin: 0,
-        scale: 8,  // Smaller for faster preview
+        scale: 8,
         errorCorrectionLevel: "H"
       }).then(svg => {
         div.innerHTML = `
           <div>${svg}</div>
-          <div style="font-size:.85rem;margin-top:4px;font-weight:600;">
+          <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
             ${item.assetId || ""}
           </div>
-          <div style="font-size:.7rem;color:#666;margin-top:2px;">
+          <div style="font-size:.75rem;color:#444;">
             ${item.deviceName || ""}
           </div>
         `;
-        labelsArea.appendChild(div);
       }).catch(err => {
-        console.error("QR Error:", err);
-        div.innerHTML = `<div style="color:red;font-size:.7rem;">QR Error</div>`;
+        console.error("QR error:", err);
+        div.innerHTML = `<div style="color:red;">QR error</div>`;
       });
+
+      labelsArea.appendChild(div);
     }
   }
-
-  // Preview button - generates full quality QR codes
-  btnPreview.onclick = async () => {
-    console.log("👁️ Generating preview...");
-    renderLabels();
-  };
-
-  // Fixed PDF Download
-  btnPDF.onclick = async () => {
-    if (labelsData.length === 0) {
-      alert("No labels to export. Click Preview first.");
-      return;
-    }
-
-    console.log("📄 Generating PDF...");
-    await new Promise(r => setTimeout(r, 500)); // Wait for SVGs
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-    
-    // Higher quality for PDF
-    for (let i = 0; i < labelsData.length; i += layout) {
-      const pageLabels = labelsData.slice(i, i + layout);
-      
-      // Clear and regenerate high-quality SVGs
-      labelsArea.innerHTML = "";
-      for (const item of pageLabels) {
-        const div = document.createElement("div");
-        div.className = "label";
-        const qrText = item.assetId || item.id || "No ID";
-        
-        const svg = await QRCode.toString(qrText, {
-          type: "svg",
-          margin: 0,
-          scale: 12,  // High quality for PDF
-          errorCorrectionLevel: "H"
-        });
-        
-        div.innerHTML = `
-          <div>${svg}</div>
-          <div style="font-size:1rem;margin-top:6px;font-weight:600;">${item.assetId || ""}</div>
-          <div style="font-size:.8rem;color:#444;">${item.deviceName || ""}</div>
-        `;
-        labelsArea.appendChild(div);
-      }
-
-      const canvas = await html2canvas(labelsArea, { 
-        scale: 3,
-        useCORS: true,
-        allowTaint: true
-      });
-      
-      const imgData = canvas.toDataURL('image/png');
-      const imgWidth = 190;
-      const pageHeight = 277;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      const heightLeft = imgHeight > pageHeight ? imgHeight - pageHeight : 0;
-
-      pdf.addImage(imgData, 'PNG', 10, 10, imgWidth, imgHeight);
-      
-      if (heightLeft > 0 && i + layout < labelsData.length) {
-        pdf.addPage();
-      }
-    }
-    
-    pdf.save(`OCSI-QR-Labels-${new Date().toISOString().slice(0,10)}.pdf`);
-  };
-
-  // Test Grid
-  btnTest.onclick = () => {
-    labelsArea.style.display = "none";
-    statusEl.style.display = "none";
-    testGrid.style.display = "block";
-    window.print();
-    setTimeout(() => {
-      testGrid.style.display = "none";
-      labelsArea.style.display = "grid";
-      statusEl.style.display = "block";
-    }, 1000);
-  };
 </script>
 
 </body>
