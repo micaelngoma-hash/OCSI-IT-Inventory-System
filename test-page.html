@@ -121,19 +121,6 @@
   .pill-gray{background:#e5e7eb;color:#374151;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
 
-  /* ===== ROUND BLUE QR BUTTON ===== */
-  .qr-btn{
-    background:#1a73e8;
-    color:white;
-    border:none;
-    border-radius:999px;
-    padding:5px 14px;
-    font-size:.82rem;
-    cursor:pointer;
-    font-weight:500;
-  }
-  .qr-btn:hover{background:#1558b0;}
-
   /* ===== QR MODAL ===== */
   #qrModal{
     display:none;
@@ -149,54 +136,42 @@
     border-radius:14px;text-align:center;
     box-shadow:0 8px 28px rgba(0,0,0,0.25);
   }
-
 </style>
 </head>
 <body>
 
-<!-- ========================================================= -->
 <!-- TOP BAR -->
-<!-- ========================================================= -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
-
 <div class="layout">
-  <!-- ========================================================= -->
+  
   <!-- SIDEBAR -->
-  <!-- ========================================================= -->
   <aside class="sidebar">
     <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span>Main Dashboard</a>
-      <a href="software-licenses.html"><span class="icon">🔑</span>Software Licenses</a>
-      <a class="active" href="inventory-list.html"><span class="icon">💻</span>Hardware</a>
-      <a href="scan.html"><span class="icon">📱</span>QR Scan Device</a>
-      <a href="audits.html"><span class="icon">🕒</span>Audits</a>
-      <a href="admin-console.html"><span class="icon">⚙️</span>Admin Console</a>
-      <a href="login.html"><span class="icon">🚪</span>Logout</a>
+      <a href="index.html">📊 Main Dashboard</a>
+      <a href="software-licenses.html">🔑 Software Licenses</a>
+      <a class="active" href="inventory-list.html">💻 Hardware</a>
+      <a href="scan.html">📱 QR Scan Device</a>
+      <a href="audits.html">🕒 Audits</a>
+      <a href="admin-console.html">⚙️ Admin Console</a>
+      <a href="login.html">🚪 Logout</a>
     </nav>
   </aside>
 
-
-  <!-- ========================================================= -->
-  <!-- MAIN CONTENT -->
-  <!-- ========================================================= -->
   <main class="content">
-
     <h1>Inventory</h1>
     <p class="subtitle">Browse, search, and manage all registered devices.</p>
 
     <div class="toolbar">
 
-      <!-- SEARCH -->
       <div class="search-box">
         <span>🔍</span>
         <input id="search" placeholder="Search by Asset ID, name, user, location…" />
       </div>
 
-      <!-- FILTERS -->
       <div class="filters">
         <select id="statusFilter">
           <option value="">All statuses</option>
@@ -211,7 +186,7 @@
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <!-- NEW BLUE DOWNLOAD QR LABELS BUTTON -->
+        <!-- Only Button for QR codes -->
         <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
@@ -221,7 +196,9 @@
       <table>
         <thead>
           <tr>
-            <th style="width:36px;"></th>
+            <th style="width:40px;">
+              <input type="checkbox" id="selectAll"/>
+            </th>
             <th>Asset ID</th>
             <th>Device Name</th>
             <th>Type</th>
@@ -229,7 +206,7 @@
             <th>Assigned To</th>
             <th>Location</th>
             <th>IP</th>
-            <th style="width:190px;">Actions</th>
+            <th style="width:150px;">Actions</th>
           </tr>
         </thead>
 
@@ -243,9 +220,7 @@
 </div>
 
 
-<!-- ========================================================= -->
-<!-- QR MODAL -->
-<!-- ========================================================= -->
+<!-- QR Modal (still available if needed) -->
 <div id="qrModal">
   <div id="qrContainer">
     <h3>Device QR Code</h3>
@@ -255,8 +230,6 @@
   </div>
 </div>
 
-
-<!-- QR LIBRARY -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <script type="module">
@@ -267,22 +240,22 @@
   const tbody        = document.getElementById("tbody");
   const searchInput  = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
+
   const addBtn       = document.getElementById("addBtn");
   const importBtn    = document.getElementById("importBtn");
   const exportBtn    = document.getElementById("exportBtn");
-  const btnBulkQR    = document.getElementById("btnBulkQR");
 
-  const qrModal   = document.getElementById("qrModal");
-  const qrBox     = document.getElementById("qrBox");
-  const btnDownloadQR = document.getElementById("btnDownloadQR");
+  const selectAll    = document.getElementById("selectAll");
+  const btnBulkQR    = document.getElementById("btnBulkQR");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
   let allItems = [];
 
-  /* -----------------------------
+
+  /* ============================
      AUTHENTICATION
-  ------------------------------*/
+  ============================ */
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
@@ -303,27 +276,31 @@
     }
   });
 
-  /* -----------------------------
+
+  /* ============================
      LOAD ITEMS
-  ------------------------------*/
+  ============================ */
   async function loadItems(){
     const snap = await getDocs(collection(db,"items"));
     allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
     render();
   }
 
-  /* -----------------------------
+
+  /* ============================
      RENDER TABLE
-  ------------------------------*/
+  ============================ */
   function render(){
     const term = searchInput.value.toLowerCase();
     const filter = statusFilter.value;
 
     const rows = allItems.filter(it=>{
       if(filter && it.status !== filter) return false;
-
-      const hay = `${it.assetId} ${it.deviceName} ${it.assetType} ${it.assignedTo} ${it.location} ${it.ipAddress}`.toLowerCase();
-      return hay.includes(term);
+      return (
+        `${it.assetId} ${it.deviceName} ${it.assetType} ${it.assignedTo} ${it.location} ${it.ipAddress}`
+        .toLowerCase()
+        .includes(term)
+      );
     });
 
     if(rows.length === 0){
@@ -334,34 +311,28 @@
     tbody.innerHTML = rows.map(makeRow).join("");
   }
 
-  /* -----------------------------
-     TABLE ROW HTML
-  ------------------------------*/
+
+  /* ============================
+     TABLE ROW
+  ============================ */
   function makeRow(it){
-    let pill = "pill-gray";
-    if(it.status==="in-use") pill="pill-green";
-    if(it.status==="loaned") pill="pill-blue";
-    if(it.status==="retired"||it.status==="repair") pill="pill-red";
+    const pill =
+      it.status === "in-use"   ? "pill-green" :
+      it.status === "loaned"   ? "pill-blue"  :
+      (it.status === "retired" || it.status === "repair") ? "pill-red" :
+      "pill-gray";
 
     const viewURL = `item.html?id=${it.id}`;
     const editURL = `item-form.html?id=${it.id}`;
 
-    let actions = `<a class="btn btn-ghost" style="padding:4px 10px;" href="${viewURL}">View</a>`;
-
+    let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
     if(EDIT_ROLES.includes(currentRole)){
-      actions += `<a class="btn btn-ghost" style="padding:4px 10px;margin-left:4px;" href="${editURL}">Edit</a>`;
+      actions += `<a class="btn btn-ghost" href="${editURL}" style="margin-left:6px;">Edit</a>`;
     }
-
-    /* BLUE QR BUTTON */
-    actions += `
-      <button class="qr-btn" style="margin-left:6px;"
-        onclick="openQR('${it.id}','${escapeHtml(it.assetId)}','${escapeHtml(it.deviceName)}')">
-        QR
-      </button>`;
 
     return `
       <tr>
-        <td></td>
+        <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
         <td>${escapeHtml(it.assetId)}</td>
         <td>${escapeHtml(it.deviceName)}</td>
         <td>${escapeHtml(it.assetType)}</td>
@@ -373,56 +344,45 @@
       </tr>`;
   }
 
-  /* -----------------------------
-     QR POPUP
-  ------------------------------*/
-  window.openQR = async (id, assetId, name)=>{
-    qrBox.innerHTML = "";
 
-    const url = `${location.origin}/item.html?id=${id}`;
-
-    const svg = await QRCode.toString(url,{
-      type:"svg",
-      margin:2,
-      scale:14,
-      errorCorrectionLevel:"H"
+  /* ============================
+     SELECT ALL CHECKBOX
+  ============================ */
+  selectAll.onclick = () => {
+    document.querySelectorAll(".rowChk").forEach(chk=>{
+      chk.checked = selectAll.checked;
     });
-
-    qrBox.innerHTML = svg;
-
-    btnDownloadQR.onclick = ()=>{
-      const cleanSVG = svg.replace(/<path /g, '<path fill="black" stroke="none" ');
-      const blob = new Blob([cleanSVG],{type:"image/svg+xml"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `${assetId || name || "qr"}.svg`;
-      a.click();
-    };
-
-    qrModal.style.display = "flex";
   };
 
-  window.closeQR = ()=> qrModal.style.display="none";
 
-  /* -----------------------------
-     BULK QR DOWNLOAD (open in print-labels.html)
-  ------------------------------*/
+  /* ============================
+     DOWNLOAD SELECTED QR CODES
+  ============================ */
   btnBulkQR.onclick = ()=>{
-    const ids = allItems.map(x=>x.id).join(",");
-    location.href = `print-labels.html?ids=${ids}`;
+    const selected = [...document.querySelectorAll(".rowChk:checked")].map(x=>x.value);
+
+    if(selected.length === 0){
+      alert("Please select at least one device to generate QR codes.");
+      return;
+    }
+
+    // Continue using your existing page:
+    location.href = `print-labels.html?ids=${selected.join(",")}`;
   };
 
-  /* -----------------------------
-     SEARCH + FILTER EVENTS
-  ------------------------------*/
+
+  /* ============================
+     ESCAPE HTML
+  ============================ */
+  function escapeHtml(s){
+    return s ? String(s).replace(/[&<>"']/g,c=>(
+      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]
+    )) : "";
+  }
+
   searchInput.oninput = render;
   statusFilter.onchange = render;
 
-  function escapeHtml(s){
-    return s ? String(s).replace(/[&<>"']/g,c=>(
-      {"&":"&amp;","<":"&lt;","⟩":"&gt;","\"":"&quot;","'":"&#39;"}[c]
-    )) : "";
-  }
 </script>
 
 </body>
