@@ -5,7 +5,12 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- QR Code Generator -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<!-- html2canvas + jsPDF (for PDF export) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
   body {
@@ -15,7 +20,7 @@
     padding: 20px;
   }
 
-  h1 { margin-top: 0; }
+  h1 { margin-top: 0; font-size: 2rem; }
 
   .top-controls {
     background: white;
@@ -26,12 +31,13 @@
   }
 
   .layout-option {
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 12px;
     border: 1px solid #cbd5e1;
     cursor: pointer;
-    margin-right: 6px;
+    margin-right: 8px;
     background: white;
+    font-size: .9rem;
   }
   .layout-option.active {
     background: #1a73e8;
@@ -41,32 +47,60 @@
 
   #labelsArea {
     display: grid;
-    gap: 6px;
+    gap: 10px;
     justify-content: center;
   }
 
   .label {
     background: white;
     border: 1px solid #e5e7eb;
-    padding: 6px;
+    padding: 10px;
     text-align: center;
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
   }
 
-  /* Ensure SVG prints correctly */
   .label svg {
     width: 100%;
     height: auto;
   }
 
+  /* Print optimization */
   @media print {
-    body { padding: 0; background: white; }
+    body { background: white; padding: 0; margin: 0; }
     .top-controls { display: none !important; }
   }
 </style>
+</head>
+<body>
+
+<h1>Bulk QR Label Printing</h1>
+
+<div class="top-controls">
+  <strong>Choose label layout:</strong><br><br>
+
+  <button id="btn6"  class="layout-option">6 per page (Large)</button>
+  <button id="btn12" class="layout-option active">12 per page (Medium)</button>
+  <button id="btn24" class="layout-option">24 per page (Small)</button>
+
+  <br><br>
+
+  <!-- PRINT -->
+  <button onclick="window.print()"
+          style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
+    🖨 Print Labels
+  </button>
+
+  <!-- PDF EXPORT -->
+  <button onclick="exportPDF()"
+          style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
+    📄 Download PDF
+  </button>
+</div>
+
+<div id="labelsArea"></div>
+
 
 <script type="module">
   import { db } from "./firebase.js";
@@ -77,25 +111,32 @@
 
   const labelsArea = document.getElementById("labelsArea");
 
-  let layout = 12; // default grid
+  /* -------------------------
+     GRID BEHAVIOR
+  --------------------------*/
+  let layout = 12;
   updateGrid();
 
+  document.getElementById("btn6").onclick  = () => setLayout(6);
+  document.getElementById("btn12").onclick = () => setLayout(12);
+  document.getElementById("btn24").onclick = () => setLayout(24);
+
+  function setLayout(num) {
+    layout = num;
+    document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
+    document.getElementById("btn" + num).classList.add("active");
+    updateGrid();
+  }
+
   function updateGrid() {
-    if (layout === 6) labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
+    if (layout === 6)  labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
     if (layout === 12) labelsArea.style.gridTemplateColumns = "repeat(3, 1fr)";
     if (layout === 24) labelsArea.style.gridTemplateColumns = "repeat(4, 1fr)";
   }
 
-  window.setLayout = function(count) {
-    layout = count;
-    document.querySelectorAll(".layout-option").forEach(btn => btn.classList.remove("active"));
-    document.getElementById("btn" + count).classList.add("active");
-    updateGrid();
-  };
-
-  // -------------------------
-  // Load items + Render labels
-  // -------------------------
+  /* -------------------------
+     LOAD ITEMS + RENDER LABELS
+  --------------------------*/
   async function loadAndRender() {
     labelsArea.innerHTML = "<p>Loading labels…</p>";
 
@@ -110,76 +151,70 @@
       return;
     }
 
-    labelsArea.innerHTML = ""; // clear grid
-
-    const renderPromises = [];
+    labelsArea.innerHTML = "";
+    const jobs = [];
 
     for (const item of items) {
       const container = document.createElement("div");
       container.className = "label";
 
-      const qrData = `${location.origin}/item.html?id=${item.id}`;
+      const url = `${location.origin}/item.html?id=${item.id}`;
 
-      // Generate SVG asynchronously
-      const p = QRCode.toString(qrData, {
+      const job = QRCode.toString(url, {
         type: "svg",
+        scale: 10,
         margin: 0,
-        scale: 8,
         errorCorrectionLevel: "H"
-      }).then(svgText => {
-
-        // Convert raw SVG string → SVG DOM element
-        const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
-        const svgEl = svgDoc.documentElement;
-
-        // Improve print reliability
-        svgEl.setAttribute("width", "100%");
-        svgEl.setAttribute("height", "100%");
-        svgEl.removeAttribute("stroke");
-
-        container.appendChild(svgEl);
-
-        container.innerHTML += `
-          <div style="font-size:.8rem;margin-top:4px;font-weight:600;">
-            ${item.assetId || ""}
-          </div>
-          <div style="font-size:.7rem;color:#555;">${item.deviceName || ""}</div>
+      }).then(svg => {
+        container.innerHTML = `
+          <div>${svg}</div>
+          <div style="font-size:.85rem;margin-top:6px;font-weight:600;">${item.assetId || ""}</div>
+          <div style="font-size:.75rem;color:#444;">${item.deviceName || ""}</div>
         `;
-
         labelsArea.appendChild(container);
       });
 
-      renderPromises.push(p);
+      jobs.push(job);
     }
 
-    // Wait until ALL QR codes fully rendered before user prints
-    await Promise.all(renderPromises);
+    await Promise.all(jobs);
+    console.log("All labels rendered.");
   }
 
   loadAndRender();
+
+  /* -------------------------
+     PDF EXPORT FUNCTION
+  --------------------------*/
+  async function exportPDF() {
+    const { jsPDF } = window.jspdf;
+
+    // Wait a moment for SVGs to settle
+    await new Promise(r => setTimeout(r, 300));
+
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    // Capture the labels container
+    const canvas = await html2canvas(labelsArea, {
+      scale: 2,
+      useCORS: true
+    });
+
+    const img = canvas.toDataURL("image/png");
+
+    const pageWidth = 210;
+    const pageHeight = 297;
+
+    const ratio = canvas.width / canvas.height;
+    const pdfWidth = pageWidth - 10;
+    const pdfHeight = pdfWidth / ratio;
+
+    pdf.addImage(img, "PNG", 5, 5, pdfWidth, pdfHeight);
+
+    pdf.save("QR-labels.pdf");
+  }
+
 </script>
-
-</head>
-<body>
-
-<h1>Bulk QR Label Printing</h1>
-
-<div class="top-controls">
-  <strong>Choose label layout:</strong><br><br>
-
-  <button id="btn6"  class="layout-option" onclick="setLayout(6)">6 per page (Large)</button>
-  <button id="btn12" class="layout-option active" onclick="setLayout(12)">12 per page (Medium)</button>
-  <button id="btn24" class="layout-option" onclick="setLayout(24)">24 per page (Small)</button>
-
-  <br><br>
-  <button onclick="window.print()"
-          style="padding:10px 20px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;">
-    🖨 Print Labels
-  </button>
-</div>
-
-<div id="labelsArea"></div>
 
 </body>
 </html>
