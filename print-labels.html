@@ -56,14 +56,14 @@
     justify-content: center;
   }
 
+  /* Ensure SVG prints correctly */
   .label svg {
     width: 100%;
+    height: auto;
   }
 
-  /* A4 print settings */
   @media print {
     body { padding: 0; background: white; }
-
     .top-controls { display: none !important; }
   }
 </style>
@@ -77,12 +77,9 @@
 
   const labelsArea = document.getElementById("labelsArea");
 
-  let layout = 12; // default grid count
+  let layout = 12; // default grid
   updateGrid();
 
-  // -------------------------
-  //  GRID LAYOUT SWITCHING
-  // -------------------------
   function updateGrid() {
     if (layout === 6) labelsArea.style.gridTemplateColumns = "repeat(2, 1fr)";
     if (layout === 12) labelsArea.style.gridTemplateColumns = "repeat(3, 1fr)";
@@ -97,7 +94,7 @@
   };
 
   // -------------------------
-  // LOAD ITEMS + RENDER LABELS
+  // Load items + Render labels
   // -------------------------
   async function loadAndRender() {
     labelsArea.innerHTML = "<p>Loading labels…</p>";
@@ -113,33 +110,51 @@
       return;
     }
 
-    labelsArea.innerHTML = ""; // clear
+    labelsArea.innerHTML = ""; // clear grid
+
+    const renderPromises = [];
 
     for (const item of items) {
       const container = document.createElement("div");
       container.className = "label";
 
-      // QR Data
       const qrData = `${location.origin}/item.html?id=${item.id}`;
 
-      // Generate SVG QR
-      const svg = await QRCode.toString(qrData, {
+      // Generate SVG asynchronously
+      const p = QRCode.toString(qrData, {
         type: "svg",
         margin: 0,
-        scale: 10,
+        scale: 8,
         errorCorrectionLevel: "H"
+      }).then(svgText => {
+
+        // Convert raw SVG string → SVG DOM element
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, "image/svg+xml");
+        const svgEl = svgDoc.documentElement;
+
+        // Improve print reliability
+        svgEl.setAttribute("width", "100%");
+        svgEl.setAttribute("height", "100%");
+        svgEl.removeAttribute("stroke");
+
+        container.appendChild(svgEl);
+
+        container.innerHTML += `
+          <div style="font-size:.8rem;margin-top:4px;font-weight:600;">
+            ${item.assetId || ""}
+          </div>
+          <div style="font-size:.7rem;color:#555;">${item.deviceName || ""}</div>
+        `;
+
+        labelsArea.appendChild(container);
       });
 
-      container.innerHTML = `
-        <div class="qr">${svg}</div>
-        <div style="font-size:.8rem;margin-top:4px;font-weight:600;">
-          ${item.assetId || ""}
-        </div>
-        <div style="font-size:.7rem;color:#555;">${item.deviceName || ""}</div>
-      `;
-
-      labelsArea.appendChild(container);
+      renderPromises.push(p);
     }
+
+    // Wait until ALL QR codes fully rendered before user prints
+    await Promise.all(renderPromises);
   }
 
   loadAndRender();
