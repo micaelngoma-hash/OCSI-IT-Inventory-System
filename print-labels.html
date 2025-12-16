@@ -5,101 +5,70 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- html2canvas + jsPDF (UMD on window) -->
+<!-- html2canvas + jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #f5f7fb;
-    margin: 0;
-    padding: 20px;
-  }
-  h1 { margin-top: 0; font-size: 2rem; }
+  body { font-family: system-ui, sans-serif; background:#f5f7fb; margin:0; padding:20px; }
+
+  h1 { margin-top:0; font-size:2rem; }
 
   .top-controls {
-    background: white;
-    padding: 14px 18px;
-    border-radius: 12px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 20px;
+    background:white; padding:14px 18px;
+    border-radius:12px; border:1px solid #e5e7eb;
+    margin-bottom:20px;
   }
 
   .layout-option {
-    padding: 8px 16px;
-    border-radius: 12px;
-    border: 1px solid #cbd5e1;
-    cursor: pointer;
-    margin-right: 8px;
-    background: white;
-    font-size: .9rem;
+    padding:8px 16px; border-radius:12px;
+    border:1px solid #cbd5e1; cursor:pointer;
+    margin-right:8px; background:white; font-size:.9rem;
   }
   .layout-option.active {
-    background: #1a73e8;
-    color: white;
-    border-color: #1a73e8;
+    background:#1a73e8; color:white; border-color:#1a73e8;
   }
 
   .btn {
-    padding:10px 22px;
-    border-radius:999px;
-    border:none;
-    cursor:pointer;
-    font-weight:500;
-    margin-right:10px;
+    padding:10px 22px; border-radius:999px; border:none;
+    cursor:pointer; font-weight:500; margin-right:10px;
   }
   .btn-primary { background:#1a73e8; color:white; }
   .btn-success { background:#16a34a; color:white; }
   .btn-secondary { background:#6b7280; color:white; }
 
   #status {
-    background: white;
-    padding: 10px 14px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    margin-bottom: 16px;
-    display:none;
-    font-size: .9rem;
+    background:white; padding:10px 14px;
+    border-radius:8px; border:1px solid #e5e7eb;
+    margin-bottom:16px; display:none;
   }
 
   #labelsArea {
-    display: grid;
-    gap: 12px;
-    justify-content: center;
+    display:grid; gap:12px; justify-content:center;
   }
 
   .label {
-    background: white;
-    border: 1px solid #e5e7eb;
-    padding: 12px;
-    text-align: center;
-    border-radius: 8px;
-    width: 100%;
-    page-break-inside: avoid;
+    background:white; border:1px solid #e5e7eb;
+    padding:12px; text-align:center;
+    border-radius:8px;
+    page-break-inside:avoid;
   }
 
-  .label svg {
-    width: 100%;
-    height: auto;
-    display: block;
-  }
+  .label svg { width:100%; height:auto; display:block; }
 
   @media print {
-    body { background: white; padding: 0; margin: 0; }
-    .top-controls, #status { display: none !important; }
-    #labelsArea { gap: 0; }
+    body { padding:0; margin:0; }
+    .top-controls, #status { display:none !important; }
+    #labelsArea { gap:0; }
   }
 
   .grid-test {
-    width: 100%;
-    height: 90vh;
-    border: 1px dashed #999;
-    background-size: 20px 20px;
+    width:100%; height:90vh;
+    background-size:20px 20px;
+    border:2px dashed #777;
     background-image:
       linear-gradient(to right, #ccc 1px, transparent 1px),
       linear-gradient(to bottom, #ccc 1px, transparent 1px);
-    page-break-inside: avoid;
   }
 </style>
 </head>
@@ -114,22 +83,12 @@
   <button id="btn6"  class="layout-option">6 per page (Large)</button>
   <button id="btn12" class="layout-option active">12 per page (Medium)</button>
   <button id="btn24" class="layout-option">24 per page (Small)</button>
-
   <br><br>
 
   <button id="btnPreview" class="btn btn-primary">👁️ Preview Labels</button>
-
-  <button id="btnPrint" class="btn btn-primary">
-    🖨 Print Labels
-  </button>
-
-  <button id="btnPDF" class="btn btn-success">
-    📄 Download PDF
-  </button>
-
-  <button id="btnTest" class="btn btn-secondary">
-    📐 Print Test Grid
-  </button>
+  <button id="btnPrint"   class="btn btn-primary">🖨 Print Labels</button>
+  <button id="btnPDF"     class="btn btn-success">📄 Download PDF</button>
+  <button id="btnTest"    class="btn btn-secondary">📐 Print Test Grid</button>
 </div>
 
 <div id="status"></div>
@@ -141,176 +100,158 @@
 <div id="labelsArea"></div>
 
 <script type="module">
-  /* Firestore (no auth guard here) */
-  import { app, db } from "./firebase.js";
-  import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  /* QRCode ESM */
-  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
+/* Import Firestore */
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const labelsArea = document.getElementById("labelsArea");
-  const statusEl   = document.getElementById("status");
-  const btnPreview = document.getElementById("btnPreview");
-  const btnPrint   = document.getElementById("btnPrint");
-  const btnPDF     = document.getElementById("btnPDF");
-  const btnTest    = document.getElementById("btnTest");
-  const testGrid   = document.getElementById("testGrid");
+/* Import QR Code ESM */
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
-  const params = new URLSearchParams(location.search);
-  const rawIds = params.get("ids") || "";
-  const idList = rawIds.split(",").map(s => s.trim()).filter(Boolean);
+/* Elements */
+const labelsArea = document.getElementById("labelsArea");
+const statusEl   = document.getElementById("status");
+const testGrid   = document.getElementById("testGrid");
+const btnPreview = document.getElementById("btnPreview");
+const btnPrint   = document.getElementById("btnPrint");
+const btnPDF     = document.getElementById("btnPDF");
+const btnTest    = document.getElementById("btnTest");
 
-  let layout = 12;
-  let labelsData = [];
+/* Read item IDs from URL */
+const params = new URLSearchParams(location.search);
+const idList = (params.get("ids") || "")
+  .split(",")
+  .map(x => x.trim())
+  .filter(Boolean);
 
-  // ----- layout buttons -----
-  document.getElementById("btn6").onclick  = () => setLayout(6);
-  document.getElementById("btn12").onclick = () => setLayout(12);
-  document.getElementById("btn24").onclick = () => setLayout(24);
+/* State */
+let labelsData = [];
+let layout = 12;
 
-  function setLayout(n) {
-    layout = n;
-    document.querySelectorAll(".layout-option").forEach(b => b.classList.remove("active"));
-    document.getElementById("btn" + n).classList.add("active");
-    updateGrid();
-    if (labelsData.length) renderLabels();
-  }
+/* Layout select */
+document.getElementById("btn6").onclick  = () => setLayout(6);
+document.getElementById("btn12").onclick = () => setLayout(12);
+document.getElementById("btn24").onclick = () => setLayout(24);
 
-  function updateGrid() {
-    labelsArea.style.gridTemplateColumns =
-      layout === 6  ? "repeat(2, 1fr)" :
-      layout === 12 ? "repeat(3, 1fr)" :
-                      "repeat(4, 1fr)";
-  }
+function setLayout(n) {
+  layout = n;
+  document.querySelectorAll(".layout-option").forEach(b => b.classList.remove("active"));
+  document.getElementById("btn" + n).classList.add("active");
   updateGrid();
+  if (labelsData.length) renderLabels();
+}
 
-  // ----- wire buttons -----
-  btnPreview.onclick = () => {
-    if (!labelsData.length) {
-      alert("Still loading items or none found. Please wait and try again.");
-      return;
-    }
-    renderLabels();
-  };
+function updateGrid() {
+  labelsArea.style.gridTemplateColumns =
+    layout === 6  ? "repeat(2, 1fr)" :
+    layout === 12 ? "repeat(3, 1fr)" :
+                    "repeat(4, 1fr)";
+}
+updateGrid();
 
-  btnPrint.onclick = () => {
-    if (!labelsData.length) {
-      alert("No labels to print. Click Preview first.");
-      return;
-    }
-    window.print();
-  };
+/* Preview button */
+btnPreview.onclick = () => {
+  if (!labelsData.length) return alert("Items still loading…");
+  renderLabels();
+};
 
-  btnPDF.onclick = async () => {
-    if (!labelsData.length) {
-      alert("No labels to export. Click Preview first.");
-      return;
-    }
-    if (!window.jspdf || !window.html2canvas) {
-      alert("PDF libraries failed to load.");
-      return;
-    }
+/* Print button */
+btnPrint.onclick = () => {
+  if (!labelsData.length) return alert("Preview labels first.");
+  window.print();
+};
 
-    // Ensure labels are visible
-    renderLabels();
-    await new Promise(r => setTimeout(r, 400));
+/* Test Grid */
+btnTest.onclick = () => {
+  labelsArea.style.display = "none";
+  testGrid.style.display = "block";
+  window.print();
+  setTimeout(() => {
+    testGrid.style.display = "none";
+    labelsArea.style.display = "grid";
+  }, 600);
+};
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
+/* PDF Button */
+btnPDF.onclick = async () => {
+  if (!labelsData.length) return alert("Preview labels first.");
 
-    const canvas = await html2canvas(labelsArea, { scale: 2 });
-    const img = canvas.toDataURL("image/png");
-    const pageWidth = 210;
-    const imgWidth  = pageWidth - 10;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+  const { jsPDF } = window.jspdf;
 
-    pdf.addImage(img, "PNG", 5, 5, imgWidth, imgHeight);
-    pdf.save("OCSI-QR-Labels.pdf");
-  };
+  renderLabels();
+  await new Promise(r => setTimeout(r, 300));
 
-  btnTest.onclick = () => {
-    labelsArea.style.display = "none";
-    statusEl.style.display   = "none";
-    testGrid.style.display   = "block";
-    window.print();
-    setTimeout(() => {
-      testGrid.style.display = "none";
-      labelsArea.style.display = "grid";
-      statusEl.style.display = labelsData.length ? "block" : "none";
-    }, 800);
-  };
+  const canvas = await html2canvas(labelsArea, { scale: 2 });
+  const img = canvas.toDataURL("image/png");
 
-  // ----- load Firestore data -----
-  (async function loadData() {
-    if (!idList.length) {
-      statusEl.textContent = "No item IDs specified in URL.";
-      statusEl.style.display = "block";
-      statusEl.style.background = "#fee2e2";
-      return;
-    }
+  const pdf = new jsPDF("p", "mm", "a4");
+  const width = 200;
+  const height = (canvas.height * width) / canvas.width;
 
-    statusEl.textContent = "Loading items…";
+  pdf.addImage(img, "PNG", 5, 5, width, height);
+  pdf.save("OCSI-QR-Labels.pdf");
+};
+
+/* Load items */
+(async function loadData() {
+
+  if (!idList.length) {
+    statusEl.innerText = "No IDs in URL.";
     statusEl.style.display = "block";
-    statusEl.style.background = "#dbeafe";
-
-    const items = [];
-    for (const id of idList) {
-      try {
-        const snap = await getDoc(doc(db, "items", id));
-        if (snap.exists()) {
-          items.push({ id, ...snap.data() });
-        } else {
-          console.warn("Item not found:", id);
-        }
-      } catch (e) {
-        console.error("Error fetching", id, e);
-      }
-    }
-
-    if (!items.length) {
-      statusEl.textContent = "No items found for these IDs (check Firestore and rules).";
-      statusEl.style.background = "#fee2e2";
-      return;
-    }
-
-    labelsData = items;
-    statusEl.textContent = `Loaded ${items.length} items. Click “Preview Labels” to generate QR codes.`;
-    statusEl.style.background = "#dcfce7";
-  })();
-
-  // ----- render labels (asset ID QR) -----
-  function renderLabels() {
-    labelsArea.innerHTML = "";
-
-    for (const item of labelsData) {
-      const div = document.createElement("div");
-      div.className = "label";
-
-      const qrText = item.assetId || item.id || "NO-ID";
-
-      QRCode.toString(qrText, {
-        type: "svg",
-        margin: 0,
-        scale: 8,
-        errorCorrectionLevel: "H"
-      }).then(svg => {
-        div.innerHTML = `
-          <div>${svg}</div>
-          <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-            ${item.assetId || ""}
-          </div>
-          <div style="font-size:.75rem;color:#444;">
-            ${item.deviceName || ""}
-          </div>
-        `;
-      }).catch(err => {
-        console.error("QR error:", err);
-        div.innerHTML = `<div style="color:red;">QR error</div>`;
-      });
-
-      labelsArea.appendChild(div);
-    }
+    statusEl.style.background = "#fee2e2";
+    return;
   }
+
+  statusEl.style.display = "block";
+  statusEl.innerText = "Loading items…";
+
+  const items = [];
+  for (const id of idList) {
+    const snap = await getDoc(doc(db, "items", id));
+    if (snap.exists()) items.push({ id, ...snap.data() });
+  }
+
+  if (!items.length) {
+    statusEl.innerText = "No items found for these IDs.";
+    statusEl.style.background = "#fee2e2";
+    return;
+  }
+
+  labelsData = items;
+  statusEl.innerText = `Loaded ${items.length} items. Click Preview.`;
+  statusEl.style.background = "#dcfce7";
+})();
+
+/* Render QR Labels */
+function renderLabels() {
+  labelsArea.innerHTML = "";
+
+  for (const item of labelsData) {
+    const qrTarget = item.assetId || item.id || "NO-ID";
+
+    const card = document.createElement("div");
+    card.className = "label";
+
+    QRCode.toString(qrTarget, {
+      type: "svg",
+      margin: 0,
+      scale: 8,
+      errorCorrectionLevel: "H"
+    }).then(svg => {
+      card.innerHTML = `
+        <div>${svg}</div>
+        <div style="font-weight:600; margin-top:6px;">
+          ${item.assetId || ""}
+        </div>
+        <div style="font-size:.75rem; color:#444;">
+          ${item.deviceName || ""}
+        </div>
+      `;
+    });
+
+    labelsArea.appendChild(card);
+  }
+}
 </script>
 
 </body>
