@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Inventory List</title>
-
 <style>
   :root{
     --bg:#0f172a;
@@ -12,70 +11,59 @@
     --brand:#1a73e8;
     --border:#e5e7eb;
   }
-
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
-  /* ===== TOP BAR ===== */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
     padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-
-  /* ===== LAYOUT ===== */
   .layout{
     display:grid;
     grid-template-columns:240px 1fr;
     min-height:calc(100vh - 52px);
   }
-
   .sidebar{
     background:var(--bg2);color:white;padding:14px;
   }
-  .nav a{
+  .sidebar .nav a{
     display:flex;align-items:center;gap:8px;
     padding:9px 11px;border-radius:9px;
     color:#dbe4ff;text-decoration:none;margin-bottom:6px;
     font-size:.92rem;
   }
-  .nav a:hover,.nav a.active{background:#111a33;}
-
+  .sidebar .nav a:hover,
+  .sidebar .nav a.active{background:#111a33;}
   .content{
     padding:18px;
     max-width:1150px;
     margin:0 auto;
     width:100%;
   }
-
   h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-
-  /* ===== TOOLBAR ===== */
   .toolbar{
     display:flex;
     justify-content:space-between;
     align-items:center;
     margin-bottom:10px;
-    gap:10px;
+    gap:12px;
     flex-wrap:wrap;
   }
-
   .search-box{
     display:flex;align-items:center;gap:6px;
     background:white;border:1px solid var(--border);
-    border-radius:999px;padding:4px 10px;
+    border-radius:999px;padding:4px 12px;
     max-width:320px;width:100%;
   }
   .search-box input{
     border:none;outline:none;font-size:.88rem;width:100%;
     background:transparent;
   }
-
   .filters{display:flex;gap:8px;flex-wrap:wrap;}
   select{
-    padding:6px 8px;border-radius:999px;
+    padding:6px 10px;border-radius:999px;
     border:1px solid var(--border);
     font-size:.85rem;background:white;
   }
@@ -87,13 +75,12 @@
     text-decoration:none;
   }
   .btn-primary{background:var(--brand);color:white;}
+  .btn-primary:hover{background:#1558b0;}
   .btn-ghost{
     background:white;
     border:1px solid #cbd5e1;
     color:#0f172a;
   }
-
-  /* ===== TABLE ===== */
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
@@ -110,7 +97,6 @@
     position:sticky;top:0;z-index:4;
   }
   tr:hover td{background:#f9fafb;}
-
   .pill{
     padding:2px 8px;border-radius:999px;font-size:.75rem;
     display:inline-flex;
@@ -123,15 +109,12 @@
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div><strong>OCSI IT Inventory</strong> – Inventory List</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html">📊 Main Dashboard</a>
@@ -144,20 +127,16 @@
     </nav>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="content">
-
     <h1>Inventory</h1>
     <p class="subtitle">Browse, search, and manage all registered devices.</p>
 
     <div class="toolbar">
-      <!-- SEARCH -->
       <div class="search-box">
         <span>🔍</span>
-        <input id="search" placeholder="Search by Asset ID, name, user…" />
+        <input id="search" placeholder="Search device…" />
       </div>
 
-      <!-- FILTERS -->
       <div class="filters">
         <select id="statusFilter">
           <option value="">All statuses</option>
@@ -172,17 +151,17 @@
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <!-- BULK QR GENERATION -->
         <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
 
-    <!-- TABLE -->
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th style="width:40px;"><input type="checkbox" id="selectAll"/></th>
+            <th style="width:40px;">
+              <input type="checkbox" id="selectAll"/>
+            </th>
             <th>Asset ID</th>
             <th>Device Name</th>
             <th>Type</th>
@@ -190,86 +169,72 @@
             <th>Assigned To</th>
             <th>Location</th>
             <th>IP</th>
-            <th style="width:150px;">Actions</th>
+            <th style="width:160px;">Actions</th>
           </tr>
         </thead>
-
         <tbody id="tbody">
           <tr><td colspan="9">Loading devices…</td></tr>
         </tbody>
       </table>
     </div>
-
   </main>
 </div>
 
-<!-- FIREBASE + LOGIC -->
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
   import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl = document.getElementById("who");
-  const tbody = document.getElementById("tbody");
-
+  const whoEl        = document.getElementById("who");
+  const tbody        = document.getElementById("tbody");
   const searchInput  = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
-
-  const exportBtn = document.getElementById("exportBtn");
-  const importBtn = document.getElementById("importBtn");
-  const addBtn    = document.getElementById("addBtn");
-  const selectAll = document.getElementById("selectAll");
-  const btnBulkQR = document.getElementById("btnBulkQR");
+  const addBtn       = document.getElementById("addBtn");
+  const importBtn    = document.getElementById("importBtn");
+  const exportBtn    = document.getElementById("exportBtn");
+  const selectAll    = document.getElementById("selectAll");
+  const btnBulkQR    = document.getElementById("btnBulkQR");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
   let allItems = [];
 
-  /* ============================
-     AUTH GUARD
-  ============================ */
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
     onReady: async (_user, role)=>{
       currentRole = role;
 
-      if (!EDIT_ROLES.includes(role)) {
-        exportBtn.style.display = "none";
-        importBtn.style.display = "none";
+      if(!EDIT_ROLES.includes(role)){
         addBtn.style.display = "none";
+        importBtn.style.display = "none";
+        exportBtn.style.display = "none";
       } else {
-        exportBtn.onclick = () => location.href="export-devices.html";
-        importBtn.onclick = () => location.href="import-devices.html";
         addBtn.onclick    = () => location.href="item-form.html";
+        importBtn.onclick = () => location.href="import-devices.html";
+        exportBtn.onclick = () => location.href="export-devices.html";
       }
 
       await loadItems();
     }
   });
 
-  /* ============================
-     LOAD ITEMS
-  ============================ */
-  async function loadItems() {
-    const snap = await getDocs(collection(db, "items"));
-    allItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderTable();
+  async function loadItems(){
+    const snap = await getDocs(collection(db,"items"));
+    allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    render();
   }
 
-  /* ============================
-     RENDER TABLE
-  ============================ */
-  function renderTable() {
-    const q = searchInput.value.toLowerCase();
+  function render(){
+    const term   = (searchInput.value || "").toLowerCase();
     const filter = statusFilter.value;
 
-    const rows = allItems.filter(it => {
-      if (filter && it.status !== filter) return false;
-      const hay = `${it.assetId} ${it.deviceName} ${it.assetType} ${it.assignedTo} ${it.location} ${it.ipAddress}`.toLowerCase();
-      return hay.includes(q);
+    const rows = allItems.filter(it=>{
+      if(filter && it.status !== filter) return false;
+      const blob = `${it.assetId || ""} ${it.deviceName || ""} ${it.assetType || ""} ${it.assignedTo || ""} ${it.location || ""} ${it.ipAddress || ""}`;
+      return blob.toLowerCase().includes(term);
     });
 
-    if (!rows.length) {
+    if(rows.length === 0){
       tbody.innerHTML = `<tr><td colspan="9">No devices found.</td></tr>`;
       return;
     }
@@ -277,61 +242,62 @@
     tbody.innerHTML = rows.map(makeRow).join("");
   }
 
-  function makeRow(it) {
-    let pill = "pill-gray";
-    if (it.status === "in-use") pill = "pill-green";
-    if (it.status === "loaned") pill = "pill-blue";
-    if (["retired","repair"].includes(it.status)) pill = "pill-red";
+  function makeRow(it){
+    const pill =
+      it.status === "in-use"   ? "pill-green" :
+      it.status === "loaned"   ? "pill-blue"  :
+      (it.status === "retired" || it.status === "repair") ? "pill-red" :
+      "pill-gray";
 
-    const view = `item.html?id=${it.id}`;
-    const edit = `item-form.html?id=${it.id}`;
+    const viewURL = `item.html?id=${it.id}`;
+    const editURL = `item-form.html?id=${it.id}`;
 
-    let actions = `<a class="btn btn-ghost" href="${view}">View</a>`;
-    if (EDIT_ROLES.includes(currentRole)) {
-      actions += `<a class="btn btn-ghost" style="margin-left:6px;" href="${edit}">Edit</a>`;
+    let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
+    if(EDIT_ROLES.includes(currentRole)){
+      actions += `<a class="btn btn-ghost" style="margin-left:6px;" href="${editURL}">Edit</a>`;
     }
 
     return `
       <tr>
-        <td><input class="rowChk" type="checkbox" value="${it.id}"></td>
-        <td>${escape(it.assetId)}</td>
-        <td>${escape(it.deviceName)}</td>
-        <td>${escape(it.assetType)}</td>
-        <td><span class="pill ${pill}">${escape(it.status||"")}</span></td>
-        <td>${escape(it.assignedTo||"")}</td>
-        <td>${escape(it.location||"")}</td>
-        <td>${escape(it.ipAddress||"")}</td>
+        <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
+        <td>${escapeHtml(it.assetId || "")}</td>
+        <td>${escapeHtml(it.deviceName || "")}</td>
+        <td>${escapeHtml(it.assetType || "")}</td>
+        <td><span class="pill ${pill}">${escapeHtml(it.status || "")}</span></td>
+        <td>${escapeHtml(it.assignedTo || "")}</td>
+        <td>${escapeHtml(it.location || "")}</td>
+        <td>${escapeHtml(it.ipAddress || "")}</td>
         <td>${actions}</td>
       </tr>`;
   }
 
-  /* ============================
-     BULK QR GENERATION
-  ============================ */
+  selectAll.onclick = () => {
+    document.querySelectorAll(".rowChk").forEach(chk =>
+      chk.checked = selectAll.checked
+    );
+  };
+
   btnBulkQR.onclick = () => {
     const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
-
-    if (!selected.length) {
+    if(selected.length === 0){
       alert("Please select at least one device.");
       return;
     }
-
-    location.href = `print-labels.html?ids=${selected.join(",")}`;
+    // clean query string with comma-separated IDs
+    location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
   };
 
-  selectAll.onclick = () => {
-    document.querySelectorAll(".rowChk").forEach(ch => ch.checked = selectAll.checked);
-  };
-
-  searchInput.oninput = renderTable;
-  statusFilter.onchange = renderTable;
-
-  function escape(s){
-    return s ? String(s).replace(/[&<>"']/g, c => (
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]
-    )) : "";
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,c=>(
+      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]
+    ));
   }
+
+  searchInput.oninput   = render;
+  statusFilter.onchange = render;
 </script>
 
 </body>
 </html>
+
+
