@@ -1,168 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OCSI IT Inventory – Edit Device</title>
-
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Device – Add / Edit</title>
 <style>
   :root{
     --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
   }
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
     padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-
-  .layout{
-    display:grid;grid-template-columns:240px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
   .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
     display:flex;align-items:center;gap:8px;
     padding:9px 11px;border-radius:9px;
     color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:.92rem;
+    font-size:0.92rem;
   }
   .nav a:hover,.nav a.active{background:#111a33;}
-
-  .content{
-    padding:18px;
-    max-width:1100px;margin:0 auto;width:100%;
-  }
-
-  h1{margin:0 0 6px;font-size:1.4rem;}
-  .sub{color:#64748b;font-size:.9rem;margin-bottom:12px;}
-
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+  .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
+  h1{margin:0 0 14px;font-size:1.4rem;}
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
   .card{
     background:white;border:1px solid var(--border);
-    border-radius:12px;padding:16px;margin-bottom:18px;
+    border-radius:12px;padding:16px 18px;margin-bottom:14px;
   }
-  .card h2{margin:0 0 12px;font-size:1.07rem;}
-
-  label{font-size:.82rem;color:#475569;font-weight:600;}
-  input,select,textarea{
-    width:100%;padding:8px 10px;margin-top:4px;
-    border:1px solid var(--border);
-    border-radius:8px;background:white;
-    font-size:.9rem;
-  }
-  textarea{min-height:100px;}
-
+  .card h2{margin:0 0 10px;font-size:1.05rem;}
   .grid-2{
-    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-    gap:14px 20px;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 16px;
   }
-
-  .toolbar{
-    display:flex;justify-content:flex-end;gap:10px;
-    margin-bottom:18px;
+  label{display:block;font-size:0.82rem;color:#475569;margin-bottom:3px;}
+  input,select,textarea{
+    width:100%;
+    padding:7px 8px;
+    border-radius:8px;
+    border:1px solid #cbd5e1;
+    font-size:0.9rem;
   }
-
+  textarea{min-height:80px;resize:vertical;}
+  .row{display:flex;gap:10px;align-items:center;margin-top:4px;}
+  .hint{font-size:.75rem;color:#94a3b8;margin-top:2px;}
+  .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px;}
   .btn{
-    padding:8px 14px;border-radius:999px;
     border:none;cursor:pointer;
-    font-size:.88rem;font-weight:500;
-    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 14px;border-radius:999px;
+    font-size:.9rem;font-weight:500;
   }
   .btn-primary{background:var(--brand);color:white;}
-  .btn-ghost{background:white;border:1px solid #cbd5e1;color:#0f172a;}
-
-  /* QR PREVIEW */
-  .qr-box{
-    text-align:center;padding:12px 0;
-  }
-  .qr-box svg{
-    width:170px;height:170px;
-  }
+  .btn-ghost{background:transparent;color:#0f172a;}
+  .danger{color:#b91c1c;font-size:.8rem;margin-left:auto;}
 </style>
 </head>
-
 <body>
 
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Edit Device</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking…</div>
+  <div>
+    <strong>OCSI IT Inventory</strong> – Device Form
+  </div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
 <div class="layout">
-  <aside class="sidebar" id="sidebar-root"></aside>
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
+      <a href="software-dashboard.html"><span class="icon">📋</span><span>Software Dashboard</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
 
   <main class="content">
+    <h1 id="formTitle">New Device</h1>
 
-    <h1 id="title">New Device</h1>
-    <p class="sub" id="subtitle">Fill the fields below to register the device.</p>
-
-    <div class="toolbar">
-      <button id="btnSave" class="btn btn-primary">💾 Save</button>
-      <button onclick="history.back()" class="btn btn-ghost">Back</button>
-    </div>
-
-    <!-- QR CODE LIVE PREVIEW -->
-    <section class="card">
-      <h2>QR Code Preview</h2>
-
-      <div id="qrPreview" class="qr-box">
-        <p style="color:#64748b;">Enter an Asset ID to generate QR…</p>
-      </div>
-
-      <div style="text-align:center;margin-top:10px;">
-        <button id="btnDownloadQR" class="btn btn-primary" disabled>⬇️ Download QR</button>
-        <button id="btnPrintQR" class="btn btn-ghost" disabled>🖨 Print Label</button>
-      </div>
-    </section>
-
-    <!-- FORM -->
     <form id="deviceForm">
-
+      <!-- Identification -->
       <section class="card">
         <h2>Identification</h2>
         <div class="grid-2">
           <div>
-            <label>Asset ID *</label>
-            <input id="assetId" required>
+            <label for="assetId">Asset ID</label>
+            <input id="assetId" name="assetId" required />
           </div>
-
           <div>
-            <label>Device Name</label>
-            <input id="deviceName">
+            <label for="deviceName">Device Name</label>
+            <input id="deviceName" name="deviceName" required />
           </div>
-
           <div>
-            <label>Asset Type *</label>
-            <select id="assetType" required>
-              <option value="">Choose…</option>
-              <option>Laptop</option>
-              <option>iPad</option>
-              <option>Desktop</option>
-              <option>Monitor</option>
-              <option>Printer</option>
-              <option>Network Device</option>
-              <option>Phone</option>
-              <option>Other</option>
-            </select>
+            <label for="assetType">Asset Type / Device Type</label>
+            <input id="assetType" name="assetType" placeholder="Laptop, Switch, AP…" />
           </div>
-
           <div>
-            <label>Manufacturer & Model</label>
-            <input id="manufacturer">
+            <label for="manufacturer">Manufacturer &amp; Model</label>
+            <input id="manufacturer" name="manufacturer" placeholder="Apple MacBook Pro 14&quot;" />
           </div>
-
           <div>
-            <label>Serial Number</label>
-            <input id="serialNumber">
+            <label for="serialNumber">Serial Number</label>
+            <input id="serialNumber" name="serialNumber" />
           </div>
-
           <div>
-            <label>Status</label>
-            <select id="status">
+            <label for="status">Status</label>
+            <select id="status" name="status">
               <option value="in-use">In use</option>
               <option value="in-storage">In storage</option>
               <option value="loaned">Loaned</option>
@@ -173,222 +125,219 @@
         </div>
       </section>
 
+      <!-- Location & Assignment -->
       <section class="card">
-        <h2>Location & Assignment</h2>
+        <h2>Location &amp; Assignment</h2>
         <div class="grid-2">
           <div>
-            <label>Assigned To</label>
-            <input id="assignedTo">
+            <label for="assignedTo">Assigned To</label>
+            <input id="assignedTo" name="assignedTo" placeholder="User / Room / Class" />
           </div>
           <div>
-            <label>Department</label>
-            <input id="department">
+            <label for="department">Department</label>
+            <input id="department" name="department" placeholder="IT, Music, Office…" />
           </div>
           <div>
-            <label>Location</label>
-            <input id="location">
+            <label for="location">Location</label>
+            <input id="location" name="location" placeholder="Campus / Building" />
           </div>
           <div>
-            <label>Building / Floor</label>
-            <input id="buildingFloor">
+            <label for="buildingFloor">Building / Floor</label>
+            <input id="buildingFloor" name="buildingFloor" placeholder="Bldg A – 2F" />
           </div>
         </div>
       </section>
 
+      <!-- Network & System Info -->
       <section class="card">
-        <h2>Network & System</h2>
+        <h2>Network &amp; System Info</h2>
         <div class="grid-2">
-          <div><label>IP Address</label><input id="ipAddress"></div>
-          <div><label>MAC Address</label><input id="macAddress"></div>
-          <div><label>OS / Version</label><input id="osVersion"></div>
+          <div>
+            <label for="ipAddress">IP Address</label>
+            <input id="ipAddress" name="ipAddress" placeholder="192.168.10.25" />
+          </div>
+          <div>
+            <label for="macAddress">MAC Address</label>
+            <input id="macAddress" name="macAddress" placeholder="AA:BB:CC:DD:EE:FF" />
+          </div>
+          <div>
+            <label for="osVersion">Operating System / Version</label>
+            <input id="osVersion" name="osVersion" placeholder="Windows 11, macOS 15…" />
+          </div>
         </div>
       </section>
 
+      <!-- Procurement & Lifecycle -->
       <section class="card">
-        <h2>Lifecycle & Procurement</h2>
+        <h2>Procurement &amp; Lifecycle</h2>
         <div class="grid-2">
-          <div><label>Purchase Date</label><input type="date" id="purchaseDate"></div>
-          <div><label>Installation Date</label><input type="date" id="installationDate"></div>
-          <div><label>Vendor</label><input id="vendor"></div>
-          <div><label>Warranty End Date</label><input type="date" id="warrantyEndDate"></div>
-          <div><label>Replacement Date</label><input type="date" id="replacementDate"></div>
-          <div><label>Replacement Alert</label><select id="replacementAlert"><option value="false">No</option><option value="true">Yes</option></select></div>
-          <div><label>Removed Date</label><input type="date" id="removedDate"></div>
+          <div>
+            <label for="purchaseDate">Purchase Date</label>
+            <input type="date" id="purchaseDate" name="purchaseDate" />
+          </div>
+          <div>
+            <label for="installationDate">Date of Installation</label>
+            <input type="date" id="installationDate" name="installationDate" />
+          </div>
+          <div>
+            <label for="vendor">Vendor / Supplier</label>
+            <input id="vendor" name="vendor" />
+          </div>
+          <div>
+            <label for="warrantyEndDate">Warranty End Date</label>
+            <input type="date" id="warrantyEndDate" name="warrantyEndDate" />
+          </div>
+          <div>
+            <label for="replacementDate">Estimated Replacement Date</label>
+            <input type="date" id="replacementDate" name="replacementDate" />
+          </div>
+          <div>
+            <label>Replacement Alert</label>
+            <div class="row">
+              <input type="checkbox" id="replacementAlert" name="replacementAlert" />
+              <span class="hint">Send alert when near end of lifecycle</span>
+            </div>
+          </div>
+          <div>
+            <label for="removedDate">Removed Date</label>
+            <input type="date" id="removedDate" name="removedDate" />
+          </div>
         </div>
       </section>
 
+      <!-- Notes -->
       <section class="card">
-        <h2>Notes</h2>
-        <textarea id="notes" placeholder="Optional notes…"></textarea>
+        <h2>Notes &amp; Misc</h2>
+        <textarea id="notes" name="notes" placeholder="Condition notes, repair history, custom comments…"></textarea>
       </section>
 
+      <div class="actions">
+        <span class="danger" id="editWarning"></span>
+        <button type="button" class="btn btn-ghost" onclick="history.back()">Cancel</button>
+        <button class="btn btn-primary" type="submit">Save Device</button>
+      </div>
     </form>
-
   </main>
 </div>
 
-<script src="sidebar.js"></script>
-
-<!-- QR Library -->
 <script type="module">
-  import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
   import { db, watchAuth } from "./firebase.js";
   import {
-    doc, getDoc, setDoc, serverTimestamp
+    doc, getDoc, setDoc, addDoc, collection, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const params = new URLSearchParams(location.search);
-  const itemId = params.get("id");
+  const who         = document.getElementById("who");
+  const form        = document.getElementById("deviceForm");
+  const formTitle   = document.getElementById("formTitle");
+  const editWarning = document.getElementById("editWarning");
 
-  const whoEl = document.getElementById("who");
-  const qrPreview = document.getElementById("qrPreview");
-  const btnDownloadQR = document.getElementById("btnDownloadQR");
-  const btnPrintQR = document.getElementById("btnPrintQR");
+  const EDIT_ROLES  = ["admin","it"];
+  const params      = new URLSearchParams(location.search);
+  const itemId      = params.get("id");
 
-  const btnSave = document.getElementById("btnSave");
-
-  let QR_SVG = "";
+  let currentRole   = "viewer";
 
   watchAuth({
-    allowedRoles:["admin","it"],
-    whoEl,
+    allowedRoles:["admin","it","viewer"],
+    whoEl: who,
     onReady: async (_user, role)=>{
+      currentRole = role;
+
+      if(!EDIT_ROLES.includes(currentRole)){
+        editWarning.textContent = "Read-only: viewers cannot save changes.";
+        form.querySelector("button[type='submit']").disabled = true;
+      }
+
       if(itemId){
-        document.getElementById("title").textContent = "Edit Device";
-        await loadItem();
+        formTitle.textContent = "Edit Device";
+        await loadItem(itemId);
+      }else{
+        formTitle.textContent = "New Device";
       }
     }
   });
 
-  /* ============================
-     LOAD EXISTING ITEM
-  ============================ */
-  async function loadItem(){
-    const snap = await getDoc(doc(db,"items",itemId));
-    if (!snap.exists()) return;
-
+  async function loadItem(id){
+    const snap = await getDoc(doc(db,"items",id));
+    if(!snap.exists()) return;
     const d = snap.data();
 
-    for (const key in d){
-      const field = document.getElementById(key);
-      if (field){
-        if (field.type === "date"){
-          if (d[key]?.toDate) field.value = d[key].toDate().toISOString().slice(0,10);
-        } else {
-          field.value = d[key];
-        }
+    const setVal = (id, v) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      if(el.type === "checkbox"){
+        el.checked = !!v;
+      }else if(el.type === "date" && v){
+        el.value = String(v).substring(0,10);
+      }else{
+        el.value = v || "";
       }
-    }
+    };
 
-    generateQR();
+    setVal("assetId", d.assetId);
+    setVal("deviceName", d.deviceName);
+    setVal("assetType", d.assetType);
+    setVal("manufacturer", d.manufacturer);
+    setVal("serialNumber", d.serialNumber);
+    setVal("status", d.status);
+
+    setVal("assignedTo", d.assignedTo);
+    setVal("department", d.department);
+    setVal("location", d.location);
+    setVal("buildingFloor", d.buildingFloor);
+
+    setVal("ipAddress", d.ipAddress);
+    setVal("macAddress", d.macAddress);
+    setVal("osVersion", d.osVersion);
+
+    setVal("purchaseDate", d.purchaseDate);
+    setVal("installationDate", d.installationDate);
+    setVal("vendor", d.vendor);
+    setVal("warrantyEndDate", d.warrantyEndDate);
+    setVal("replacementDate", d.replacementDate);
+    setVal("replacementAlert", d.replacementAlert);
+    setVal("removedDate", d.removedDate);
+
+    setVal("notes", d.notes);
   }
 
-  /* ============================
-     LIVE QR GENERATION
-  ============================ */
-  document.getElementById("assetId").addEventListener("input", generateQR);
-
-  async function generateQR(){
-    const asset = document.getElementById("assetId").value.trim();
-    if (!asset){
-      qrPreview.innerHTML = `<p style="color:#64748b;">Enter an Asset ID…</p>`;
-      btnDownloadQR.disabled = true;
-      btnPrintQR.disabled = true;
+  form.addEventListener("submit", async e=>{
+    e.preventDefault();
+    if(!EDIT_ROLES.includes(currentRole)){
+      alert("You do not have permission to save devices.");
       return;
     }
 
-    // QR text based on item page
-    const qrText = `${location.origin}/item.html?id=${itemId || asset}`;
+    const fd   = new FormData(form);
+    const data = Object.fromEntries(fd.entries());
 
-    QR_SVG = await QRCode.toString(qrText,{
-      type:"svg", scale:10, margin:2, errorCorrectionLevel:"H"
+    // checkbox
+    data.replacementAlert = form.replacementAlert.checked;
+
+    // normalise date fields as plain strings
+    ["purchaseDate","installationDate","warrantyEndDate",
+     "replacementDate","removedDate"].forEach(f=>{
+      if(!data[f]) data[f] = "";
     });
 
-    qrPreview.innerHTML = QR_SVG;
-    btnDownloadQR.disabled = false;
-    btnPrintQR.disabled = false;
-  }
+    data.updatedAt = serverTimestamp();
+    if(!itemId) data.createdAt = serverTimestamp();
 
-  /* ============================
-     QR DOWNLOAD
-  ============================ */
-  btnDownloadQR.onclick = ()=>{
-    const blob = new Blob([QR_SVG], {type:"image/svg+xml"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "QR-" + document.getElementById("assetId").value + ".svg";
-    a.click();
-  };
-
-  /* ============================
-     PRINT QR LABEL
-  ============================ */
-  btnPrintQR.onclick = ()=>{
-    const w = window.open("", "_blank");
-    w.document.write(`
-      <html><body style="display:flex;justify-content:center;align-items:center;height:100vh;">
-        ${QR_SVG}
-        <script>window.print()</script>
-      </body></html>
-    `);
-  };
-
-  /* ============================
-     SAVE DEVICE
-  ============================ */
-  btnSave.onclick = async ()=>{
-    const data = collectFormData();
-
-    if (!data.assetId.trim()){
-      alert("Asset ID is required.");
-      return;
+    try{
+      if(itemId){
+        await setDoc(doc(db,"items",itemId), data, { merge:true });
+      }else{
+        await addDoc(collection(db,"items"), data);   // <-- creates items collection if missing
+      }
+      alert("Device saved.");
+      location.href = "inventory-list.html";
+    }catch(err){
+      console.error(err);
+      alert("Error saving device: " + err.message);
     }
-
-    const id = itemId || data.assetId;
-
-    await setDoc(doc(db,"items",id),{
-      ...data,
-      updatedAt: serverTimestamp(),
-      createdAt: itemId ? data.createdAt || serverTimestamp() : serverTimestamp()
-    },{merge:true});
-
-    alert("Device saved.");
-    location.href = `item.html?id=${id}`;
-  };
-
-  function collectFormData(){
-    const f = id => document.getElementById(id)?.value || "";
-
-    return {
-      assetId: f("assetId"),
-      deviceName: f("deviceName"),
-      assetType: f("assetType"),
-      manufacturer: f("manufacturer"),
-      serialNumber: f("serialNumber"),
-      status: f("status"),
-
-      assignedTo: f("assignedTo"),
-      department: f("department"),
-      location: f("location"),
-      buildingFloor: f("buildingFloor"),
-
-      ipAddress: f("ipAddress"),
-      macAddress: f("macAddress"),
-      osVersion: f("osVersion"),
-
-      purchaseDate: f("purchaseDate") || null,
-      installationDate: f("installationDate") || null,
-      vendor: f("vendor"),
-      warrantyEndDate: f("warrantyEndDate") || null,
-      replacementDate: f("replacementDate") || null,
-      replacementAlert: f("replacementAlert") === "true",
-      removedDate: f("removedDate") || null,
-
-      notes: f("notes")
-    };
-  }
-
+  });
 </script>
 
 </body>
 </html>
+
