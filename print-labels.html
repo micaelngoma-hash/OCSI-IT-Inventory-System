@@ -5,9 +5,6 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- QRCode (GLOBAL, NOT MODULE) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
 <style>
 body{
   font-family:system-ui,sans-serif;
@@ -64,35 +61,33 @@ button{
   <button onclick="window.print()">🖨 Print Labels</button>
 </div>
 
-<div id="labelsArea"></div>
+<div id="labelsArea">Loading labels…</div>
 
-<script>
+<script type="module">
+/* ✅ USE YOUR EXISTING FIREBASE SETUP */
+import { db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* ✅ USE ESM QRCode */
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
+
 document.addEventListener("DOMContentLoaded", async () => {
 
   const labelsArea = document.getElementById("labelsArea");
-  const params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(window.location.search);
+
+  /* URLSearchParams already decodes %2C → comma */
   const ids = (params.get("ids") || "")
     .split(",")
-    .map(i => i.trim())
+    .map(id => id.trim())
     .filter(Boolean);
 
   if (ids.length === 0) {
-    labelsArea.innerHTML = "<p>No item IDs provided.</p>";
+    labelsArea.textContent = "No item IDs provided.";
     return;
   }
 
-  // 🔒 Firebase imports MUST be dynamic in non-module script
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-  const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  labelsArea.innerHTML = "";
 
   for (const id of ids) {
     try {
@@ -101,6 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const data = snap.data();
 
+      /* 🔑 QR CONTAINS ONLY DOCUMENT ID */
       const svg = await QRCode.toString(id, {
         type: "svg",
         margin: 0,
@@ -118,9 +114,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       labelsArea.appendChild(div);
 
-    } catch (e) {
-      console.error("QR error for", id, e);
+    } catch (err) {
+      console.error("Failed to generate QR for:", id, err);
     }
+  }
+
+  if (!labelsArea.children.length) {
+    labelsArea.textContent = "No valid items found.";
   }
 });
 </script>
