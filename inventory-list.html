@@ -151,7 +151,8 @@
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
+        <!-- ✅ Bulk QR uses PUBLIC print page -->
+        <button id="btnBulkQR" class="btn btn-primary">🖨 Print QR Labels</button>
       </div>
     </div>
 
@@ -181,123 +182,121 @@
 </div>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { db, watchAuth } from "./firebase.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl        = document.getElementById("who");
-  const tbody        = document.getElementById("tbody");
-  const searchInput  = document.getElementById("search");
-  const statusFilter = document.getElementById("statusFilter");
-  const addBtn       = document.getElementById("addBtn");
-  const importBtn    = document.getElementById("importBtn");
-  const exportBtn    = document.getElementById("exportBtn");
-  const selectAll    = document.getElementById("selectAll");
-  const btnBulkQR    = document.getElementById("btnBulkQR");
+const whoEl        = document.getElementById("who");
+const tbody        = document.getElementById("tbody");
+const searchInput  = document.getElementById("search");
+const statusFilter = document.getElementById("statusFilter");
+const addBtn       = document.getElementById("addBtn");
+const importBtn    = document.getElementById("importBtn");
+const exportBtn    = document.getElementById("exportBtn");
+const selectAll    = document.getElementById("selectAll");
+const btnBulkQR    = document.getElementById("btnBulkQR");
 
-  const EDIT_ROLES = ["admin","it"];
-  let currentRole = "viewer";
-  let allItems = [];
+const EDIT_ROLES = ["admin","it"];
+let currentRole = "viewer";
+let allItems = [];
 
-  watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl,
-    onReady: async (_user, role)=>{
-      currentRole = role;
+watchAuth({
+  allowedRoles:["admin","it","viewer"],
+  whoEl,
+  onReady: async (_user, role)=>{
+    currentRole = role;
 
-      if(!EDIT_ROLES.includes(role)){
-        addBtn.style.display = "none";
-        importBtn.style.display = "none";
-        exportBtn.style.display = "none";
-      } else {
-        addBtn.onclick    = () => location.href="item-form.html";
-        importBtn.onclick = () => location.href="import-devices.html";
-        exportBtn.onclick = () => location.href="export-devices.html";
-      }
-
-      await loadItems();
+    if(!EDIT_ROLES.includes(role)){
+      addBtn.style.display = "none";
+      importBtn.style.display = "none";
+      exportBtn.style.display = "none";
+    } else {
+      addBtn.onclick    = () => location.href="item-form.html";
+      importBtn.onclick = () => location.href="import-devices.html";
+      exportBtn.onclick = () => location.href="export-devices.html";
     }
+
+    await loadItems();
+  }
+});
+
+async function loadItems(){
+  const snap = await getDocs(collection(db,"items"));
+  allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  render();
+}
+
+function render(){
+  const term   = (searchInput.value || "").toLowerCase();
+  const filter = statusFilter.value;
+
+  const rows = allItems.filter(it=>{
+    if(filter && it.status !== filter) return false;
+    const blob = `${it.assetId||""} ${it.deviceName||""} ${it.assetType||""} ${it.assignedTo||""} ${it.location||""} ${it.ipAddress||""}`;
+    return blob.toLowerCase().includes(term);
   });
 
-  async function loadItems(){
-    const snap = await getDocs(collection(db,"items"));
-    allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    render();
+  if(rows.length === 0){
+    tbody.innerHTML = `<tr><td colspan="9">No devices found.</td></tr>`;
+    return;
   }
 
-  function render(){
-    const term   = (searchInput.value || "").toLowerCase();
-    const filter = statusFilter.value;
+  tbody.innerHTML = rows.map(makeRow).join("");
+}
 
-    const rows = allItems.filter(it=>{
-      if(filter && it.status !== filter) return false;
-      const blob = `${it.assetId || ""} ${it.deviceName || ""} ${it.assetType || ""} ${it.assignedTo || ""} ${it.location || ""} ${it.ipAddress || ""}`;
-      return blob.toLowerCase().includes(term);
-    });
+function makeRow(it){
+  const pill =
+    it.status === "in-use" ? "pill-green" :
+    it.status === "loaned" ? "pill-blue"  :
+    (it.status === "retired" || it.status === "repair") ? "pill-red" :
+    "pill-gray";
 
-    if(rows.length === 0){
-      tbody.innerHTML = `<tr><td colspan="9">No devices found.</td></tr>`;
-      return;
-    }
+  const viewURL = `item.html?id=${it.id}`;
+  const editURL = `item-form.html?id=${it.id}`;
 
-    tbody.innerHTML = rows.map(makeRow).join("");
+  let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
+  if(EDIT_ROLES.includes(currentRole)){
+    actions += `<a class="btn btn-ghost" style="margin-left:6px;" href="${editURL}">Edit</a>`;
   }
 
-  function makeRow(it){
-    const pill =
-      it.status === "in-use"   ? "pill-green" :
-      it.status === "loaned"   ? "pill-blue"  :
-      (it.status === "retired" || it.status === "repair") ? "pill-red" :
-      "pill-gray";
+  return `
+    <tr>
+      <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
+      <td>${escapeHtml(it.assetId||"")}</td>
+      <td>${escapeHtml(it.deviceName||"")}</td>
+      <td>${escapeHtml(it.assetType||"")}</td>
+      <td><span class="pill ${pill}">${escapeHtml(it.status||"")}</span></td>
+      <td>${escapeHtml(it.assignedTo||"")}</td>
+      <td>${escapeHtml(it.location||"")}</td>
+      <td>${escapeHtml(it.ipAddress||"")}</td>
+      <td>${actions}</td>
+    </tr>`;
+}
 
-    const viewURL = `item.html?id=${it.id}`;
-    const editURL = `item-form.html?id=${it.id}`;
+selectAll.onclick = () => {
+  document.querySelectorAll(".rowChk").forEach(chk =>
+    chk.checked = selectAll.checked
+  );
+};
 
-    let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
-    if(EDIT_ROLES.includes(currentRole)){
-      actions += `<a class="btn btn-ghost" style="margin-left:6px;" href="${editURL}">Edit</a>`;
-    }
-
-    return `
-      <tr>
-        <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
-        <td>${escapeHtml(it.assetId || "")}</td>
-        <td>${escapeHtml(it.deviceName || "")}</td>
-        <td>${escapeHtml(it.assetType || "")}</td>
-        <td><span class="pill ${pill}">${escapeHtml(it.status || "")}</span></td>
-        <td>${escapeHtml(it.assignedTo || "")}</td>
-        <td>${escapeHtml(it.location || "")}</td>
-        <td>${escapeHtml(it.ipAddress || "")}</td>
-        <td>${actions}</td>
-      </tr>`;
+btnBulkQR.onclick = () => {
+  const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
+  if(!selected.length){
+    alert("Please select at least one device.");
+    return;
   }
+  // 🔑 Public, auth-free print page
+  location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
+};
 
-  selectAll.onclick = () => {
-    document.querySelectorAll(".rowChk").forEach(chk =>
-      chk.checked = selectAll.checked
-    );
-  };
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>(
+    {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]
+  ));
+}
 
-  btnBulkQR.onclick = () => {
-    const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
-    if(selected.length === 0){
-      alert("Please select at least one device.");
-      return;
-    }
-    // clean query string with comma-separated IDs
-    location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
-  };
-
-  function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,c=>(
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]
-    ));
-  }
-
-  searchInput.oninput   = render;
-  statusFilter.onchange = render;
+searchInput.oninput   = render;
+statusFilter.onchange = render;
 </script>
 
 </body>
 </html>
-
-
