@@ -6,50 +6,68 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{
-  font-family:system-ui,sans-serif;
-  background:#f5f7fb;
-  padding:20px;
-}
-h1{margin-top:0}
-.controls{margin-bottom:16px}
-button{
-  padding:8px 16px;
-  border-radius:999px;
-  border:none;
-  cursor:pointer;
-  background:#1a73e8;
-  color:white;
-}
-#labelsArea{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:12px;
-}
-.label{
-  background:white;
-  border:1px solid #e5e7eb;
-  border-radius:8px;
-  padding:10px;
-  text-align:center;
-}
-.label svg{
-  width:100%;
-  height:auto;
-}
-.asset{
-  font-size:.85rem;
-  font-weight:600;
-  margin-top:6px;
-}
-.device{
-  font-size:.75rem;
-  color:#555;
-}
-@media print{
-  body{background:white;padding:0}
-  .controls{display:none}
-}
+  body{
+    font-family:system-ui,sans-serif;
+    background:#f5f7fb;
+    margin:0;
+    padding:20px;
+  }
+  h1{margin-top:0}
+
+  .controls{
+    margin-bottom:16px;
+  }
+
+  button{
+    padding:8px 16px;
+    border-radius:999px;
+    border:none;
+    cursor:pointer;
+    background:#1a73e8;
+    color:white;
+    font-size:.9rem;
+  }
+
+  #labelsArea{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+
+  .label{
+    background:white;
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    padding:10px;
+    text-align:center;
+  }
+
+  .label svg{
+    width:100%;
+    height:auto;
+  }
+
+  .asset{
+    font-size:.85rem;
+    font-weight:600;
+    margin-top:6px;
+  }
+
+  .device{
+    font-size:.75rem;
+    color:#555;
+  }
+
+  .status{
+    color:#64748b;
+    font-size:.85rem;
+    margin-bottom:12px;
+  }
+
+  @media print{
+    body{background:white;padding:0}
+    .controls,.status{display:none}
+  }
 </style>
 </head>
 
@@ -57,70 +75,91 @@ button{
 
 <h1>Bulk QR Label Printing</h1>
 
+<div class="status" id="statusMsg">Initializing…</div>
+
 <div class="controls">
   <button onclick="window.print()">🖨 Print Labels</button>
 </div>
 
-<div id="labelsArea">Loading labels…</div>
+<div id="labelsArea"></div>
 
 <script type="module">
-/* ✅ USE YOUR EXISTING FIREBASE SETUP */
-import { db } from "./firebase.js";
+/* -------------------------------------------
+   IMPORT EXISTING PROJECT MODULES
+------------------------------------------- */
+import { db, watchAuth } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-/* ✅ USE ESM QRCode */
 import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
+/* -------------------------------------------
+   DOM
+------------------------------------------- */
+const labelsArea = document.getElementById("labelsArea");
+const statusMsg  = document.getElementById("statusMsg");
 
-  const labelsArea = document.getElementById("labelsArea");
-  const params = new URLSearchParams(window.location.search);
+/* -------------------------------------------
+   WAIT FOR AUTH (CRITICAL)
+------------------------------------------- */
+watchAuth({
+  allowedRoles: ["admin","it","viewer"],
+  whoEl: null,
+  onReady: async () => {
 
-  /* URLSearchParams already decodes %2C → comma */
-  const ids = (params.get("ids") || "")
-    .split(",")
-    .map(id => id.trim())
-    .filter(Boolean);
+    statusMsg.textContent = "Loading labels…";
 
-  if (ids.length === 0) {
-    labelsArea.textContent = "No item IDs provided.";
-    return;
-  }
+    const params = new URLSearchParams(window.location.search);
 
-  labelsArea.innerHTML = "";
+    // URLSearchParams automatically decodes %2C → ,
+    const ids = (params.get("ids") || "")
+      .split(",")
+      .map(id => id.trim())
+      .filter(Boolean);
 
-  for (const id of ids) {
-    try {
-      const snap = await getDoc(doc(db, "items", id));
-      if (!snap.exists()) continue;
-
-      const data = snap.data();
-
-      /* 🔑 QR CONTAINS ONLY DOCUMENT ID */
-      const svg = await QRCode.toString(id, {
-        type: "svg",
-        margin: 0,
-        scale: 8,
-        errorCorrectionLevel: "H"
-      });
-
-      const div = document.createElement("div");
-      div.className = "label";
-      div.innerHTML = `
-        ${svg}
-        <div class="asset">${data.assetId || ""}</div>
-        <div class="device">${data.deviceName || ""}</div>
-      `;
-
-      labelsArea.appendChild(div);
-
-    } catch (err) {
-      console.error("Failed to generate QR for:", id, err);
+    if (ids.length === 0) {
+      statusMsg.textContent = "No item IDs provided.";
+      return;
     }
-  }
 
-  if (!labelsArea.children.length) {
-    labelsArea.textContent = "No valid items found.";
+    labelsArea.innerHTML = "";
+
+    let rendered = 0;
+
+    for (const id of ids) {
+      try {
+        const snap = await getDoc(doc(db, "items", id));
+        if (!snap.exists()) continue;
+
+        const data = snap.data();
+
+        // 🔑 QR CONTAINS ONLY DOCUMENT ID
+        const svg = await QRCode.toString(id, {
+          type: "svg",
+          margin: 0,
+          scale: 8,
+          errorCorrectionLevel: "H"
+        });
+
+        const div = document.createElement("div");
+        div.className = "label";
+        div.innerHTML = `
+          ${svg}
+          <div class="asset">${data.assetId || ""}</div>
+          <div class="device">${data.deviceName || ""}</div>
+        `;
+
+        labelsArea.appendChild(div);
+        rendered++;
+
+      } catch (err) {
+        console.error("Failed to generate QR for:", id, err);
+      }
+    }
+
+    if (rendered === 0) {
+      statusMsg.textContent = "No valid items found.";
+    } else {
+      statusMsg.textContent = `Loaded ${rendered} label(s).`;
+    }
   }
 });
 </script>
