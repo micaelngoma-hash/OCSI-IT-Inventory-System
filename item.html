@@ -4,90 +4,193 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Device Details</title>
-
 <style>
-:root{--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;}
+:root{
+--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+}
 *{box-sizing:border-box;}
 body{margin:0;font-family:system-ui;background:#f5f7fb;}
-.topbar{position:sticky;top:0;background:var(--bg);color:white;padding:12px 16px;display:flex;justify-content:space-between;}
-.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
+.topbar{
+position:sticky;top:0;z-index:20;
+background:var(--bg);color:white;
+padding:12px 16px;
+display:flex;justify-content:space-between;align-items:center;
+}
+.layout{
+display:grid;
+grid-template-columns:240px 1fr;
+min-height:calc(100vh - 52px);
+}
 .sidebar{background:var(--bg2);color:white;padding:14px;}
-.content{padding:18px;max-width:1100px;margin:auto;}
-.toolbar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:12px;}
-.btn{padding:6px 12px;border-radius:999px;border:none;font-size:.85rem;cursor:pointer;display:inline-flex;gap:6px;}
+.content{
+padding:18px;
+max-width:1100px;
+margin:0 auto;
+width:100%;
+}
+h1{margin:0 0 6px;font-size:1.4rem;}
+.sub{color:#64748b;font-size:.9rem;margin-bottom:12px;}
+.toolbar{
+display:flex;
+justify-content:flex-end;
+gap:8px;
+margin-bottom:12px;
+flex-wrap:wrap;
+}
+.btn{
+border:none;cursor:pointer;
+padding:6px 12px;
+border-radius:999px;
+font-size:.85rem;
+font-weight:500;
+text-decoration:none;
+display:inline-flex;
+align-items:center;
+gap:6px;
+}
 .btn-primary{background:var(--brand);color:white;}
-.btn-ghost{background:white;border:1px solid #cbd5e1;}
-.card{background:white;border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 16px;}
-.field-label{font-size:.75rem;color:#94a3b8;}
-.field-value{font-size:.9rem;}
-.status{padding:3px 9px;border-radius:999px;background:#e5f3ff;color:#1d4ed8;font-size:.75rem;}
+.btn-ghost{background:white;color:#0f172a;border:1px solid #cbd5e1;}
+.card{
+background:white;
+border:1px solid var(--border);
+border-radius:12px;
+padding:14px 16px;
+margin-bottom:12px;
+}
+.card h2{margin:0 0 8px;font-size:1.05rem;}
+.grid-2{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:6px 16px;
+}
+.field-label{font-size:.78rem;color:#94a3b8;}
+.field-value{font-size:.92rem;color:#0f172a;}
+.status-pill{
+display:inline-flex;
+align-items:center;
+gap:6px;
+padding:3px 9px;
+border-radius:999px;
+font-size:.78rem;
+background:#e5f3ff;
+color:#1d4ed8;
+}
+.notes{
+white-space:pre-wrap;
+font-size:.92rem;
+color:#0f172a;
+margin-top:4px;
+}
 </style>
 </head>
-
 <body>
 <div class="topbar">
-  <strong>OCSI IT Inventory</strong>
-  <div id="who">Checking session…</div>
+<div><strong>OCSI IT Inventory</strong> – Device Details</div>
+<div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
-
 <div class="layout">
-  <aside class="sidebar" id="sidebar-root"></aside>
-  <main class="content">
-
-    <h1 id="title">Device</h1>
-    <div id="subtitle" style="color:#64748b;margin-bottom:10px;">Loading…</div>
-
-    <div class="toolbar">
-      <a id="editLink" class="btn btn-primary">✏️ Edit</a>
-      <a id="qrLink" class="btn btn-ghost" target="_blank">📎 QR Code</a>
-      <button class="btn btn-ghost" onclick="history.back()">⬅ Back</button>
-    </div>
-
-    <section class="card">
-      <h3>Identification</h3>
-      <div class="grid">
-        <div><div class="field-label">Asset ID</div><div id="assetId" class="field-value"></div></div>
-        <div><div class="field-label">Device Name</div><div id="deviceName" class="field-value"></div></div>
-        <div><div class="field-label">Type</div><div id="assetType" class="field-value"></div></div>
-        <div><div class="field-label">Manufacturer</div><div id="manufacturer" class="field-value"></div></div>
-        <div><div class="field-label">Serial</div><div id="serialNumber" class="field-value"></div></div>
-        <div><div class="field-label">Status</div><span id="status" class="status"></span></div>
-      </div>
-    </section>
-
-  </main>
+<aside class="sidebar" id="sidebar-root"></aside>
+<main class="content">
+<h1 id="title">Device</h1>
+<div class="sub" id="subtitle">Loading device…</div>
+<!-- Toolbar -->
+<div class="toolbar">
+<a id="editLink" class="btn btn-primary">
+✏️ Edit
+</a>
+<a id="qrLink" class="btn btn-ghost" target="_blank">
+📎 QR Code
+</a>
+<button class="btn btn-ghost" onclick="history.back()">⬅ Back</button>
 </div>
-
+<!-- Identification -->
+<section class="card">
+<h2>Identification</h2>
+<div class="grid-2">
+<div><div class="field-label">Asset ID</div><div id="f_assetId" class="field-value">–</div></div>
+<div><div class="field-label">Device Name</div><div id="f_deviceName" class="field-value">–</div></div>
+<div><div class="field-label">Asset Type</div><div id="f_assetType" class="field-value">–</div></div>
+<div><div class="field-label">Manufacturer</div><div id="f_manufacturer" class="field-value">–</div></div>
+<div><div class="field-label">Serial Number</div><div id="f_serialNumber" class="field-value">–</div></div>
+<div><div class="field-label">Status</div><span id="f_status" class="status-pill">–</span></div>
+</div>
+</section>
+<!-- Location -->
+<section class="card">
+<h2>Location & Assignment</h2>
+<div class="grid-2">
+<div><div class="field-label">Assigned To</div><div id="f_assignedTo" class="field-value">–</div></div>
+<div><div class="field-label">Department</div><div id="f_department" class="field-value">–</div></div>
+<div><div class="field-label">Location</div><div id="f_location" class="field-value">–</div></div>
+<div><div class="field-label">Building / Floor</div><div id="f_buildingFloor" class="field-value">–</div></div>
+</div>
+</section>
+<!-- Network -->
+<section class="card">
+<h2>Network & System</h2>
+<div class="grid-2">
+<div><div class="field-label">IP Address</div><div id="f_ipAddress" class="field-value">–</div></div>
+<div><div class="field-label">MAC Address</div><div id="f_macAddress" class="field-value">–</div></div>
+<div><div class="field-label">OS Version</div><div id="f_osVersion" class="field-value">–</div></div>
+</div>
+</section>
+<!-- Notes -->
+<section class="card">
+<h2>Notes</h2>
+<div id="f_notes" class="notes">No notes recorded.</div>
+</section>
+</main>
+</div>
 <script src="sidebar.js"></script>
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const id = new URLSearchParams(location.search).get("id");
-const set = (i,v)=>document.getElementById(i).textContent=v||"–";
-
+const params = new URLSearchParams(location.search);
+const itemId = params.get("id");
+const editLink = document.getElementById("editLink");
+const qrLink = document.getElementById("qrLink");
+const who = document.getElementById("who");
+const field = id => document.getElementById(id);
+const show = v => v || "–";
 watchAuth({
-  allowedRoles:["admin","it","viewer"],
-  whoEl:document.getElementById("who"),
-  onReady:async(_,role)=>{
-    if(!id) return;
-    document.getElementById("qrLink").href=`qr-generator.html?id=${id}`;
-    if(role==="viewer") document.getElementById("editLink").style.display="none";
-    else document.getElementById("editLink").href=`item-form.html?id=${id}`;
-
-    const snap=await getDoc(doc(db,"items",id));
-    if(!snap.exists()) return;
-    const d=snap.data();
-    set("title",d.deviceName||"Device");
-    set("subtitle",d.assetType||"");
-    set("assetId",d.assetId);
-    set("deviceName",d.deviceName);
-    set("assetType",d.assetType);
-    set("manufacturer",d.manufacturer);
-    set("serialNumber",d.serialNumber);
-    set("status",d.status);
-  }
+allowedRoles:["admin","it","viewer"],
+whoEl: who,
+onReady: async (_user, role)=>{
+if(!itemId){
+document.getElementById("subtitle").textContent = "No device ID provided.";
+editLink.style.display = "none";
+qrLink.style.display = "none";
+return;
+}
+qrLink.href = `print-qr.html?id=${encodeURIComponent(itemId)}`;
+if(role === "viewer"){
+editLink.style.display = "none";
+} else {
+editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
+}
+const snap = await getDoc(doc(db,"items",itemId));
+if(!snap.exists()){
+document.getElementById("subtitle").textContent = "Device not found.";
+return;
+}
+const d = snap.data();
+document.getElementById("title").textContent = d.deviceName || d.assetId || "Device";
+document.getElementById("subtitle").textContent = d.assetType || "";
+field("f_assetId").textContent = show(d.assetId);
+field("f_deviceName").textContent = show(d.deviceName);
+field("f_assetType").textContent = show(d.assetType);
+field("f_manufacturer").textContent = show(d.manufacturer);
+field("f_serialNumber").textContent = show(d.serialNumber);
+field("f_status").textContent = show(d.status);
+field("f_assignedTo").textContent = show(d.assignedTo);
+field("f_department").textContent = show(d.department);
+field("f_location").textContent = show(d.location);
+field("f_buildingFloor").textContent = show(d.buildingFloor);
+field("f_ipAddress").textContent = show(d.ipAddress);
+field("f_macAddress").textContent = show(d.macAddress);
+field("f_osVersion").textContent = show(d.osVersion);
+field("f_notes").textContent = d.notes || "No notes recorded.";
+}
 });
 </script>
 </body>
