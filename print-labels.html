@@ -14,6 +14,12 @@ body{
 }
 h1{margin-top:0}
 
+.status{
+  color:#64748b;
+  margin-bottom:12px;
+  font-size:.9rem;
+}
+
 .controls{margin-bottom:16px}
 button{
   padding:8px 16px;
@@ -22,12 +28,6 @@ button{
   cursor:pointer;
   background:#1a73e8;
   color:white;
-  font-size:.9rem;
-}
-
-.status{
-  color:#64748b;
-  margin-bottom:12px;
   font-size:.9rem;
 }
 
@@ -69,7 +69,7 @@ button{
 
 <h1>Bulk QR Label Printing</h1>
 
-<div class="status" id="statusMsg">Initializing authentication…</div>
+<div id="statusMsg" class="status">Loading labels…</div>
 
 <div class="controls">
   <button onclick="window.print()">🖨 Print Labels</button>
@@ -78,67 +78,46 @@ button{
 <div id="labelsArea"></div>
 
 <script type="module">
-/* -------------------------------------------
-   IMPORT PROJECT MODULES
-------------------------------------------- */
-import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signInAnonymously } 
-  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc } 
-  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import QRCode 
-  from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
+import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
-/* -------------------------------------------
-   DOM
-------------------------------------------- */
+const PROJECT_ID = "ocsi-it-iventory-system";
+const COLLECTION = "items";
+
 const labelsArea = document.getElementById("labelsArea");
 const statusMsg  = document.getElementById("statusMsg");
 
-/* -------------------------------------------
-   ENSURE AUTH CONTEXT (KEY FIX)
-------------------------------------------- */
-onAuthStateChanged(auth, async (user) => {
+const params = new URLSearchParams(location.search);
+const ids = (params.get("ids") || "")
+  .split(",")
+  .map(id => id.trim())
+  .filter(Boolean);
 
-  if (!user) {
-    // 🔑 Guarantee auth instead of hanging forever
-    try {
-      await signInAnonymously(auth);
-      return; // auth state will fire again
-    } catch (e) {
-      statusMsg.textContent = "Authentication failed.";
-      console.error(e);
-      return;
-    }
-  }
+if (!ids.length) {
+  statusMsg.textContent = "No item IDs provided.";
+} else {
+  loadLabels();
+}
 
-  statusMsg.textContent = "Loading labels…";
-
-  const params = new URLSearchParams(window.location.search);
-  const ids = (params.get("ids") || "")
-    .split(",")
-    .map(id => id.trim())
-    .filter(Boolean);
-
-  if (ids.length === 0) {
-    statusMsg.textContent = "No item IDs provided.";
-    return;
-  }
-
-  labelsArea.innerHTML = "";
+async function loadLabels() {
   let rendered = 0;
 
   for (const id of ids) {
     try {
-      const snap = await getDoc(doc(db, "items", id));
-      if (!snap.exists()) continue;
+      const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${id}`;
+      const res = await fetch(url);
 
-      const d = snap.data();
+      if (!res.ok) continue;
+
+      const json = await res.json();
+      const fields = json.fields || {};
+
+      const assetId    = fields.assetId?.stringValue || "";
+      const deviceName = fields.deviceName?.stringValue || "";
 
       const svg = await QRCode.toString(id, {
         type: "svg",
-        margin: 0,
         scale: 8,
+        margin: 0,
         errorCorrectionLevel: "H"
       });
 
@@ -146,22 +125,22 @@ onAuthStateChanged(auth, async (user) => {
       div.className = "label";
       div.innerHTML = `
         ${svg}
-        <div class="asset">${d.assetId || ""}</div>
-        <div class="device">${d.deviceName || ""}</div>
+        <div class="asset">${assetId}</div>
+        <div class="device">${deviceName}</div>
       `;
 
       labelsArea.appendChild(div);
       rendered++;
 
-    } catch (err) {
-      console.error("Failed to load item:", id, err);
+    } catch (e) {
+      console.error("Failed:", id, e);
     }
   }
 
   statusMsg.textContent = rendered
     ? `Loaded ${rendered} label(s).`
     : "No labels could be loaded.";
-});
+}
 </script>
 
 </body>
