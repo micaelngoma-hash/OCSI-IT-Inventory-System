@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Print QR Labels – OCSI IT Inventory</title>
+<title>Bulk QR Label Printing – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -14,10 +14,7 @@
   }
   h1{margin-top:0}
 
-  .controls{
-    margin-bottom:16px;
-  }
-
+  .controls{margin-bottom:16px}
   button{
     padding:8px 16px;
     border-radius:999px;
@@ -25,6 +22,12 @@
     cursor:pointer;
     background:#1a73e8;
     color:white;
+    font-size:.9rem;
+  }
+
+  .status{
+    color:#64748b;
+    margin-bottom:12px;
     font-size:.9rem;
   }
 
@@ -42,10 +45,7 @@
     text-align:center;
   }
 
-  .label svg{
-    width:100%;
-    height:auto;
-  }
+  .label svg{width:100%;height:auto}
 
   .asset{
     font-size:.85rem;
@@ -56,12 +56,6 @@
   .device{
     font-size:.75rem;
     color:#555;
-  }
-
-  .status{
-    color:#64748b;
-    font-size:.85rem;
-    margin-bottom:12px;
   }
 
   @media print{
@@ -75,7 +69,7 @@
 
 <h1>Bulk QR Label Printing</h1>
 
-<div class="status" id="statusMsg">Initializing…</div>
+<div class="status" id="statusMsg">Loading labels…</div>
 
 <div class="controls">
   <button onclick="window.print()">🖨 Print Labels</button>
@@ -85,9 +79,9 @@
 
 <script type="module">
 /* -------------------------------------------
-   IMPORT EXISTING PROJECT MODULES
+   IMPORT PROJECT MODULES
 ------------------------------------------- */
-import { db, watchAuth } from "./firebase.js";
+import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
@@ -98,70 +92,60 @@ const labelsArea = document.getElementById("labelsArea");
 const statusMsg  = document.getElementById("statusMsg");
 
 /* -------------------------------------------
-   WAIT FOR AUTH (CRITICAL)
+   MAIN
 ------------------------------------------- */
-watchAuth({
-  allowedRoles: ["admin","it","viewer"],
-  whoEl: null,
-  onReady: async () => {
+(async () => {
+  const params = new URLSearchParams(window.location.search);
+  const ids = (params.get("ids") || "")
+    .split(",")
+    .map(id => id.trim())
+    .filter(Boolean);
 
-    statusMsg.textContent = "Loading labels…";
+  if (ids.length === 0) {
+    statusMsg.textContent = "No item IDs provided.";
+    return;
+  }
 
-    const params = new URLSearchParams(window.location.search);
+  let rendered = 0;
+  labelsArea.innerHTML = "";
 
-    // URLSearchParams automatically decodes %2C → ,
-    const ids = (params.get("ids") || "")
-      .split(",")
-      .map(id => id.trim())
-      .filter(Boolean);
+  for (const id of ids) {
+    try {
+      const snap = await getDoc(doc(db, "items", id));
+      if (!snap.exists()) continue;
 
-    if (ids.length === 0) {
-      statusMsg.textContent = "No item IDs provided.";
-      return;
-    }
+      const d = snap.data();
 
-    labelsArea.innerHTML = "";
+      const svg = await QRCode.toString(id, {
+        type: "svg",
+        margin: 0,
+        scale: 8,
+        errorCorrectionLevel: "H"
+      });
 
-    let rendered = 0;
+      const div = document.createElement("div");
+      div.className = "label";
+      div.innerHTML = `
+        ${svg}
+        <div class="asset">${d.assetId || ""}</div>
+        <div class="device">${d.deviceName || ""}</div>
+      `;
 
-    for (const id of ids) {
-      try {
-        const snap = await getDoc(doc(db, "items", id));
-        if (!snap.exists()) continue;
+      labelsArea.appendChild(div);
+      rendered++;
 
-        const data = snap.data();
-
-        // 🔑 QR CONTAINS ONLY DOCUMENT ID
-        const svg = await QRCode.toString(id, {
-          type: "svg",
-          margin: 0,
-          scale: 8,
-          errorCorrectionLevel: "H"
-        });
-
-        const div = document.createElement("div");
-        div.className = "label";
-        div.innerHTML = `
-          ${svg}
-          <div class="asset">${data.assetId || ""}</div>
-          <div class="device">${data.deviceName || ""}</div>
-        `;
-
-        labelsArea.appendChild(div);
-        rendered++;
-
-      } catch (err) {
-        console.error("Failed to generate QR for:", id, err);
-      }
-    }
-
-    if (rendered === 0) {
-      statusMsg.textContent = "No valid items found.";
-    } else {
-      statusMsg.textContent = `Loaded ${rendered} label(s).`;
+    } catch (err) {
+      console.error("Failed to load item:", id, err);
+      statusMsg.textContent = "Permission denied or item not found.";
     }
   }
-});
+
+  if (rendered === 0) {
+    statusMsg.textContent = "No labels could be loaded.";
+  } else {
+    statusMsg.textContent = `Loaded ${rendered} label(s).`;
+  }
+})();
 </script>
 
 </body>
