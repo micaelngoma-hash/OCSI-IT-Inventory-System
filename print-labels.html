@@ -6,62 +6,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-  body{
-    font-family:system-ui,sans-serif;
-    background:#f5f7fb;
-    margin:0;
-    padding:20px;
-  }
-  h1{margin-top:0}
+body{
+  font-family:system-ui,sans-serif;
+  background:#f5f7fb;
+  margin:0;
+  padding:20px;
+}
+h1{margin-top:0}
 
-  .controls{margin-bottom:16px}
-  button{
-    padding:8px 16px;
-    border-radius:999px;
-    border:none;
-    cursor:pointer;
-    background:#1a73e8;
-    color:white;
-    font-size:.9rem;
-  }
+.controls{margin-bottom:16px}
+button{
+  padding:8px 16px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#1a73e8;
+  color:white;
+  font-size:.9rem;
+}
 
-  .status{
-    color:#64748b;
-    margin-bottom:12px;
-    font-size:.9rem;
-  }
+.status{
+  color:#64748b;
+  margin-bottom:12px;
+  font-size:.9rem;
+}
 
-  #labelsArea{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:12px;
-  }
+#labelsArea{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
 
-  .label{
-    background:white;
-    border:1px solid #e5e7eb;
-    border-radius:8px;
-    padding:10px;
-    text-align:center;
-  }
+.label{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:10px;
+  text-align:center;
+}
 
-  .label svg{width:100%;height:auto}
+.label svg{width:100%;height:auto}
 
-  .asset{
-    font-size:.85rem;
-    font-weight:600;
-    margin-top:6px;
-  }
+.asset{
+  font-size:.85rem;
+  font-weight:600;
+  margin-top:6px;
+}
 
-  .device{
-    font-size:.75rem;
-    color:#555;
-  }
+.device{
+  font-size:.75rem;
+  color:#555;
+}
 
-  @media print{
-    body{background:white;padding:0}
-    .controls,.status{display:none}
-  }
+@media print{
+  body{background:white;padding:0}
+  .controls,.status{display:none}
+}
 </style>
 </head>
 
@@ -82,9 +82,12 @@
    IMPORT PROJECT MODULES
 ------------------------------------------- */
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
+import { onAuthStateChanged, signInAnonymously } 
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { doc, getDoc } 
+  from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import QRCode 
+  from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
 /* -------------------------------------------
    DOM
@@ -93,13 +96,20 @@ const labelsArea = document.getElementById("labelsArea");
 const statusMsg  = document.getElementById("statusMsg");
 
 /* -------------------------------------------
-   WAIT FOR AUTH STATE (CRITICAL FIX)
+   ENSURE AUTH CONTEXT (KEY FIX)
 ------------------------------------------- */
 onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
-    statusMsg.textContent = "Not signed in. Please login first.";
-    return;
+    // 🔑 Guarantee auth instead of hanging forever
+    try {
+      await signInAnonymously(auth);
+      return; // auth state will fire again
+    } catch (e) {
+      statusMsg.textContent = "Authentication failed.";
+      console.error(e);
+      return;
+    }
   }
 
   statusMsg.textContent = "Loading labels…";
@@ -148,11 +158,9 @@ onAuthStateChanged(auth, async (user) => {
     }
   }
 
-  if (rendered === 0) {
-    statusMsg.textContent = "No labels could be loaded.";
-  } else {
-    statusMsg.textContent = `Loaded ${rendered} label(s).`;
-  }
+  statusMsg.textContent = rendered
+    ? `Loaded ${rendered} label(s).`
+    : "No labels could be loaded.";
 });
 </script>
 
