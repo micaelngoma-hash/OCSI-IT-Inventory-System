@@ -42,15 +42,16 @@ button {
 }
 </style>
 
+<!-- QRCode UMD global -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script> <!-- UMD global --> [web:1]
+
 <script type="module">
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js"; [web:1]
 import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(location.search);
   const itemId = params.get("id");
-
   const nameEl = document.getElementById("deviceName");
   const assetEl = document.getElementById("assetId");
   const qrBox = document.getElementById("qrBox");
@@ -73,12 +74,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     assetEl.textContent = d.assetId || "(no asset ID)";
 
     const url = `${location.origin}/item.html?id=${itemId}`;
-    const svgCode = await QRCode.toString(url, {
+    const svgCode = await window.QRCode.toString(url, {
       type: "svg",
       margin: 2,
       scale: 12,
       errorCorrectionLevel: "H"
-    }); [web:1]
+    }); /* UMD global */ [web:1]
 
     qrBox.innerHTML = svgCode;
 
