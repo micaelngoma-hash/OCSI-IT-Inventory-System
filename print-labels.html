@@ -1,36 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Print QR Labels</title>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js" type="module"></script>
+<title>Print QR Labels – OCSI IT Inventory</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- QRCode (GLOBAL, NOT MODULE) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
-body{font-family:system-ui;padding:20px;}
-#labels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
-.label{border:1px solid #ddd;padding:10px;text-align:center;}
-.label svg{width:100%;}
-@media print{button{display:none}}
+body{
+  font-family:system-ui,sans-serif;
+  background:#f5f7fb;
+  padding:20px;
+}
+h1{margin-top:0}
+.controls{margin-bottom:16px}
+button{
+  padding:8px 16px;
+  border-radius:999px;
+  border:none;
+  cursor:pointer;
+  background:#1a73e8;
+  color:white;
+}
+#labelsArea{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.label{
+  background:white;
+  border:1px solid #e5e7eb;
+  border-radius:8px;
+  padding:10px;
+  text-align:center;
+}
+.label svg{
+  width:100%;
+  height:auto;
+}
+.asset{
+  font-size:.85rem;
+  font-weight:600;
+  margin-top:6px;
+}
+.device{
+  font-size:.75rem;
+  color:#555;
+}
+@media print{
+  body{background:white;padding:0}
+  .controls{display:none}
+}
 </style>
 </head>
+
 <body>
 
-<button onclick="window.print()">🖨 Print</button>
-<div id="labels"></div>
+<h1>Bulk QR Label Printing</h1>
 
-<script type="module">
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
-import { db } from "./firebase.js";
-import { doc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<div class="controls">
+  <button onclick="window.print()">🖨 Print Labels</button>
+</div>
 
-const ids=(new URLSearchParams(location.search).get("ids")||"").split(",");
-const labels=document.getElementById("labels");
+<div id="labelsArea"></div>
 
-for(const id of ids){
-  const snap=await getDoc(doc(db,"items",id));
-  if(!snap.exists()) continue;
-  const svg=await QRCode.toString(id,{type:"svg",scale:8});
-  labels.innerHTML+=`<div class="label">${svg}<div>${snap.data().assetId||""}</div></div>`;
-}
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+
+  const labelsArea = document.getElementById("labelsArea");
+  const params = new URLSearchParams(location.search);
+  const ids = (params.get("ids") || "")
+    .split(",")
+    .map(i => i.trim())
+    .filter(Boolean);
+
+  if (ids.length === 0) {
+    labelsArea.innerHTML = "<p>No item IDs provided.</p>";
+    return;
+  }
+
+  // 🔒 Firebase imports MUST be dynamic in non-module script
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+  const { getFirestore, doc, getDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  for (const id of ids) {
+    try {
+      const snap = await getDoc(doc(db, "items", id));
+      if (!snap.exists()) continue;
+
+      const data = snap.data();
+
+      const svg = await QRCode.toString(id, {
+        type: "svg",
+        margin: 0,
+        scale: 8,
+        errorCorrectionLevel: "H"
+      });
+
+      const div = document.createElement("div");
+      div.className = "label";
+      div.innerHTML = `
+        ${svg}
+        <div class="asset">${data.assetId || ""}</div>
+        <div class="device">${data.deviceName || ""}</div>
+      `;
+
+      labelsArea.appendChild(div);
+
+    } catch (e) {
+      console.error("QR error for", id, e);
+    }
+  }
+});
 </script>
+
 </body>
 </html>
