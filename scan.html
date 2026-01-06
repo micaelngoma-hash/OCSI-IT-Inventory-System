@@ -5,98 +5,98 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – QR Scan Device</title>
 <style>
-  :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--bg);color:white;
-    padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .layout{
-    display:grid;
-    grid-template-columns:240px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-  .sidebar{
-    background:var(--bg2);color:white;padding:14px;
-  }
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
-  .content{
-    padding:18px;
-    max-width:1100px;
-    margin:0 auto;
-    width:100%;
-  }
-  h1{margin:0 0 4px;font-size:1.4rem;}
-  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
-  .grid{
-    display:grid;
-    grid-template-columns:2fr 1.2fr;
-    gap:16px;
-  }
-  @media(max-width:960px){
-    .layout{grid-template-columns:1fr;}
-    .grid{grid-template-columns:1fr;}
-  }
-  .card{
-    background:white;border:1px solid var(--border);
-    border-radius:14px;
-    padding:14px 16px;
-    margin-bottom:12px;
-  }
-  .card h2{margin:0 0 8px;font-size:1.05rem;}
-  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
-  #reader{
-    width:100%;
-    max-width:450px;
-    margin:0 auto;
-    position:relative;
-    border-radius:12px;
-    overflow:hidden;
-    border:2px solid var(--border);
-    background:#000;
-    min-height:300px;
-  }
-  .scan-overlay{
-    position:absolute;top:50%;left:50%;width:60%;height:60%;
-    transform:translate(-50%,-50%);border:2px solid rgba(248,250,252,0.95);
-    border-radius:12px;box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
-    pointer-events:none;
-  }
-  .scan-glow{box-shadow:0 0 0 4px rgba(34,197,94,0.8);animation:scanPulse .6s ease-out;}
-  @keyframes scanPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.9);}100%{box-shadow:0 0 0 14px rgba(34,197,94,0);}}
-  label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
-  input[type="text"]{width:100%;padding:8px 9px;border-radius:9px;border:1px solid #cbd5e1;font-size:.9rem;}
-  .btn{
-    border:none;cursor:pointer;padding:7px 13px;border-radius:999px;
-    font-size:.86rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;
-  }
-  .btn-primary{background:var(--brand);color:white;}
-  .btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
-  .btn:disabled{opacity:0.5;cursor:not-allowed;}
-  .status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;}
-  .history-list{list-style:none;margin:6px 0 0;padding:0;font-size:.85rem;max-height:220px;overflow:auto;}
-  .history-list li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed #e5e7eb;}
-  .history-list li:last-child{border-bottom:none;}
-  .history-list .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;color:#0f172a;word-break:break-all;}
-  .history-list .meta{color:#6b7280;font-size:.78rem;margin-left:6px;white-space:nowrap;}
-  .debug-info{font-size:.75rem;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin-top:12px;}
+:root{
+  --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+  --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:system-ui;background:#f5f7fb;}
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:var(--bg);color:white;
+  padding:12px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.layout{
+  display:grid;
+  grid-template-columns:240px 1fr;
+  min-height:calc(100vh - 52px);
+}
+.sidebar{
+  background:var(--bg2);color:white;padding:14px;
+}
+.nav a{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 11px;border-radius:9px;
+  color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+  font-size:0.92rem;
+}
+.nav a:hover,.nav a.active{background:#111a33;}
+.nav .icon{width:18px;text-align:center;opacity:.8;}
+.content{
+  padding:18px;
+  max-width:1100px;
+  margin:0 auto;
+  width:100%;
+}
+h1{margin:0 0 4px;font-size:1.4rem;}
+.subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+.badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+.badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+.badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+.badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+.grid{
+  display:grid;
+  grid-template-columns:2fr 1.2fr;
+  gap:16px;
+}
+@media(max-width:960px){
+  .layout{grid-template-columns:1fr;}
+  .grid{grid-template-columns:1fr;}
+}
+.card{
+  background:white;border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:12px;
+}
+.card h2{margin:0 0 8px;font-size:1.05rem;}
+.muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+#reader{
+  width:100%;
+  max-width:450px;
+  margin:0 auto;
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  border:2px solid var(--border);
+  background:#000;
+  min-height:300px;
+}
+.scan-overlay{
+  position:absolute;top:50%;left:50%;width:60%;height:60%;
+  transform:translate(-50%,-50%);border:2px solid rgba(248,250,252,0.95);
+  border-radius:12px;box-shadow:0 0 0 100vmax rgba(15,23,42,0.35);
+  pointer-events:none;
+}
+.scan-glow{box-shadow:0 0 0 4px rgba(34,197,94,0.8);animation:scanPulse .6s ease-out;}
+@keyframes scanPulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,0.9);}100%{box-shadow:0 0 0 14px rgba(34,197,94,0);}}
+label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
+input[type="text"]{width:100%;padding:8px 9px;border-radius:9px;border:1px solid #cbd5e1;font-size:.9rem;}
+.btn{
+  border:none;cursor:pointer;padding:7px 13px;border-radius:999px;
+  font-size:.86rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;
+}
+.btn-primary{background:var(--brand);color:white;}
+.btn-ghost{background:transparent;border:1px solid #cbd5e1;color:#0f172a;}
+.btn:disabled{opacity:0.5;cursor:not-allowed;}
+.status{font-size:.8rem;color:#6b7280;margin-top:8px;min-height:18px;}
+.history-list{list-style:none;margin:6px 0 0;padding:0;font-size:.85rem;max-height:220px;overflow:auto;}
+.history-list li{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px dashed #e5e7eb;}
+.history-list li:last-child{border-bottom:none;}
+.history-list .code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;color:#0f172a;word-break:break-all;}
+.history-list .meta{color:#6b7280;font-size:.78rem;margin-left:6px;white-space:nowrap;}
+.debug-info{font-size:.75rem;color:#64748b;background:#f8fafc;padding:8px;border-radius:8px;margin-top:12px;}
 </style>
 </head>
 <body>
@@ -104,7 +104,6 @@
   <div><strong>OCSI IT Inventory</strong> – QR Scan Device</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
-
 <div class="layout">
   <aside class="sidebar">
     <nav class="nav">
@@ -117,7 +116,6 @@
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
-
   <main class="content">
     <h1>Scan or Lookup Device</h1>
     <p class="subtitle">Scan a QR code attached to a device, or enter an Asset ID / document ID manually.</p>
@@ -156,258 +154,240 @@
   </main>
 </div>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8"></script> [web:18]
+
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { db, watchAuth } from "./firebase.js";
+import { collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  // Elements
-  const whoEl = document.getElementById("who");
-  const scanStatusEl = document.getElementById("scanStatus");
-  const debugEl = document.getElementById("debugInfo");
-  const manualIdEl = document.getElementById("manualId");
-  const manualStatusEl = document.getElementById("manualStatus");
-  const btnOpen = document.getElementById("btnOpen");
-  const btnStartScan = document.getElementById("btnStartScan");
-  const btnStopScan = document.getElementById("btnStopScan");
-  const btnFlipCam = document.getElementById("btnFlipCam");
-  const historyList = document.getElementById("historyList");
+const whoEl = document.getElementById("who");
+const scanStatusEl = document.getElementById("scanStatus");
+const debugEl = document.getElementById("debugInfo");
+const manualIdEl = document.getElementById("manualId");
+const manualStatusEl = document.getElementById("manualStatus");
+const btnOpen = document.getElementById("btnOpen");
+const btnStartScan = document.getElementById("btnStartScan");
+const btnStopScan = document.getElementById("btnStopScan");
+const btnFlipCam = document.getElementById("btnFlipCam");
+const historyList = document.getElementById("historyList");
 
-  let html5QrCode = null;
-  let isScanning = false;
-  let cameras = [];
-  let currentCameraIndex = 0;
-  const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-  const scanHistory = [];
+let html5QrCode = null;
+let isScanning = false;
+let cameras = [];
+let currentCameraIndex = 0;
+const scanConfig = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+const scanHistory = [];
 
-  // Cross-platform initialization
-  watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl,
-    onReady: initApp
-  });
+watchAuth({
+  allowedRoles:["admin","it","viewer"],
+  whoEl,
+  onReady: initApp
+});
 
-  async function initApp() {
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        scanStatusEl.textContent = "Camera not supported on this browser.";
-        return;
-      }
-      
-      // Check HTTPS (required for camera)
-      if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-        scanStatusEl.textContent = "Camera requires HTTPS. Use https:// or localhost.";
-        return;
-      }
-
-      html5QrCode = new Html5Qrcode("reader", /* verbose= */ false);
-      await detectCameras();
-      updateUI();
-      
-      // Event listeners
-      btnOpen.addEventListener("click", onManualOpen);
-      btnStartScan.addEventListener("click", startCamera);
-      btnStopScan.addEventListener("click", stopCamera);
-      btnFlipCam.addEventListener("click", switchCamera);
-      
-    } catch (err) {
-      console.error("Init failed:", err);
-      scanStatusEl.textContent = "Initialization failed.";
-    }
-  }
-
-  async function detectCameras() {
-    try {
-      scanStatusEl.textContent = "Detecting cameras...";
-      cameras = await Html5Qrcode.getCameras();
-      
-      if (!cameras || cameras.length === 0) {
-        scanStatusEl.textContent = "No cameras found. Check permissions.";
-        debugEl.innerHTML = "Open browser settings → Camera → Allow";
-        debugEl.style.display = "block";
-        return;
-      }
-      
-      // Prefer back camera for mobile
-      const backCamera = cameras.find(cam => 
-        cam.label?.toLowerCase().includes('back') || 
-        cam.label?.toLowerCase().includes('rear') ||
-        cam.facingMode === 'environment'
-      );
-      currentCameraIndex = backCamera ? cameras.indexOf(backCamera) : 0;
-      
-      debugEl.innerHTML = `${cameras.length} camera(s): ${cameras.map((c,i) => 
-        `<span style="color:${i===currentCameraIndex ? '#22c55e' : '#64748b'}">${c.label || 'Camera ' + (i+1)}</span>`
-      ).join(', ')}`;
-      
-    } catch (err) {
-      console.error("Camera detection failed:", err);
-      debugEl.innerHTML = `Detection failed: ${err.message}`;
-    }
-  }
-
-  async function startCamera() {
-    if (isScanning || !html5QrCode || cameras.length === 0) return;
-    
-    try {
-      const cameraId = cameras[currentCameraIndex].id;
-      scanStatusEl.textContent = `Starting ${cameras[currentCameraIndex].label || 'camera'}...`;
-      
-      await html5QrCode.start(
-        cameraId,
-        scanConfig,
-        onScanSuccess,
-        onScanError
-      );
-      
-      isScanning = true;
-      updateUI();
-      scanStatusEl.textContent = "✅ Scanning active - point at QR code";
-      addOverlay();
-      
-    } catch (err) {
-      console.error("Start failed:", err);
-      scanStatusEl.textContent = `Start failed: ${err}`;
-      debugEl.innerHTML = `Error: ${err.message}. Check console (F12).`;
-      debugEl.style.display = "block";
-    }
-  }
-
-  function onScanError(err) {
-    // Ignore per-frame errors
-    if (!err || err.includes("No MultiFormat Readers")) return;
-    console.warn("Scan error:", err);
-  }
-
-  async function stopCamera() {
-    if (!isScanning || !html5QrCode) return;
-    
-    try {
-      await html5QrCode.stop();
-      isScanning = false;
-      removeOverlay();
-      updateUI();
-      scanStatusEl.textContent = "Camera stopped";
-    } catch (err) {
-      console.error("Stop failed:", err);
-    }
-  }
-
-  async function switchCamera() {
-    if (!isScanning || cameras.length < 2) {
-      scanStatusEl.textContent = cameras.length < 2 ? "Only 1 camera available" : "Stop scanner first";
+async function initApp() {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      scanStatusEl.textContent = "Camera not supported on this browser.";
       return;
     }
-    
-    await stopCamera();
-    currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+      scanStatusEl.textContent = "Camera requires HTTPS. Use https:// or localhost.";
+      return;
+    }
+
+    html5QrCode = new Html5Qrcode("reader", false);
+    await detectCameras();
     updateUI();
-    startCamera();
-  }
 
-  function updateUI() {
-    btnStartScan.style.display = isScanning ? "none" : "inline-flex";
-    btnStopScan.style.display = isScanning ? "inline-flex" : "none";
-    btnFlipCam.disabled = !isScanning || cameras.length < 2;
-    debugEl.style.display = cameras.length > 0 ? "block" : "none";
+    btnOpen.addEventListener("click", onManualOpen);
+    btnStartScan.addEventListener("click", startCamera);
+    btnStopScan.addEventListener("click", stopCamera);
+    btnFlipCam.addEventListener("click", switchCamera);
+  } catch (err) {
+    console.error("Init failed:", err);
+    scanStatusEl.textContent = "Initialization failed.";
   }
+}
 
-  function addOverlay() {
-    const reader = document.getElementById("reader");
-    if (reader.querySelector(".scan-overlay")) return;
-    const overlay = document.createElement("div");
-    overlay.className = "scan-overlay";
-    reader.appendChild(overlay);
-  }
+async function detectCameras() {
+  try {
+    scanStatusEl.textContent = "Detecting cameras...";
+    cameras = await Html5Qrcode.getCameras(); [web:18]
+    if (!cameras || cameras.length === 0) {
+      scanStatusEl.textContent = "No cameras found. Check permissions.";
+      debugEl.innerHTML = "Open browser settings → Camera → Allow";
+      debugEl.style.display = "block";
+      return;
+    }
 
-  function removeOverlay() {
-    const reader = document.getElementById("reader");
-    const overlay = reader.querySelector(".scan-overlay");
-    if (overlay) overlay.remove();
-  }
+    const backCamera = cameras.find(cam =>
+      cam.label?.toLowerCase().includes('back') ||
+      cam.label?.toLowerCase().includes('rear') ||
+      cam.facingMode === 'environment'
+    );
+    currentCameraIndex = backCamera ? cameras.indexOf(backCamera) : 0;
 
-  function onScanSuccess(decodedText) {
-    const code = decodedText.trim();
-    if (!code) return;
-    
-    addToHistory(code, "QR");
-    playBeep();
-    addGlow();
-    stopCamera();
-    
-    scanStatusEl.textContent = `✅ Found: ${code.substring(0,30)}${code.length>30?'...' : ''}`;
-    
-    setTimeout(() => {
-      window.location.href = `item.html?id=${encodeURIComponent(code)}`;
-    }, 1200);
+    debugEl.innerHTML = `${cameras.length} camera(s): ${cameras.map((c,i) =>
+      `<span style="color:${i===currentCameraIndex ? '#22c55e' : '#64748b'}">${c.label || 'Camera ' + (i+1)}</span>`
+    ).join(', ')}`;
+  } catch (err) {
+    console.error("Camera detection failed:", err);
+    debugEl.innerHTML = `Detection failed: ${err.message}`;
   }
+}
 
-  // Rest of your existing functions (unchanged)
-  async function onManualOpen() {
-    const id = manualIdEl.value.trim();
-    if (!id) return manualStatusEl.textContent = "Enter ID";
-    
-    manualStatusEl.textContent = "Looking up...";
-    try {
-      const docRef = doc(db, "items", id);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        addToHistory(id, "Manual");
-        return window.location.href = `item.html?id=${encodeURIComponent(id)}`;
-      }
-    } catch(e) { console.error(e); }
-    
-    try {
-      const q = query(collection(db, "items"), where("assetId", "==", id));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        const first = snap.docs[0];
-        addToHistory(id, "Manual");
-        return window.location.href = `item.html?id=${encodeURIComponent(first.id)}`;
-      }
-    } catch(e) { console.error(e); }
-    
-    manualStatusEl.textContent = "Not found";
+async function startCamera() {
+  if (isScanning || !html5QrCode || cameras.length === 0) return;
+  try {
+    const cameraId = cameras[currentCameraIndex].id;
+    scanStatusEl.textContent = `Starting ${cameras[currentCameraIndex].label || 'camera'}...`;
+    await html5QrCode.start(
+      cameraId,
+      scanConfig,
+      onScanSuccess,
+      onScanError
+    ); [web:18]
+    isScanning = true;
+    updateUI();
+    scanStatusEl.textContent = "✅ Scanning active - point at QR code";
+    addOverlay();
+  } catch (err) {
+    console.error("Start failed:", err);
+    scanStatusEl.textContent = `Start failed: ${err}`;
+    debugEl.innerHTML = `Error: ${err.message}. Check console (F12).`;
+    debugEl.style.display = "block";
   }
+}
 
-  function addToHistory(text, source) {
-    scanHistory.unshift({ text, source, time: new Date() });
-    if (scanHistory.length > 10) scanHistory.pop();
-    renderHistory();
-  }
+function onScanError(err) {
+  if (!err || err.includes("No MultiFormat Readers")) return;
+  console.warn("Scan error:", err);
+}
 
-  function renderHistory() {
-    historyList.innerHTML = scanHistory.length 
-      ? scanHistory.map(e => {
-          const t = e.time.toLocaleTimeString();
-          return `<li><span class="code">${escapeHtml(e.text)}</span><span class="meta">${e.source} • ${t}</span></li>`;
-        }).join("")
-      : '<li><span class="code">No scans yet</span></li>';
+async function stopCamera() {
+  if (!isScanning || !html5QrCode) return;
+  try {
+    await html5QrCode.stop();
+    isScanning = false;
+    removeOverlay();
+    updateUI();
+    scanStatusEl.textContent = "Camera stopped";
+  } catch (err) {
+    console.error("Stop failed:", err);
   }
+}
 
-  function addGlow() {
-    const reader = document.getElementById("reader");
-    reader?.classList.add("scan-glow");
-    setTimeout(() => reader?.classList.remove("scan-glow"), 600);
+async function switchCamera() {
+  if (!isScanning || cameras.length < 2) {
+    scanStatusEl.textContent = cameras.length < 2 ? "Only 1 camera available" : "Stop scanner first";
+    return;
   }
+  await stopCamera();
+  currentCameraIndex = (currentCameraIndex + 1) % cameras.length;
+  updateUI();
+  startCamera();
+}
 
-  function playBeep() {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine"; osc.frequency.value = 800;
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(); gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
-      osc.stop(ctx.currentTime + 0.2);
-    } catch(e) {}
-  }
+function updateUI() {
+  btnStartScan.style.display = isScanning ? "none" : "inline-flex";
+  btnStopScan.style.display = isScanning ? "inline-flex" : "none";
+  btnFlipCam.disabled = !isScanning || cameras.length < 2;
+  debugEl.style.display = cameras.length > 0 ? "block" : "none";
+}
 
-  function escapeHtml(s) {
-    const map = {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"};
-    return String(s).replace(/[&<>"']/g, m => map[m]);
-  }
+function addOverlay() {
+  const reader = document.getElementById("reader");
+  if (reader.querySelector(".scan-overlay")) return;
+  const overlay = document.createElement("div");
+  overlay.className = "scan-overlay";
+  reader.appendChild(overlay);
+}
+
+function removeOverlay() {
+  const reader = document.getElementById("reader");
+  const overlay = reader.querySelector(".scan-overlay");
+  if (overlay) overlay.remove();
+}
+
+function onScanSuccess(decodedText) {
+  const code = decodedText.trim();
+  if (!code) return;
+  addToHistory(code, "QR");
+  playBeep();
+  addGlow();
+  stopCamera();
+  scanStatusEl.textContent = `✅ Found: ${code.substring(0,30)}${code.length>30?'...' : ''}`;
+  setTimeout(() => {
+    window.location.href = `item.html?id=${encodeURIComponent(code)}`;
+  }, 1200);
+}
+
+async function onManualOpen() {
+  const id = manualIdEl.value.trim();
+  if (!id) return manualStatusEl.textContent = "Enter ID";
+  manualStatusEl.textContent = "Looking up...";
+
+  try {
+    const docRef = doc(db, "items", id);
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      addToHistory(id, "Manual");
+      return window.location.href = `item.html?id=${encodeURIComponent(id)}`;
+    }
+  } catch(e) { console.error(e); }
+
+  try {
+    const q = query(collection(db, "items"), where("assetId", "==", id));
+    const snap = await getDocs(q);
+    if (!snap.empty) {
+      const first = snap.docs[0];
+      addToHistory(id, "Manual");
+      return window.location.href = `item.html?id=${encodeURIComponent(first.id)}`;
+    }
+  } catch(e) { console.error(e); }
+
+  manualStatusEl.textContent = "Not found";
+}
+
+function addToHistory(text, source) {
+  scanHistory.unshift({ text, source, time: new Date() });
+  if (scanHistory.length > 10) scanHistory.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  historyList.innerHTML = scanHistory.length
+    ? scanHistory.map(e => {
+        const t = e.time.toLocaleTimeString();
+        return `<li><span class="code">${escapeHtml(e.text)}</span><span class="meta">${e.source} • ${t}</span></li>`;
+      }).join("")
+    : '<li><span class="code">No scans yet</span></li>';
+}
+
+function addGlow() {
+  const reader = document.getElementById("reader");
+  reader?.classList.add("scan-glow");
+  setTimeout(() => reader?.classList.remove("scan-glow"), 600);
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine"; osc.frequency.value = 800;
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch(e) {}
+}
+
+function escapeHtml(s) {
+  const map = {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"};
+  return String(s).replace(/[&<>"']/g, m => map[m]);
+}
 </script>
 </body>
 </html>
