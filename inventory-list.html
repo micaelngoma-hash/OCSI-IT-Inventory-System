@@ -151,8 +151,7 @@
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
 
-        <!-- ✅ Bulk QR uses PUBLIC print page -->
-        <button id="btnBulkQR" class="btn btn-primary">🖨 Print QR Labels</button>
+        <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
 
@@ -231,7 +230,7 @@ function render(){
 
   const rows = allItems.filter(it=>{
     if(filter && it.status !== filter) return false;
-    const blob = `${it.assetId||""} ${it.deviceName||""} ${it.assetType||""} ${it.assignedTo||""} ${it.location||""} ${it.ipAddress||""}`;
+    const blob = `${it.assetId || ""} ${it.deviceName || ""} ${it.assetType || ""} ${it.assignedTo || ""} ${it.location || ""} ${it.ipAddress || ""}`;
     return blob.toLowerCase().includes(term);
   });
 
@@ -245,8 +244,8 @@ function render(){
 
 function makeRow(it){
   const pill =
-    it.status === "in-use" ? "pill-green" :
-    it.status === "loaned" ? "pill-blue"  :
+    it.status === "in-use"   ? "pill-green" :
+    it.status === "loaned"   ? "pill-blue"  :
     (it.status === "retired" || it.status === "repair") ? "pill-red" :
     "pill-gray";
 
@@ -261,13 +260,13 @@ function makeRow(it){
   return `
     <tr>
       <td><input type="checkbox" class="rowChk" value="${it.id}"></td>
-      <td>${escapeHtml(it.assetId||"")}</td>
-      <td>${escapeHtml(it.deviceName||"")}</td>
-      <td>${escapeHtml(it.assetType||"")}</td>
-      <td><span class="pill ${pill}">${escapeHtml(it.status||"")}</span></td>
-      <td>${escapeHtml(it.assignedTo||"")}</td>
-      <td>${escapeHtml(it.location||"")}</td>
-      <td>${escapeHtml(it.ipAddress||"")}</td>
+      <td>${escapeHtml(it.assetId || "")}</td>
+      <td>${escapeHtml(it.deviceName || "")}</td>
+      <td>${escapeHtml(it.assetType || "")}</td>
+      <td><span class="pill ${pill}">${escapeHtml(it.status || "")}</span></td>
+      <td>${escapeHtml(it.assignedTo || "")}</td>
+      <td>${escapeHtml(it.location || "")}</td>
+      <td>${escapeHtml(it.ipAddress || "")}</td>
       <td>${actions}</td>
     </tr>`;
 }
@@ -280,17 +279,16 @@ selectAll.onclick = () => {
 
 btnBulkQR.onclick = () => {
   const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
-  if(!selected.length){
+  if(selected.length === 0){
     alert("Please select at least one device.");
     return;
   }
-  // 🔑 Public, auth-free print page
   location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
 };
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g,c=>(
-    {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]
+    {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]
   ));
 }
 
