@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- ✅ QRCode UMD fallback (GitHub Pages safe) -->
+<!-- ✅ QRCode UMD (GitHub Pages SAFE – REQUIRED) -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
@@ -123,25 +123,14 @@ import { doc, getDoc } from
   "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* ======================================================
-   QRCode SAFE LOADER (NEW – minimal change)
+   QRCode (GLOBAL ONLY — FIX)
 ====================================================== */
-let QR;
-
-try {
-  const mod = await import(
-    "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js"
-  );
-  QR = mod.default;
-  console.log("✅ QRCode ESM loaded");
-} catch (e) {
-  console.warn("⚠️ QRCode ESM failed, using UMD fallback");
-  QR = window.QRCode;
-}
+const QR = window.QRCode;
 
 if (!QR) {
-  document.getElementById("labelsArea").textContent =
+  document.getElementById("labelsArea").innerHTML =
     "❌ QRCode library failed to load.";
-  throw new Error("QRCode unavailable");
+  throw new Error("QRCode missing");
 }
 
 /* ======================================================
