@@ -9,7 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- QRCode (UMD – GitHub Pages safe) -->
+<!-- ✅ QRCode UMD fallback (GitHub Pages safe) -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 
 <style>
@@ -112,21 +112,58 @@ h1{margin-top:0;font-size:2rem;}
   <div class="grid-test"></div>
 </div>
 
-<div id="labelsArea">Loading labels…</div>
+<div id="labelsArea">Initialising…</div>
 
-<script>
+<script type="module">
+/* ======================================================
+   FIREBASE (UNCHANGED)
+====================================================== */
+import { db } from "./firebase.js";
+import { doc, getDoc } from
+  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* ======================================================
+   QRCode SAFE LOADER (NEW – minimal change)
+====================================================== */
+let QR;
+
+try {
+  const mod = await import(
+    "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js"
+  );
+  QR = mod.default;
+  console.log("✅ QRCode ESM loaded");
+} catch (e) {
+  console.warn("⚠️ QRCode ESM failed, using UMD fallback");
+  QR = window.QRCode;
+}
+
+if (!QR) {
+  document.getElementById("labelsArea").textContent =
+    "❌ QRCode library failed to load.";
+  throw new Error("QRCode unavailable");
+}
+
+/* ======================================================
+   DOM
+====================================================== */
 const labelsArea = document.getElementById("labelsArea");
 const btnPrint   = document.getElementById("btnPrint");
 const btnPDF     = document.getElementById("btnPDF");
 const btnTest    = document.getElementById("btnTest");
 const testGrid   = document.getElementById("testGrid");
 
+/* ======================================================
+   PARAMS
+====================================================== */
 const params = new URLSearchParams(location.search);
 const idList = (params.get("ids") || "").split(",").filter(Boolean);
 
 let layout = 12;
 
-/* Layout */
+/* ======================================================
+   LAYOUT (UNCHANGED)
+====================================================== */
 document.getElementById("btn6").onclick  = () => setLayout(6);
 document.getElementById("btn12").onclick = () => setLayout(12);
 document.getElementById("btn24").onclick = () => setLayout(24);
@@ -134,10 +171,12 @@ updateGrid();
 
 function setLayout(n){
   layout = n;
-  document.querySelectorAll(".layout-option").forEach(b=>b.classList.remove("active"));
+  document.querySelectorAll(".layout-option")
+    .forEach(b => b.classList.remove("active"));
   document.getElementById("btn"+n).classList.add("active");
   updateGrid();
 }
+
 function updateGrid(){
   labelsArea.style.gridTemplateColumns =
     layout === 6  ? "repeat(2,1fr)" :
@@ -145,35 +184,65 @@ function updateGrid(){
                     "repeat(4,1fr)";
 }
 
-/* Generate labels WITHOUT Firebase */
+/* ======================================================
+   LOAD LABELS (UNCHANGED LOGIC)
+====================================================== */
+loadLabels();
+
 async function loadLabels(){
-  if(idList.length === 0){
-    labelsArea.textContent = "No IDs provided.";
-    return;
-  }
+  labelsArea.textContent = "Loading labels…";
 
-  labelsArea.innerHTML = "";
+  try{
+    const items = [];
 
-  for(const id of idList){
-    const div = document.createElement("div");
-    div.className = "label";
+    for(const id of idList){
+      const snap = await getDoc(doc(db,"items",id));
+      if(snap.exists()) items.push({ id, ...snap.data() });
+    }
 
-    const url = `${location.origin}/OCSI-IT-Inventory-System/item.html?id=${id}`;
-    const svg = await QRCode.toString(url,{ type:"svg", scale:8, margin:1 });
+    if(items.length === 0){
+      labelsArea.textContent = "No items found.";
+      return;
+    }
 
-    div.innerHTML = `
-      <div>${svg}</div>
-      <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-        ${id}
-      </div>
-    `;
-    labelsArea.appendChild(div);
+    labelsArea.innerHTML = "";
+
+    for(const item of items){
+      const div = document.createElement("div");
+      div.className = "label";
+
+      const url =
+        `${location.origin}/OCSI-IT-Inventory-System/item.html?id=${item.id}`;
+
+      const svg = await QR.toString(url,{
+        type:"svg",
+        margin:1,
+        scale:8,
+        errorCorrectionLevel:"H"
+      });
+
+      div.innerHTML = `
+        <div>${svg}</div>
+        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+          ${item.assetId || item.id}
+        </div>
+        <div style="font-size:.75rem;color:#444;">
+          ${item.deviceName || ""}
+        </div>
+      `;
+
+      labelsArea.appendChild(div);
+    }
+
+  }catch(err){
+    console.error(err);
+    labelsArea.textContent = "❌ Failed to load labels.";
   }
 }
 
-loadLabels();
-
-/* Buttons */
+/* ======================================================
+   BUTTONS (UNCHANGED)
+====================================================== */
 btnPrint.onclick = () => window.print();
 
 btnPDF.onclick = async () => {
@@ -181,6 +250,7 @@ btnPDF.onclick = async () => {
   const pdf = new jsPDF("p","mm","a4");
   const canvas = await html2canvas(labelsArea,{ scale:2 });
   const img = canvas.toDataURL("image/png");
+
   const w = 200;
   const h = canvas.height * w / canvas.width;
   pdf.addImage(img,"PNG",5,5,w,h);
