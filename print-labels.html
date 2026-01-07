@@ -9,6 +9,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+<!-- QRCode (UMD – GitHub Pages safe) -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
 body{
   font-family:system-ui,sans-serif;
@@ -89,17 +92,17 @@ h1{margin-top:0;font-size:2rem;}
 
   <br><br>
 
-  <button id="btnPrint" type="button"
+  <button id="btnPrint"
     style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
     🖨 Print Labels
   </button>
 
-  <button id="btnPDF" type="button"
+  <button id="btnPDF"
     style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
     📄 Download PDF
   </button>
 
-  <button id="btnTest" type="button"
+  <button id="btnTest"
     style="padding:10px 22px;border-radius:999px;background:#6b7280;color:white;border:none;cursor:pointer;margin-left:10px;">
     📐 Print Test Alignment Grid
   </button>
@@ -109,18 +112,9 @@ h1{margin-top:0;font-size:2rem;}
   <div class="grid-test"></div>
 </div>
 
-<div id="labelsArea">Initialising…</div>
+<div id="labelsArea">Loading labels…</div>
 
 <script>
-window.__APP_READY__ = false;
-</script>
-
-<script type="module">
-/* Firebase (Firestore ONLY — no auth) */
-import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
-
 const labelsArea = document.getElementById("labelsArea");
 const btnPrint   = document.getElementById("btnPrint");
 const btnPDF     = document.getElementById("btnPDF");
@@ -151,76 +145,43 @@ function updateGrid(){
                     "repeat(4,1fr)";
 }
 
-/* LOAD IMMEDIATELY — NO AUTH */
-loadLabels();
-
-/* LOAD LABELS */
+/* Generate labels WITHOUT Firebase */
 async function loadLabels(){
-  labelsArea.innerHTML = "Loading labels…";
+  if(idList.length === 0){
+    labelsArea.textContent = "No IDs provided.";
+    return;
+  }
 
-  try{
-    const items = [];
-    for(const id of idList){
-      const snap = await getDoc(doc(db,"items",id));
-      if(snap.exists()) items.push({ id, ...snap.data() });
-    }
+  labelsArea.innerHTML = "";
 
-    if(items.length === 0){
-      labelsArea.innerHTML = "No items found.";
-      return;
-    }
+  for(const id of idList){
+    const div = document.createElement("div");
+    div.className = "label";
 
-    labelsArea.innerHTML = "";
+    const url = `${location.origin}/OCSI-IT-Inventory-System/item.html?id=${id}`;
+    const svg = await QRCode.toString(url,{ type:"svg", scale:8, margin:1 });
 
-    for(const item of items){
-      const div = document.createElement("div");
-      div.className = "label";
-
-      const url = `${location.origin}/item.html?id=${item.id}`;
-      const svg = await QRCode.toString(url,{
-        type:"svg",
-        margin:1,
-        scale:8,
-        errorCorrectionLevel:"H"
-      });
-
-      div.innerHTML = `
-        <div>${svg}</div>
-        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-          ${item.assetId || ""}
-        </div>
-        <div style="font-size:.75rem;color:#444;">
-          ${item.deviceName || ""}
-        </div>
-      `;
-      labelsArea.appendChild(div);
-    }
-
-    await new Promise(r=>requestAnimationFrame(r));
-    window.__APP_READY__ = true;
-    console.log("✅ Labels ready");
-
-  }catch(err){
-    console.error(err);
-    labelsArea.innerHTML = "❌ Failed to load labels.";
+    div.innerHTML = `
+      <div>${svg}</div>
+      <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+        ${id}
+      </div>
+    `;
+    labelsArea.appendChild(div);
   }
 }
 
-/* BUTTONS */
-btnPrint.onclick = () => {
-  if(!window.__APP_READY__) return alert("Labels not ready.");
-  window.print();
-};
+loadLabels();
+
+/* Buttons */
+btnPrint.onclick = () => window.print();
 
 btnPDF.onclick = async () => {
-  if(!window.__APP_READY__) return alert("Labels not ready.");
-
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
   const canvas = await html2canvas(labelsArea,{ scale:2 });
   const img = canvas.toDataURL("image/png");
-
-  const w = 210 - 10;
+  const w = 200;
   const h = canvas.height * w / canvas.width;
   pdf.addImage(img,"PNG",5,5,w,h);
   pdf.save("QR-labels.pdf");
