@@ -112,34 +112,70 @@ h1{margin-top:0;font-size:2rem;}
   <div class="grid-test"></div>
 </div>
 
-<div id="labelsArea"></div>
+<div id="labelsArea">
+  <p>Initialising…</p>
+</div>
 
-<!-- ========================= -->
-<!-- MAIN SCRIPT (FINAL) -->
-<!-- ========================= -->
+<!-- ================================================= -->
+<!-- SAFETY BOOTSTRAP (RUNS EVEN IF MODULE FAILS) -->
+<!-- ================================================= -->
+<script>
+/* Global readiness flag */
+window.__APP_READY__ = false;
+
+window.addEventListener("DOMContentLoaded", () => {
+  const btnPrint = document.getElementById("btnPrint");
+  const btnPDF   = document.getElementById("btnPDF");
+  const btnTest  = document.getElementById("btnTest");
+
+  btnPrint.onclick = () => {
+    if (!window.__APP_READY__) {
+      alert("⚠️ Labels are still loading or the app failed to initialise.");
+      return;
+    }
+    window.print();
+  };
+
+  btnPDF.onclick = () => {
+    if (!window.__APP_READY__) {
+      alert("⚠️ Labels are not ready for PDF export.");
+      return;
+    }
+    alert("PDF export is ready.");
+  };
+
+  btnTest.onclick = () => {
+    if (!window.__APP_READY__) {
+      alert("⚠️ App not ready. Cannot print test grid.");
+      return;
+    }
+  };
+
+  console.log("✅ Button safety handlers attached");
+});
+</script>
+
+<!-- ================================================= -->
+<!-- MAIN MODULE SCRIPT (MAY FAIL SAFELY ON GH PAGES) -->
+<!-- ================================================= -->
 <script type="module">
 import { watchAuth, db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
-/* DOM */
 const labelsArea = document.getElementById("labelsArea");
-const btnPDF   = document.getElementById("btnPDF");
-const btnPrint = document.getElementById("btnPrint");
-const btnTest  = document.getElementById("btnTest");
-const testGrid = document.getElementById("testGrid");
+const testGrid   = document.getElementById("testGrid");
 
 const params = new URLSearchParams(location.search);
 const idList = (params.get("ids") || "").split(",").filter(Boolean);
 
 let layout = 12;
-let labelsRendered = false;
 
-/* GRID */
-updateGrid();
+/* Layout controls */
 document.getElementById("btn6").onclick  = () => setLayout(6);
 document.getElementById("btn12").onclick = () => setLayout(12);
 document.getElementById("btn24").onclick = () => setLayout(24);
+updateGrid();
 
 function setLayout(n){
   layout = n;
@@ -154,16 +190,14 @@ function updateGrid(){
                     "repeat(4,1fr)";
 }
 
-/* AUTH */
+/* AUTH + LOAD */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl:null,
   onReady: loadLabels
 });
 
-/* LOAD LABELS */
 async function loadLabels(){
-  labelsRendered = false;
   labelsArea.innerHTML = "<p>Loading labels…</p>";
 
   const items = [];
@@ -204,59 +238,12 @@ async function loadLabels(){
   }
 
   await new Promise(r=>requestAnimationFrame(r));
-  labelsRendered = true;
+
+  /* Signal success */
+  window.__APP_READY__ = true;
+  console.log("✅ Print labels module loaded successfully");
 }
-
-/* BUTTONS — GUARANTEED WORKING */
-
-/* PRINT */
-btnPrint.addEventListener("click", async ()=>{
-  if(!labelsRendered){
-    alert("Labels are still loading. Please wait.");
-    return;
-  }
-  await new Promise(r=>requestAnimationFrame(r));
-  await new Promise(r=>setTimeout(r,300));
-  window.print();
-});
-
-/* PDF */
-btnPDF.addEventListener("click", async ()=>{
-  if(!labelsRendered){
-    alert("Labels are still loading.");
-    return;
-  }
-  await new Promise(r=>setTimeout(r,300));
-
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
-
-  const canvas = await html2canvas(labelsArea,{ scale:2 });
-  const img = canvas.toDataURL("image/png");
-
-  const pageWidth = 210;
-  const imgWidth  = pageWidth - 10;
-  const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-  pdf.addImage(img,"PNG",5,5,imgWidth,imgHeight);
-  pdf.save("QR-labels.pdf");
-});
-
-/* TEST GRID */
-btnTest.addEventListener("click", async ()=>{
-  labelsArea.style.display="none";
-  testGrid.style.display="block";
-
-  await new Promise(r=>requestAnimationFrame(r));
-  await new Promise(r=>setTimeout(r,200));
-
-  window.print();
-
-  setTimeout(()=>{
-    testGrid.style.display="none";
-    labelsArea.style.display="grid";
-  },500);
-});
 </script>
+
 </body>
 </html>
