@@ -60,13 +60,11 @@ h1{margin-top:0;font-size:2rem;}
   height:auto;
 }
 
-/* PRINT */
 @media print{
   body{background:white;padding:0;margin:0;}
   .top-controls{display:none !important;}
 }
 
-/* TEST GRID */
 .grid-test{
   width:100%;
   height:90%;
@@ -107,63 +105,26 @@ h1{margin-top:0;font-size:2rem;}
   </button>
 </div>
 
-<!-- TEST GRID -->
 <div id="testGrid" style="display:none;">
   <div class="grid-test"></div>
 </div>
 
-<div id="labelsArea">
-  <p>Initialising…</p>
-</div>
+<div id="labelsArea">Initialising…</div>
 
-<!-- ================================================= -->
-<!-- SAFETY BOOTSTRAP (RUNS EVEN IF MODULE FAILS) -->
-<!-- ================================================= -->
 <script>
-/* Global readiness flag */
 window.__APP_READY__ = false;
-
-window.addEventListener("DOMContentLoaded", () => {
-  const btnPrint = document.getElementById("btnPrint");
-  const btnPDF   = document.getElementById("btnPDF");
-  const btnTest  = document.getElementById("btnTest");
-
-  btnPrint.onclick = () => {
-    if (!window.__APP_READY__) {
-      alert("⚠️ Labels are still loading or the app failed to initialise.");
-      return;
-    }
-    window.print();
-  };
-
-  btnPDF.onclick = () => {
-    if (!window.__APP_READY__) {
-      alert("⚠️ Labels are not ready for PDF export.");
-      return;
-    }
-    alert("PDF export is ready.");
-  };
-
-  btnTest.onclick = () => {
-    if (!window.__APP_READY__) {
-      alert("⚠️ App not ready. Cannot print test grid.");
-      return;
-    }
-  };
-
-  console.log("✅ Button safety handlers attached");
-});
 </script>
 
-<!-- ================================================= -->
-<!-- MAIN MODULE SCRIPT (MAY FAIL SAFELY ON GH PAGES) -->
-<!-- ================================================= -->
 <script type="module">
-import { watchAuth, db } from "./firebase.js";
+/* Firebase (Firestore ONLY — no auth) */
+import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 import QRCode from "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.esm.js";
 
 const labelsArea = document.getElementById("labelsArea");
+const btnPrint   = document.getElementById("btnPrint");
+const btnPDF     = document.getElementById("btnPDF");
+const btnTest    = document.getElementById("btnTest");
 const testGrid   = document.getElementById("testGrid");
 
 const params = new URLSearchParams(location.search);
@@ -171,7 +132,7 @@ const idList = (params.get("ids") || "").split(",").filter(Boolean);
 
 let layout = 12;
 
-/* Layout controls */
+/* Layout */
 document.getElementById("btn6").onclick  = () => setLayout(6);
 document.getElementById("btn12").onclick = () => setLayout(12);
 document.getElementById("btn24").onclick = () => setLayout(24);
@@ -190,60 +151,90 @@ function updateGrid(){
                     "repeat(4,1fr)";
 }
 
-/* AUTH + LOAD */
-watchAuth({
-  allowedRoles:["admin","it","viewer"],
-  whoEl:null,
-  onReady: loadLabels
-});
+/* LOAD IMMEDIATELY — NO AUTH */
+loadLabels();
 
+/* LOAD LABELS */
 async function loadLabels(){
-  labelsArea.innerHTML = "<p>Loading labels…</p>";
+  labelsArea.innerHTML = "Loading labels…";
 
-  const items = [];
-  for(const id of idList){
-    const snap = await getDoc(doc(db,"items",id));
-    if(snap.exists()) items.push({ id, ...snap.data() });
+  try{
+    const items = [];
+    for(const id of idList){
+      const snap = await getDoc(doc(db,"items",id));
+      if(snap.exists()) items.push({ id, ...snap.data() });
+    }
+
+    if(items.length === 0){
+      labelsArea.innerHTML = "No items found.";
+      return;
+    }
+
+    labelsArea.innerHTML = "";
+
+    for(const item of items){
+      const div = document.createElement("div");
+      div.className = "label";
+
+      const url = `${location.origin}/item.html?id=${item.id}`;
+      const svg = await QRCode.toString(url,{
+        type:"svg",
+        margin:1,
+        scale:8,
+        errorCorrectionLevel:"H"
+      });
+
+      div.innerHTML = `
+        <div>${svg}</div>
+        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
+          ${item.assetId || ""}
+        </div>
+        <div style="font-size:.75rem;color:#444;">
+          ${item.deviceName || ""}
+        </div>
+      `;
+      labelsArea.appendChild(div);
+    }
+
+    await new Promise(r=>requestAnimationFrame(r));
+    window.__APP_READY__ = true;
+    console.log("✅ Labels ready");
+
+  }catch(err){
+    console.error(err);
+    labelsArea.innerHTML = "❌ Failed to load labels.";
   }
-
-  if(items.length === 0){
-    labelsArea.innerHTML = "<p>No items found.</p>";
-    return;
-  }
-
-  labelsArea.innerHTML = "";
-
-  for(const item of items){
-    const div = document.createElement("div");
-    div.className = "label";
-
-    const url = `${location.origin}/item.html?id=${item.id}`;
-    const svg = await QRCode.toString(url,{
-      type:"svg",
-      margin:1,
-      scale:8,
-      errorCorrectionLevel:"H"
-    });
-
-    div.innerHTML = `
-      <div>${svg}</div>
-      <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-        ${item.assetId || ""}
-      </div>
-      <div style="font-size:.75rem;color:#444;">
-        ${item.deviceName || ""}
-      </div>
-    `;
-    labelsArea.appendChild(div);
-  }
-
-  await new Promise(r=>requestAnimationFrame(r));
-
-  /* Signal success */
-  window.__APP_READY__ = true;
-  console.log("✅ Print labels module loaded successfully");
 }
-</script>
 
+/* BUTTONS */
+btnPrint.onclick = () => {
+  if(!window.__APP_READY__) return alert("Labels not ready.");
+  window.print();
+};
+
+btnPDF.onclick = async () => {
+  if(!window.__APP_READY__) return alert("Labels not ready.");
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+  const canvas = await html2canvas(labelsArea,{ scale:2 });
+  const img = canvas.toDataURL("image/png");
+
+  const w = 210 - 10;
+  const h = canvas.height * w / canvas.width;
+  pdf.addImage(img,"PNG",5,5,w,h);
+  pdf.save("QR-labels.pdf");
+};
+
+btnTest.onclick = () => {
+  labelsArea.style.display="none";
+  testGrid.style.display="block";
+  window.print();
+  setTimeout(()=>{
+    testGrid.style.display="none";
+    labelsArea.style.display="grid";
+  },500);
+};
+</script>
 </body>
 </html>
