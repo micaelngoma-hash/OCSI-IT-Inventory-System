@@ -42,14 +42,14 @@ h1{margin-top:0;font-size:2rem;}
   border-color:#1a73e8;
 }
 
-/* ===== GRID ===== */
+/* Grid */
 #labelsArea{
   display:grid;
   gap:12px;
   justify-content:center;
 }
 
-/* ===== LABEL BOX ===== */
+/* Label box */
 .label{
   background:white;
   border:1px solid #e5e7eb;
@@ -67,18 +67,17 @@ h1{margin-top:0;font-size:2rem;}
 }
 
 .label .asset{
-  font-size:0.75rem;
+  font-size:.75rem;
   font-weight:600;
   margin-top:4px;
 }
 
 .label .name{
-  font-size:0.65rem;
+  font-size:.65rem;
   color:#444;
   line-height:1.1;
 }
 
-/* ===== PRINT ===== */
 @media print{
   body{background:white;padding:0;margin:0;}
   .top-controls{display:none!important;}
@@ -95,14 +94,8 @@ h1{margin-top:0;font-size:2rem;}
   <button id="btn12" class="layout-option active">12 per page (Medium)</button>
   <button id="btn24" class="layout-option">24 per page (Small)</button>
   <br><br>
-  <button onclick="window.print()"
-    style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
-    🖨 Print Labels
-  </button>
-  <button id="btnPDF"
-    style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
-    📄 Download PDF
-  </button>
+  <button onclick="window.print()">🖨 Print Labels</button>
+  <button id="btnPDF">📄 Download PDF</button>
 </div>
 
 <div id="labelsArea"></div>
@@ -121,13 +114,12 @@ const idList = (params.get("ids") || "").split(",").filter(Boolean);
 let layout = 12;
 updateGrid();
 
-/* ===== Layout buttons ===== */
 btn6.onclick  = () => setLayout(6);
 btn12.onclick = () => setLayout(12);
 btn24.onclick = () => setLayout(24);
 
 function setLayout(n){
-  layout = n;
+  layout=n;
   document.querySelectorAll(".layout-option").forEach(b=>b.classList.remove("active"));
   document.getElementById("btn"+n).classList.add("active");
   updateGrid();
@@ -135,68 +127,71 @@ function setLayout(n){
 
 function updateGrid(){
   labelsArea.style.gridTemplateColumns =
-    layout === 6  ? "repeat(2, 120px)" :
-    layout === 12 ? "repeat(3, 120px)" :
-                    "repeat(4, 95px)";
+    layout===6  ? "repeat(2,120px)" :
+    layout===12 ? "repeat(3,120px)" :
+                  "repeat(4,95px)";
 }
 
-/* ===== Auth (keep for access control) ===== */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl:null,
   onReady: loadLabels
 });
 
-/* ===== Load & generate labels ===== */
 async function loadLabels(){
-  labelsArea.innerHTML = "<p>Loading labels…</p>";
+  labelsArea.innerHTML="Loading labels…";
 
-  const items = [];
+  const items=[];
   for(const id of idList){
-    const snap = await getDoc(doc(db,"items",id));
+    const snap=await getDoc(doc(db,"items",id));
     if(snap.exists()) items.push({id,...snap.data()});
   }
 
-  if(items.length === 0){
-    labelsArea.innerHTML = "<p>No items found.</p>";
+  if(items.length===0){
+    labelsArea.innerHTML="No items found.";
     return;
   }
 
-  labelsArea.innerHTML = "";
+  labelsArea.innerHTML="";
 
   for(const item of items){
-    const div = document.createElement("div");
-    div.className = "label";
+    const div=document.createElement("div");
+    div.className="label";
 
-    const qrURL = `${location.origin}/item.html?id=${item.id}`;
+    const qrURL=`${location.origin}/item.html?id=${item.id}`;
 
     try{
-      /* ✅ Correct QR generation (canvas → PNG) */
-      const canvas = document.createElement("canvas");
-      await window.QRCode.toCanvas(canvas, qrURL, {
-        width: layout === 24 ? 85 : 110,
-        margin: 1,
-        errorCorrectionLevel: "H"
+      const canvas=document.createElement("canvas");
+
+      // ✅ CORRECT browser-safe QR generation
+      await new Promise((resolve,reject)=>{
+        QRCode.toCanvas(canvas, qrURL, {
+          width: layout===24 ? 85 : 110,
+          margin:1,
+          errorCorrectionLevel:"H"
+        }, err=>{
+          if(err) reject(err);
+          else resolve();
+        });
       });
 
-      const img = document.createElement("img");
-      img.src = canvas.toDataURL("image/png");
+      const img=document.createElement("img");
+      img.src=canvas.toDataURL("image/png");
 
       div.appendChild(img);
-      div.innerHTML += `
-        <div class="asset">${item.assetId || "No ID"}</div>
-        <div class="name">${item.deviceName || "Unnamed"}</div>
+      div.innerHTML+=`
+        <div class="asset">${item.assetId||"No ID"}</div>
+        <div class="name">${item.deviceName||"Unnamed"}</div>
       `;
     }catch(err){
       console.error("QR generation failed:", err);
-      div.innerHTML = `<div style="color:red;font-size:.7rem;">QR Error</div>`;
+      div.innerHTML=`<div style="color:red;font-size:.7rem;">QR Error</div>`;
     }
 
     labelsArea.appendChild(div);
   }
 }
 
-/* ===== PDF ===== */
 btnPDF.onclick = async ()=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
@@ -205,6 +200,5 @@ btnPDF.onclick = async ()=>{
   pdf.save("QR-labels.pdf");
 };
 </script>
-
 </body>
 </html>
