@@ -25,9 +25,7 @@
     min-height:calc(100vh - 52px);
   }
 
-  .sidebar{
-    background:var(--bg2);color:white;padding:14px;
-  }
+  .sidebar{ background:var(--bg2);color:white;padding:14px; }
   .nav a{
     display:flex;align-items:center;gap:8px;
     padding:9px 11px;border-radius:9px;
@@ -37,123 +35,47 @@
   .nav a:hover,.nav a.active{background:#111a33;}
   .nav .icon{width:18px;text-align:center;opacity:.8;}
 
-  .content{
-    padding:18px;
-    max-width:1200px;
-    margin:0 auto;
-    width:100%;
-  }
-
+  .content{ padding:18px; max-width:1200px; margin:0 auto; width:100%; }
   h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
 
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
-
   .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom:10px;
+    display:flex; justify-content:space-between; align-items:center;
+    gap:10px; flex-wrap:wrap; margin-bottom:15px;
   }
   .search-box{
     display:flex;align-items:center;gap:6px;
     background:white;border:1px solid var(--border);
-    border-radius:999px;padding:4px 10px;
-    max-width:320px;width:100%;
+    border-radius:8px;padding:6px 12px;
+    max-width:400px;width:100%;
   }
-  .search-box input{
-    border:none;outline:none;font-size:.88rem;width:100%;
-  }
-
-  .filters{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  select{
-    padding:6px 8px;border-radius:999px;
-    border:1px solid var(--border);
-    font-size:.85rem;
-    background:white;
-  }
+  .search-box input{ border:none;outline:none;font-size:.88rem;width:100%; }
 
   .card{
     background:white;border:1px solid var(--border);
-    border-radius:14px;
-    padding:14px 16px;
-    margin-bottom:12px;
+    border-radius:14px; padding:16px; margin-bottom:12px;
   }
-  .card h2{
-    margin:0 0 8px;font-size:1.05rem;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
-
+  
   .table-wrap{
     background:white;border:1px solid var(--border);
     border-radius:12px;overflow:auto;
   }
-  table{
-    border-collapse:collapse;
-    width:100%;
-    min-width:900px;
-  }
-  th,td{
-    padding:8px 10px;
-    border-bottom:1px solid #f1f5f9;
-    font-size:.85rem;
-    text-align:left;
-  }
-  th{
-    background:#f8fafc;
-    font-weight:600;
-    color:#475569;
-    position:sticky;
-    top:0;
-    z-index:5;
-  }
-  tr:hover td{background:#f9fafb;}
+  table{ border-collapse:collapse; width:100%; min-width:900px; }
+  th,td{ padding:12px 10px; border-bottom:1px solid #f1f5f9; font-size:.85rem; text-align:left; }
+  th{ background:#f8fafc; font-weight:600; color:#475569; position:sticky; top:0; }
 
   .pill{
-    display:inline-flex;
-    padding:2px 8px;
-    border-radius:999px;
-    font-size:.75rem;
+    display:inline-flex; padding:2px 8px; border-radius:4px;
+    font-size:.7rem; font-weight: 600; text-transform: uppercase;
   }
-  .pill-blue{background:#dbeafe;color:#1d4ed8;}
-  .pill-green{background:#dcfce7;color:#166534;}
-  .pill-red{background:#fee2e2;color:#b91c1c;}
-  .pill-gray{background:#e5e7eb;color:#374151;}
+  .pill-create{background:#dcfce7;color:#166534;}
+  .pill-update{background:#dbeafe;color:#1d4ed8;}
+  .pill-delete{background:#fee2e2;color:#b91c1c;}
+  .pill-role{background:#f3e8ff;color:#6b21a8;} /* Purple for Admin actions */
+  .pill-invite{background:#ffedd5;color:#9a3412;} /* Orange for invites */
+  .pill-gray{background:#f1f5f9;color:#475569;}
 
-  .status-bar{
-    font-size:.82rem;
-    margin-top:4px;
-    min-height:18px;
-    color:#6b7280;
-  }
-
-  .side-list{
-    margin:6px 0 0;
-    padding-left:18px;
-    font-size:.82rem;
-    color:#6b7280;
-  }
-  .side-list li{margin-bottom:3px;}
-
-  .badge-small{
-    display:inline-flex;
-    align-items:center;
-    padding:2px 6px;
-    border-radius:999px;
-    font-size:.7rem;
-    background:#e5e7eb;
-    color:#374151;
-  }
+  .status-bar{ font-size:.8rem; color:#64748b; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -167,9 +89,7 @@
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
       <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
-      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a class="active" href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
@@ -178,65 +98,45 @@
 
   <main class="content">
     <h1>Audit Log</h1>
-    <p class="subtitle">
-      Read-only history of important actions in the inventory system: who did what, where, and when.
-    </p>
+    <p class="subtitle">Real-time history of system changes and administrative actions.</p>
 
     <section class="card">
       <div class="toolbar">
         <div class="search-box">
           <span>🔍</span>
-          <input id="search" placeholder="Search user, target, details…"/>
+          <input id="search" placeholder="Search by user, asset tag, or action details..."/>
         </div>
         <div class="filters">
           <select id="actionFilter">
-            <option value="">All actions</option>
-            <option value="create">Created</option>
-            <option value="update">Updated</option>
-            <option value="delete">Deleted</option>
-            <option value="login">Login</option>
-            <option value="other">Other</option>
+            <option value="">All Event Types</option>
+            <option value="create">Item Created</option>
+            <option value="update">Item Updated</option>
+            <option value="delete">Item Deleted</option>
+            <option value="user-invited">User Invited</option>
+            <option value="role-change">Role Updated</option>
+            <option value="login">Logins</option>
           </select>
         </div>
       </div>
-      <p class="muted">
-        Showing the most recent audit events from Firestore collection <code>audits</code>.
-      </p>
 
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th style="width:160px;">Timestamp</th>
+              <th style="width:180px;">Date & Time</th>
               <th>User</th>
               <th>Action</th>
-              <th>Target</th>
-              <th>Target Type</th>
+              <th>Target ID</th>
+              <th>Category</th>
               <th>Details</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6">Loading audit events…</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding:30px;">Initializing secure connection...</td></tr>
           </tbody>
         </table>
       </div>
-
       <div class="status-bar" id="statusBar"></div>
-    </section>
-
-    <section class="card">
-      <h2>What’s logged?</h2>
-      <p class="muted">
-        This page is read-only and is meant to help IT staff trace configuration changes or asset updates.
-      </p>
-      <ul class="side-list">
-        <li>Typical events: device create/update/delete, user role updates, license changes, logins.</li>
-        <li>Each event should contain: <code>timestamp</code>, <code>userEmail</code>, <code>action</code>, <code>targetType</code>, <code>targetId</code>, and optional <code>details</code>.</li>
-        <li>
-          If you don’t see anything here, make sure your Cloud Functions or frontend writes
-          to the <code>audits</code> collection and that Firestore rules allow your role to read it.
-        </li>
-      </ul>
     </section>
   </main>
 </div>
@@ -244,162 +144,111 @@
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
   import {
-    collection, getDocs, query, orderBy, limit
+    collection, query, orderBy, limit, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl        = document.getElementById("who");
-  const tbody        = document.getElementById("tbody");
-  const statusBar    = document.getElementById("statusBar");
-  const searchEl     = document.getElementById("search");
+  const whoEl = document.getElementById("who");
+  const tbody = document.getElementById("tbody");
+  const statusBar = document.getElementById("statusBar");
+  const searchEl = document.getElementById("search");
   const actionFilter = document.getElementById("actionFilter");
 
   let allAudits = [];
 
-  // Only admin & IT see audits; add "viewer" here if you want everyone to see logs.
   watchAuth({
-    allowedRoles:["admin","it"],
+    allowedRoles: ["admin", "it"],
     whoEl,
-    onReady: async ()=>{
-      await loadAudits();
+    onReady: () => {
+      initRealtimeAudits();
       searchEl.addEventListener("input", render);
       actionFilter.addEventListener("change", render);
     }
   });
 
-  function setStatus(msg){
-    statusBar.textContent = msg || "";
-  }
+  // Real-time listener: The UI updates automatically when anyone saves a change
+  function initRealtimeAudits() {
+    setStatus("Syncing with Firestore...");
+    
+    const q = query(
+      collection(db, "audits"),
+      orderBy("timestamp", "desc"),
+      limit(150)
+    );
 
-  function toDate(val){
-    if(!val) return null;
-    try{
-      if(typeof val.toDate === "function") return val.toDate(); // Firestore Timestamp
-      if(typeof val === "number") return new Date(val);
-      if(typeof val === "string") return new Date(val);
-      return null;
-    }catch{
-      return null;
-    }
-  }
-
-  function formatDate(val){
-    const d = toDate(val);
-    if(!d || isNaN(d.getTime())) return "";
-    // Compact local string
-    return d.toLocaleString();
-  }
-
-  async function loadAudits(){
-    try{
-      setStatus("Loading audit entries…");
-
-      // Most recent 200 events – adjust limit if you want more/less
-      const q = query(
-        collection(db,"audits"),
-        orderBy("timestamp","desc"),
-        limit(200)
-      );
-      const snap = await getDocs(q);
-
+    onSnapshot(q, (snap) => {
       allAudits = [];
-      snap.forEach(ds=>{
-        allAudits.push({
-          id: ds.id,
-          ...ds.data()
-        });
+      snap.forEach(doc => {
+        allAudits.push({ id: doc.id, ...doc.data() });
       });
-
-      if(!allAudits.length){
-        tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
-        setStatus('No audit entries in collection "audits" yet.');
-        console.info('[Audits] Collection "audits" is empty.');
-        return;
-      }
-
       render();
-      setStatus(`Loaded ${allAudits.length} audit events (latest first).`);
-    }catch(err){
-      console.error('[Audits] Error loading audits:', err);
-      tbody.innerHTML = `<tr><td colspan="6">Failed to load audits.</td></tr>`;
-      setStatus("Error loading audits: " + (err.message || err));
-    }
+      setStatus(`System Synced. Showing latest ${allAudits.length} events.`);
+    }, (err) => {
+      console.error("Audit Sync Error:", err);
+      setStatus("Error: Connection lost.");
+    });
   }
 
-  function render(){
-    if(!allAudits.length){
-      tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
-      return;
-    }
-
-    const term      = (searchEl.value || "").toLowerCase();
+  function render() {
+    const term = searchEl.value.toLowerCase();
     const actionVal = actionFilter.value;
 
-    const rows = allAudits.filter(ev=>{
-      const action = (ev.action || "other").toLowerCase();
+    const filtered = allAudits.filter(ev => {
+      const action = (ev.action || "").toLowerCase();
+      
+      // Action Dropdown Filter
+      if (actionVal && action !== actionVal.toLowerCase()) return false;
 
-      // Filter by action
-      if(actionVal){
-        if(actionVal === "other"){
-          if(["create","update","delete","login"].includes(action)) {
-            return false;
-          }
-        }else if(action !== actionVal){
-          return false;
-        }
+      // Text Search Filter
+      if (term) {
+        const content = [
+          ev.userEmail,
+          ev.targetId,
+          ev.targetType,
+          ev.details,
+          ev.action
+        ].join(" ").toLowerCase();
+        if (!content.includes(term)) return false;
       }
-
-      if(!term) return true;
-
-      const hay = [
-        ev.userEmail,
-        ev.userId,
-        ev.targetId,
-        ev.targetType,
-        ev.details,
-        ev.action
-      ].join(" ").toLowerCase();
-
-      return hay.includes(term);
+      return true;
     });
 
-    if(!rows.length){
-      tbody.innerHTML = `<tr><td colspan="6">No audit events match your filters.</td></tr>`;
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No matching audit logs found.</td></tr>`;
       return;
     }
 
-    tbody.innerHTML = rows.map(ev=>{
-      const ts         = formatDate(ev.timestamp);
-      const email      = ev.userEmail || "(unknown user)";
-      const action     = (ev.action || "other").toLowerCase();
-      const targetType = ev.targetType || "";
-      const targetId   = ev.targetId || "";
-      const details    = ev.details || "";
-
-      let pillClass = "pill-gray";
-      if(action === "create")  pillClass = "pill-green";
-      else if(action === "update") pillClass = "pill-blue";
-      else if(action === "delete") pillClass = "pill-red";
-      else if(action === "login")  pillClass = "pill-blue";
-
-      const targetLabel = targetId ? escapeHtml(targetId) : "";
+    tbody.innerHTML = filtered.map(ev => {
+      const ts = ev.timestamp?.toDate ? ev.timestamp.toDate().toLocaleString() : "—";
+      const action = (ev.action || "other").toLowerCase();
+      
+      // Determine Pill Style
+      let pClass = "pill-gray";
+      if (action.includes("create")) pClass = "pill-create";
+      else if (action.includes("update")) pClass = "pill-update";
+      else if (action.includes("delete")) pClass = "pill-delete";
+      else if (action.includes("invite")) pClass = "pill-invite";
+      else if (action.includes("role") || action.includes("admin")) pClass = "pill-role";
 
       return `
         <tr>
-          <td>${escapeHtml(ts)}</td>
-          <td>${escapeHtml(email)}</td>
-          <td><span class="pill ${pillClass}">${escapeHtml(action)}</span></td>
-          <td>${targetLabel}</td>
-          <td>${escapeHtml(targetType)}</td>
-          <td>${escapeHtml(details)}</td>
-        </tr>`;
+          <td style="color:#64748b; font-family:monospace;">${ts}</td>
+          <td><strong>${escapeHtml(ev.userEmail || "System")}</strong></td>
+          <td><span class="pill ${pClass}">${action}</span></td>
+          <td><code style="background:#f1f5f9; padding:2px 4px; border-radius:4px;">${escapeHtml(ev.targetId || "N/A")}</code></td>
+          <td style="text-transform: capitalize;">${escapeHtml(ev.targetType || "—")}</td>
+          <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(ev.details || "")}">
+            ${escapeHtml(ev.details || "—")}
+          </td>
+        </tr>
+      `;
     }).join("");
   }
 
-  function escapeHtml(s){
+  function setStatus(msg) { statusBar.textContent = msg; }
+
+  function escapeHtml(s) {
     if(!s) return "";
-    return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    ));
+    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
   }
 </script>
 
