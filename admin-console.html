@@ -1,223 +1,401 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>OCSI IT Inventory - Admin Console</title>
-    <style>
-        :root {
-            --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-            --good:#22c55e;--warn:#f97316;--bad:#ef4444;
-        }
-        *{box-sizing:border-box;}
-        body{margin:0;font-family:system-ui; background:#f5f7fb;}
-        .topbar {
-            position:sticky;top:0;z-index:20;
-            background:var(--bg);color:white;
-            padding:12px 16px;
-            display:flex; justify-content:space-between; align-items:center;
-        }
-        .layout {
-            display:grid;
-            grid-template-columns:240px 1fr;
-            min-height:calc(100vh - 52px);
-        }
-        .sidebar { background:var(--bg2);color:white;padding: 14px; }
-        .nav a {
-            display: flex; align-items:center;gap:8px;
-            padding:9px 11px; border-radius:9px;
-            color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-            font-size:0.92rem;
-        }
-        .nav a:hover, .nav a.active { background:#111a33; }
-        .content { padding: 18px; max-width: 1100px; margin:0 auto; width:100%; }
-        h1{margin:0 0 4px;font-size:1.4rem;}
-        .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-        .grid { display:grid; grid-template-columns:2.1fr 1.2fr; gap:16px; }
-        .card { background:white; border:1px solid var(--border); border-radius:14px; padding: 14px 16px; margin-bottom:12px; }
-        .card h2 { margin:0 0 8px; font-size:1.05rem; display:flex; justify-content:space-between; align-items:center; }
-        .muted { font-size:.82rem; color:#94a3b8; margin-bottom:10px; }
-        .status-bar { font-size:.82rem; margin-top:6px; min-height:18px; }
-        .status-ok { color:#166534; }
-        .status-error { color:#b91c1c; }
-        .table-wrap { border-radius:12px; border:1px solid var(--border); overflow:auto; }
-        table { border-collapse:collapse; width:100%; min-width:720px; }
-        th, td { padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:.88rem; text-align:left; }
-        th { background:#f8fafc; font-weight:600; color:#475569; position:sticky; top:0; z-index:1; }
-        .pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:999px; font-size:.75rem; }
-        .pill-admin { background:#dcfce7; color:#166534; }
-        .pill-it { background:#dbeafe; color:#1d4ed8; }
-        .pill-viewer { background:#e5e7eb; color:#374151; }
-        .tag { display:inline-flex; align-items:center; padding:2px 7px; border-radius:999px; font-size:.75rem; background:#eff6ff; color:#1d4ed8; margin-right:4px; }
-        .tag-danger { background:#fef2f2; color:#b91c1c; }
-        .legend-list { list-style:none; padding:0; margin:0; font-size:.85rem; }
-        .legend-list li { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-    </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>OCSI IT Inventory – Admin Console</title>
+<style>
+  :root{
+    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+
+  .topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--bg);color:white;
+    padding:12px 16px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    min-height:calc(100vh - 52px);
+  }
+
+  .sidebar{
+    background:var(--bg2);color:white;padding:14px;
+  }
+  .nav a{
+    display:flex;align-items:center;gap:8px;
+    padding:9px 11px;border-radius:9px;
+    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
+    font-size:0.92rem;
+  }
+  .nav a:hover,.nav a.active{background:#111a33;}
+  .nav .icon{width:18px;text-align:center;opacity:.8;}
+
+  .content{
+    padding:18px;
+    max-width:1100px;
+    margin:0 auto;
+    width:100%;
+  }
+
+  h1{margin:0 0 4px;font-size:1.4rem;}
+  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
+
+  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
+  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
+  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
+  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
+
+  .grid{
+    display:grid;
+    grid-template-columns:2.1fr 1.2fr;
+    gap:16px;
+  }
+  @media(max-width:960px){
+    .layout{grid-template-columns:1fr;}
+    .grid{grid-template-columns:1fr;}
+  }
+
+  .card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:14px 16px;
+    margin-bottom:12px;
+  }
+  .card h2{
+    margin:0 0 8px;
+    font-size:1.05rem;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
+
+  .status-bar{
+    font-size:.82rem;
+    margin-top:6px;
+    min-height:18px;
+  }
+  .status-ok{color:#166534;}
+  .status-warn{color:#b45309;}
+  .status-error{color:#b91c1c;}
+
+  .table-wrap{
+    border-radius:12px;
+    border:1px solid var(--border);
+    overflow:auto;
+  }
+  table{
+    border-collapse:collapse;
+    width:100%;
+    min-width:720px;
+  }
+  th,td{
+    padding:8px 10px;
+    border-bottom:1px solid #f1f5f9;
+    font-size:.88rem;
+    text-align:left;
+  }
+  th{
+    background:#f8fafc;
+    font-weight:600;
+    color:#475569;
+    position:sticky;
+    top:0;
+    z-index:1;
+  }
+  tr:hover td{background:#f9fafb;}
+
+  select{
+    padding:4px 6px;
+    border-radius:999px;
+    border:1px solid #cbd5e1;
+    font-size:.8rem;
+    background:white;
+  }
+
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    padding:2px 8px;
+    border-radius:999px;
+    font-size:.75rem;
+  }
+  .pill-admin{background:#dcfce7;color:#166534;}
+  .pill-it{background:#dbeafe;color:#1d4ed8;}
+  .pill-viewer{background:#e5e7eb;color:#374151;}
+
+  .tag{
+    display:inline-flex;
+    align-items:center;
+    padding:2px 7px;
+    border-radius:999px;
+    font-size:.75rem;
+    background:#eff6ff;
+    color:#1d4ed8;
+    margin-right:4px;
+    margin-top:2px;
+  }
+  .tag-danger{
+    background:#fef2f2;
+    color:#b91c1c;
+  }
+  .legend-list{
+    list-style:none;
+    padding:0;
+    margin:0;
+    font-size:.85rem;
+  }
+  .legend-list li{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:6px;
+  }
+</style>
 </head>
 <body>
-    <div class="topbar">
-        <div><strong>OCSI IT Inventory</strong> - Admin Console</div>
-        <div id="who" style="font-size:.85rem; opacity:.9;">Checking session...</div>
+
+<div class="topbar">
+  <div><strong>OCSI IT Inventory</strong> – Admin Console</div>
+  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="nav">
+      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
+      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
+      <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
+      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
+      <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
+      <a class="active" href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
+      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <h1>Admin Console</h1>
+    <p class="subtitle">
+      Manage who can access the IT inventory, assign roles, and review administrative notes.
+    </p>
+
+    <div class="grid">
+      <!-- LEFT: User & role management -->
+      <section class="card">
+        <h2>
+          User &amp; Role Management
+        </h2>
+        <p class="muted">
+          Only <strong>admins</strong> can see this page. Use it to control access levels for IT staff.
+        </p>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:34%;">User (email)</th>
+                <th style="width:18%;">Display name</th>
+                <th style="width:16%;">Role</th>
+                <th style="width:18%;">Last seen (UTC)</th>
+                <th style="width:14%;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="userBody">
+              <tr><td colspan="5">Loading users…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="adminStatus" class="status-bar"></div>
+      </section>
+
+      <!-- RIGHT: Legend & guidance -->
+      <section class="card">
+        <h2>Role Legend &amp; Safety</h2>
+        <p class="muted">Quick explanation of what each role can do in the system.</p>
+
+        <ul class="legend-list">
+          <li>
+            <span class="pill pill-admin">admin</span>
+            <span>Full control: manage users &amp; roles, edit all devices, software and licenses.</span>
+          </li>
+          <li>
+            <span class="pill pill-it">it</span>
+            <span>Operational: add / edit devices, software and licenses, but cannot change user roles.</span>
+          </li>
+          <li>
+            <span class="pill pill-viewer">viewer</span>
+            <span>Read-only: can view dashboards and device details, but cannot edit anything.</span>
+          </li>
+        </ul>
+
+        <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0;"/>
+
+        <p class="muted"><strong>Recommended usage</strong></p>
+        <div>
+          <span class="tag">1–2 admins</span>
+          <span class="tag">IT team as "it"</span>
+          <span class="tag tag-danger">Avoid many admins</span>
+        </div>
+        <p class="muted" style="margin-top:10px;">
+          When you promote someone to <strong>admin</strong>, they can change other users’ roles –
+          including yours. Use with care.
+        </p>
+      </section>
     </div>
-    <div class="layout">
-        <aside class="sidebar">
-            <nav class="nav">
-                <a href="index.html"><span>Main Dashboard</span></a>
-                <a href="software-licenses.html"><span>Software Licenses</span></a>
-                <a href="inventory-list.html"><span>Hardware</span></a>
-                <a href="scan.html"><span>QR Scan Device</span></a>
-                <a href="audits.html"><span>Audits</span></a>
-                <a class="active" href="admin-console.html"><span>Admin Console</span></a>
-                <a href="login.html"><span>Logout</span></a>
-            </nav>
-        </aside>
-        <main class="content">
-            <h1>Admin Console</h1>
-            <p class="subtitle">Manage who can access the IT inventory, assign roles, and review administrative notes.</p>
-            <div class="grid">
-                <section class="card">
-                    <h2>User &amp; Role Management</h2>
-                    <p class="muted">Only <strong>admins</strong> can see this page. Use it to control access levels for staff.</p>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width:34%;">User (email)</th>
-                                    <th style="width: 18%;">Display name</th>
-                                    <th style="width: 16%;">Role</th>
-                                    <th style="width: 18%;">Last seen (UTC)</th>
-                                    <th style="width:14%;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="userBody">
-                                <tr><td colspan="5">Loading users...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="adminStatus" class="status-bar"></div>
-                </section>
-                <section class="card">
-                    <h2>Role Legend &amp; Safety</h2>
-                    <ul class="legend-list">
-                        <li><span class="pill pill-admin">admin</span> <span>Full control: manage users, roles, and all assets.</span></li>
-                        <li><span class="pill pill-it">it</span> <span>Operational: edit devices and software but cannot change roles.</span></li>
-                        <li><span class="pill pill-viewer">viewer</span> <span>Read-only access.</span></li>
-                    </ul>
-                    <hr style="border:none; border-top: 1px solid #e5e7eb; margin:12px 0;"/>
-                    <p class="muted"><strong>Recommended usage</strong></p>
-                    <div>
-                        <span class="tag">1-2 admins</span>
-                        <span class="tag">IT team as "it"</span>
-                        <span class="tag tag-danger">Avoid many admins</span>
-                    </div>
-                </section>
-            </div>
-        </main>
-    </div>
+  </main>
+</div>
 
-    <script type="module">
-        import { db, watchAuth } from "./firebase.js";
-        import { collection, getDocs, doc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<script type="module">
+  import { db, watchAuth } from "./firebase.js";
+  import {
+    collection, getDocs, doc, updateDoc, orderBy, query
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-        const whoEl = document.getElementById("who");
-        const userBody = document.getElementById("userBody");
-        const adminStatus = document.getElementById("adminStatus");
-        let usersCache = [];
+  const whoEl       = document.getElementById("who");
+  const userBody    = document.getElementById("userBody");
+  const adminStatus = document.getElementById("adminStatus");
 
-        watchAuth({
-            allowedRoles: ["admin"],
-            whoEl,
-            onReady: async () => { await loadUsers(); }
-        });
+  let usersCache = [];
 
-        async function loadUsers() {
-            adminStatus.textContent = "Loading users from Firestore...";
-            adminStatus.className = "status-bar";
-            try {
-                const q = query(collection(db, "users"), orderBy("email"));
-                const snap = await getDocs(q);
-                usersCache = [];
-                snap.forEach(ds => {
-                    usersCache.push({ id: ds.id, ...ds.data() });
-                });
-                renderUsers();
-                adminStatus.textContent = `Loaded ${usersCache.length} user(s).`;
-                adminStatus.className = "status-bar status-ok";
-            } catch (err) {
-                console.error(err);
-                userBody.innerHTML = `<tr><td colspan="5">Failed to load users: ${escapeHtml(err.message)}</td></tr>`;
-                adminStatus.textContent = "Error while loading users.";
-                adminStatus.className = "status-bar status-error";
-            }
-        }
+  watchAuth({
+    // Only admins are allowed here
+    allowedRoles:["admin"],
+    whoEl,
+    onReady: async ()=>{
+      await loadUsers();
+    }
+  });
 
-        function renderUsers() {
-            if (!usersCache.length) {
-                userBody.innerHTML = '<tr><td colspan="5">No users found in the "users" collection.</td></tr>';
-                return;
-            }
-            userBody.innerHTML = usersCache.map(u => {
-                const email = u.email || "(no email)";
-                const name = u.displayName || "";
-                const role = u.role || "viewer";
-                const last = formatLastSeen(u.lastLoginAt || u.lastSeenAt || "");
-                const pillClass = role === "admin" ? "pill pill-admin" : role === "it" ? "pill pill-it" : "pill pill-viewer";
-                
-                return `
-                    <tr data-uid="${escapeHtml(u.id)}">
-                        <td>${escapeHtml(email)}</td>
-                        <td>${escapeHtml(name)}</td>
-                        <td>
-                            <select class="roleSel" data-uid="${escapeHtml(u.id)}">
-                                <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
-                                <option value="it" ${role === "it" ? "selected" : ""}>it</option>
-                                <option value="viewer" ${role === "viewer" ? "selected" : ""}>viewer</option>
-                            </select>
-                        </td>
-                        <td>${escapeHtml(last)}</td>
-                        <td><span class="${pillClass}">${escapeHtml(role)}</span></td>
-                    </tr>`;
-            }).join("");
+  async function loadUsers(){
+    adminStatus.textContent = "Loading users from Firestore…";
+    adminStatus.className = "status-bar";
 
-            userBody.querySelectorAll(".roleSel").forEach(sel => {
-                sel.addEventListener("change", onRoleChange);
-            });
-        }
+    try{
+      // Assuming your users are stored in a top-level "users" collection
+      const q = query(collection(db,"users"), orderBy("email"));
+      const snap = await getDocs(q);
 
-        async function onRoleChange(e) {
-            const sel = e.target;
-            const uid = sel.getAttribute("data-uid");
-            const newRole = sel.value;
-            if (!uid || !newRole) return;
+      usersCache = [];
+      snap.forEach(ds=>{
+        usersCache.push({ id: ds.id, ...ds.data() });
+      });
 
-            adminStatus.textContent = 'Updating role for user...';
-            adminStatus.className = "status-bar";
-            try {
-                await updateDoc(doc(db, "users", uid), { role: newRole });
-                const idx = usersCache.findIndex(u => u.id === uid);
-                if (idx >= 0) usersCache[idx].role = newRole;
-                renderUsers();
-                adminStatus.textContent = `Role updated to "${newRole}" for user.`;
-                adminStatus.className = "status-bar status-ok";
-            } catch (err) {
-                adminStatus.textContent = "Failed to update role: " + err.message;
-                adminStatus.className = "status-bar status-error";
-            }
-        }
+      renderUsers();
+      adminStatus.textContent = `Loaded ${usersCache.length} user(s).`;
+      adminStatus.className = "status-bar status-ok";
+    }catch(err){
+      console.error(err);
+      userBody.innerHTML = `<tr><td colspan="5">Failed to load users: ${escapeHtml(err.message)}</td></tr>`;
+      adminStatus.textContent = "Error while loading users.";
+      adminStatus.className = "status-bar status-error";
+    }
+  }
 
-        function formatLastSeen(val) {
-            if (!val) return "-";
-            try {
-                if (val.toDate) return val.toDate().toISOString().replace("T", " ").substring(0, 16);
-                if (typeof val === "number") return new Date(val).toISOString().replace("T", " ").substring(0, 16);
-                return String(val).substring(0, 16);
-            } catch { return String(val); }
-        }
+  function renderUsers(){
+    if(!usersCache.length){
+      userBody.innerHTML = `<tr><td colspan="5">No users found in the <code>users</code> collection.</td></tr>`;
+      return;
+    }
 
-        function escapeHtml(s) {
-            if (!s) return "";
-            return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
-        }
-    </script>
+    userBody.innerHTML = usersCache.map(u=>{
+      const email = u.email || "(no email)";
+      const name  = u.displayName || "";
+      const role  = u.role || "viewer";
+      const last  = formatLastSeen(u.lastLoginAt || u.lastSeenAt || "");
+
+      const pillClass =
+        role==="admin" ? "pill pill-admin" :
+        role==="it"    ? "pill pill-it"    :
+                         "pill pill-viewer";
+
+      return `
+        <tr data-uid="${escapeHtml(u.id)}">
+          <td>${escapeHtml(email)}</td>
+          <td>${escapeHtml(name)}</td>
+          <td>
+            <select class="roleSel" data-uid="${escapeHtml(u.id)}">
+              <option value="admin" ${role==="admin"?"selected":""}>admin</option>
+              <option value="it" ${role==="it"?"selected":""}>it</option>
+              <option value="viewer" ${role==="viewer"?"selected":""}>viewer</option>
+            </select>
+          </td>
+          <td>${escapeHtml(last)}</td>
+          <td><span class="${pillClass}">${escapeHtml(role)}</span></td>
+        </tr>`;
+    }).join("");
+
+    // attach listeners
+    userBody.querySelectorAll(".roleSel").forEach(sel=>{
+      sel.addEventListener("change", onRoleChange);
+    });
+  }
+
+  function formatLastSeen(val){
+    if(!val) return "—";
+    try{
+      // support Firestore Timestamp or ISO string or millis
+      if(val.toDate){
+        return val.toDate().toISOString().replace("T"," ").substring(0,16);
+      }
+      if(typeof val === "number"){
+        return new Date(val).toISOString().replace("T"," ").substring(0,16);
+      }
+      return String(val).substring(0,16);
+    }catch{
+      return String(val);
+    }
+  }
+
+  async function onRoleChange(e){
+    const sel = e.target;
+    const uid = sel.getAttribute("data-uid");
+    const newRole = sel.value;
+
+    if(!uid || !newRole){
+      return;
+    }
+
+    adminStatus.textContent = `Updating role for user…`;
+    adminStatus.className = "status-bar";
+
+    try{
+      const ref = doc(db,"users",uid);
+      await updateDoc(ref,{ role:newRole });
+
+      // update local cache
+      const idx = usersCache.findIndex(u=>u.id===uid);
+      if(idx>=0){
+        usersCache[idx].role = newRole;
+      }
+
+      // refresh table so pill color matches new role
+      renderUsers();
+
+      adminStatus.textContent = `Role updated to "${newRole}" for user.`;
+      adminStatus.className = "status-bar status-ok";
+    }catch(err){
+      console.error(err);
+      adminStatus.textContent = "Failed to update role: " + err.message;
+      adminStatus.className = "status-bar status-error";
+    }
+  }
+
+  function escapeHtml(s){
+    if(!s) return "";
+    return String(s).replace(/[&<>"']/g,c=>(
+      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
+    ));
+  }
+</script>
+
 </body>
 </html>
