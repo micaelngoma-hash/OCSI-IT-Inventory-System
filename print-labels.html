@@ -5,77 +5,33 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- html2canvas + jsPDF -->
+<!-- Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-<!-- ✅ QRCode UMD (GitHub Pages SAFE – REQUIRED) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
 <style>
-body{
-  font-family:system-ui,sans-serif;
-  background:#f5f7fb;
-  margin:0;
-  padding:20px;
-}
+body{font-family:system-ui;background:#f5f7fb;margin:0;padding:20px;}
 h1{margin-top:0;font-size:2rem;}
-
 .top-controls{
-  background:white;
-  padding:14px 18px;
-  border-radius:12px;
-  border:1px solid #e5e7eb;
-  margin-bottom:20px;
+  background:white;padding:14px 18px;border-radius:12px;
+  border:1px solid #e5e7eb;margin-bottom:20px;
 }
-
 .layout-option{
-  padding:8px 16px;
-  border-radius:12px;
-  border:1px solid #cbd5e1;
-  cursor:pointer;
-  margin-right:8px;
-  background:white;
-  font-size:.9rem;
+  padding:8px 16px;border-radius:12px;border:1px solid #cbd5e1;
+  cursor:pointer;margin-right:8px;background:white;font-size:.9rem;
 }
-.layout-option.active{
-  background:#1a73e8;
-  color:white;
-  border-color:#1a73e8;
-}
-
-#labelsArea{
-  display:grid;
-  gap:12px;
-  justify-content:center;
-}
-
+.layout-option.active{background:#1a73e8;color:white;border-color:#1a73e8;}
+#labelsArea{display:grid;gap:12px;justify-content:center;}
 .label{
-  background:white;
-  border:1px solid #e5e7eb;
-  padding:12px;
-  text-align:center;
-  border-radius:8px;
+  background:white;border:1px solid #e5e7eb;padding:12px;
+  text-align:center;border-radius:8px;
 }
-
-.label svg{
-  width:100%;
-  height:auto;
-}
+.label img{width:100%;max-width:220px;height:auto;}
 
 @media print{
   body{background:white;padding:0;margin:0;}
-  .top-controls{display:none !important;}
-}
-
-.grid-test{
-  width:100%;
-  height:90%;
-  border:1px dashed #999;
-  background-size:20px 20px;
-  background-image:
-    linear-gradient(to right,#ccc 1px,transparent 1px),
-    linear-gradient(to bottom,#ccc 1px,transparent 1px);
+  .top-controls{display:none!important;}
 }
 </style>
 </head>
@@ -85,175 +41,102 @@ h1{margin-top:0;font-size:2rem;}
 
 <div class="top-controls">
   <strong>Choose label layout:</strong><br><br>
-
-  <button id="btn6"  class="layout-option">6 per page (Large)</button>
-  <button id="btn12" class="layout-option active">12 per page (Medium)</button>
-  <button id="btn24" class="layout-option">24 per page (Small)</button>
-
+  <button id="btn6" class="layout-option">6 per page</button>
+  <button id="btn12" class="layout-option active">12 per page</button>
+  <button id="btn24" class="layout-option">24 per page</button>
   <br><br>
 
-  <button id="btnPrint"
-    style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
+  <button onclick="printLabels()" style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
     🖨 Print Labels
   </button>
 
-  <button id="btnPDF"
-    style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
+  <button id="btnPDF" style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
     📄 Download PDF
   </button>
-
-  <button id="btnTest"
-    style="padding:10px 22px;border-radius:999px;background:#6b7280;color:white;border:none;cursor:pointer;margin-left:10px;">
-    📐 Print Test Alignment Grid
-  </button>
 </div>
 
-<div id="testGrid" style="display:none;">
-  <div class="grid-test"></div>
-</div>
-
-<div id="labelsArea">Initialising…</div>
+<div id="labelsArea"></div>
 
 <script type="module">
-/* ======================================================
-   FIREBASE (UNCHANGED)
-====================================================== */
-import { db } from "./firebase.js";
-import { doc, getDoc } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { watchAuth, db } from "./firebase.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* ======================================================
-   QRCode (GLOBAL ONLY — FIX)
-====================================================== */
-const QR = window.QRCode;
-
-if (!QR) {
-  document.getElementById("labelsArea").innerHTML =
-    "❌ QRCode library failed to load.";
-  throw new Error("QRCode missing");
-}
-
-/* ======================================================
-   DOM
-====================================================== */
 const labelsArea = document.getElementById("labelsArea");
-const btnPrint   = document.getElementById("btnPrint");
-const btnPDF     = document.getElementById("btnPDF");
-const btnTest    = document.getElementById("btnTest");
-const testGrid   = document.getElementById("testGrid");
+const btnPDF = document.getElementById("btnPDF");
 
-/* ======================================================
-   PARAMS
-====================================================== */
 const params = new URLSearchParams(location.search);
-const idList = (params.get("ids") || "").split(",").filter(Boolean);
+const ids = (params.get("ids")||"").split(",").filter(Boolean);
 
 let layout = 12;
+setLayout(12);
 
-/* ======================================================
-   LAYOUT (UNCHANGED)
-====================================================== */
-document.getElementById("btn6").onclick  = () => setLayout(6);
-document.getElementById("btn12").onclick = () => setLayout(12);
-document.getElementById("btn24").onclick = () => setLayout(24);
-updateGrid();
+document.getElementById("btn6").onclick  = ()=>setLayout(6);
+document.getElementById("btn12").onclick = ()=>setLayout(12);
+document.getElementById("btn24").onclick = ()=>setLayout(24);
 
 function setLayout(n){
-  layout = n;
-  document.querySelectorAll(".layout-option")
-    .forEach(b => b.classList.remove("active"));
+  layout=n;
+  document.querySelectorAll(".layout-option").forEach(b=>b.classList.remove("active"));
   document.getElementById("btn"+n).classList.add("active");
-  updateGrid();
-}
-
-function updateGrid(){
   labelsArea.style.gridTemplateColumns =
-    layout === 6  ? "repeat(2,1fr)" :
-    layout === 12 ? "repeat(3,1fr)" :
-                    "repeat(4,1fr)";
+    n===6  ? "repeat(2,1fr)" :
+    n===12 ? "repeat(3,1fr)" :
+             "repeat(4,1fr)";
 }
 
-/* ======================================================
-   LOAD LABELS (UNCHANGED LOGIC)
-====================================================== */
-loadLabels();
+watchAuth({
+  allowedRoles:["admin","it","viewer"],
+  onReady: loadLabels
+});
 
 async function loadLabels(){
-  labelsArea.textContent = "Loading labels…";
+  labelsArea.innerHTML="Loading labels…";
+  const items=[];
 
-  try{
-    const items = [];
+  for(const id of ids){
+    const snap=await getDoc(doc(db,"items",id));
+    if(snap.exists()) items.push({id,...snap.data()});
+  }
 
-    for(const id of idList){
-      const snap = await getDoc(doc(db,"items",id));
-      if(snap.exists()) items.push({ id, ...snap.data() });
-    }
+  labelsArea.innerHTML="";
+  for(const it of items){
+    const div=document.createElement("div");
+    div.className="label";
 
-    if(items.length === 0){
-      labelsArea.textContent = "No items found.";
-      return;
-    }
+    const img=document.createElement("img");
+    await QRCode.toCanvas(img, `${location.origin}/item.html?id=${it.id}`,{
+      width:220, margin:1, errorCorrectionLevel:"H"
+    });
 
-    labelsArea.innerHTML = "";
-
-    for(const item of items){
-      const div = document.createElement("div");
-      div.className = "label";
-
-      const url =
-        `${location.origin}/OCSI-IT-Inventory-System/item.html?id=${item.id}`;
-
-      const svg = await QR.toString(url,{
-        type:"svg",
-        margin:1,
-        scale:8,
-        errorCorrectionLevel:"H"
-      });
-
-      div.innerHTML = `
-        <div>${svg}</div>
-        <div style="font-size:.9rem;margin-top:6px;font-weight:600;">
-          ${item.assetId || item.id}
-        </div>
-        <div style="font-size:.75rem;color:#444;">
-          ${item.deviceName || ""}
-        </div>
-      `;
-
-      labelsArea.appendChild(div);
-    }
-
-  }catch(err){
-    console.error(err);
-    labelsArea.textContent = "❌ Failed to load labels.";
+    div.appendChild(img);
+    div.innerHTML+=`
+      <div style="font-weight:600;margin-top:6px;">${it.assetId||""}</div>
+      <div style="font-size:.8rem;color:#555;">${it.deviceName||""}</div>
+    `;
+    labelsArea.appendChild(div);
   }
 }
 
-/* ======================================================
-   BUTTONS (UNCHANGED)
-====================================================== */
-btnPrint.onclick = () => window.print();
+async function waitForImages(){
+  const imgs=[...labelsArea.querySelectorAll("img")];
+  await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>img.onload=r)));
+}
 
-btnPDF.onclick = async () => {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
-  const canvas = await html2canvas(labelsArea,{ scale:2 });
-  const img = canvas.toDataURL("image/png");
-
-  const w = 200;
-  const h = canvas.height * w / canvas.width;
-  pdf.addImage(img,"PNG",5,5,w,h);
-  pdf.save("QR-labels.pdf");
+window.printLabels = async ()=>{
+  await waitForImages();
+  window.print();
 };
 
-btnTest.onclick = () => {
-  labelsArea.style.display="none";
-  testGrid.style.display="block";
-  window.print();
-  setTimeout(()=>{
-    testGrid.style.display="none";
-    labelsArea.style.display="grid";
-  },500);
+btnPDF.onclick = async ()=>{
+  await waitForImages();
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+  const canvas = await html2canvas(labelsArea,{scale:2,backgroundColor:"#fff"});
+  const img=canvas.toDataURL("image/png");
+  const w=210-10;
+  const h=(canvas.height*w)/canvas.width;
+  pdf.addImage(img,"PNG",5,5,w,h);
+  pdf.save("OCSI-QR-labels.pdf");
 };
 </script>
 </body>
