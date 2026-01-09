@@ -6,7 +6,7 @@
 <title>OCSI IT Inventory – Device Details</title>
 <style>
 :root{
---bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
+--bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;--success:#22c55e;
 }
 *{box-sizing:border-box;}
 body{margin:0;font-family:system-ui;background:#f5f7fb;}
@@ -49,6 +49,7 @@ align-items:center;
 gap:6px;
 }
 .btn-primary{background:var(--brand);color:white;}
+.btn-success{background:var(--success);color:white;}
 .btn-ghost{background:white;color:#0f172a;border:1px solid #cbd5e1;}
 .card{
 background:white;
@@ -81,6 +82,11 @@ font-size:.92rem;
 color:#0f172a;
 margin-top:4px;
 }
+@media(max-width:768px){
+    .layout{grid-template-columns: 1fr;}
+    .sidebar{display:none;}
+    .toolbar{justify-content: flex-start;}
+}
 </style>
 </head>
 <body>
@@ -89,12 +95,16 @@ margin-top:4px;
 <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 <div class="layout">
-<aside class="sidebar" id="sidebar-root"></aside>
+<aside class="sidebar" id="sidebar-root">
+    </aside>
 <main class="content">
 <h1 id="title">Device</h1>
 <div class="sub" id="subtitle">Loading device…</div>
-<!-- Toolbar -->
+
 <div class="toolbar">
+<a href="scan.html" class="btn btn-success">
+    📱 Scan Another
+</a>
 <a id="editLink" class="btn btn-primary">
 ✏️ Edit
 </a>
@@ -103,7 +113,7 @@ margin-top:4px;
 </a>
 <button class="btn btn-ghost" onclick="history.back()">⬅ Back</button>
 </div>
-<!-- Identification -->
+
 <section class="card">
 <h2>Identification</h2>
 <div class="grid-2">
@@ -115,7 +125,7 @@ margin-top:4px;
 <div><div class="field-label">Status</div><span id="f_status" class="status-pill">–</span></div>
 </div>
 </section>
-<!-- Location -->
+
 <section class="card">
 <h2>Location & Assignment</h2>
 <div class="grid-2">
@@ -125,7 +135,7 @@ margin-top:4px;
 <div><div class="field-label">Building / Floor</div><div id="f_buildingFloor" class="field-value">–</div></div>
 </div>
 </section>
-<!-- Network -->
+
 <section class="card">
 <h2>Network & System</h2>
 <div class="grid-2">
@@ -134,63 +144,92 @@ margin-top:4px;
 <div><div class="field-label">OS Version</div><div id="f_osVersion" class="field-value">–</div></div>
 </div>
 </section>
-<!-- Notes -->
+
 <section class="card">
 <h2>Notes</h2>
 <div id="f_notes" class="notes">No notes recorded.</div>
 </section>
 </main>
 </div>
+
 <script src="sidebar.js"></script>
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
 const params = new URLSearchParams(location.search);
 const itemId = params.get("id");
+
 const editLink = document.getElementById("editLink");
 const qrLink = document.getElementById("qrLink");
 const who = document.getElementById("who");
+const titleEl = document.getElementById("title");
+const subtitleEl = document.getElementById("subtitle");
+
 const field = id => document.getElementById(id);
 const show = v => v || "–";
+
 watchAuth({
-allowedRoles:["admin","it","viewer"],
-whoEl: who,
-onReady: async (_user, role)=>{
-if(!itemId){
-document.getElementById("subtitle").textContent = "No device ID provided.";
-editLink.style.display = "none";
-qrLink.style.display = "none";
-return;
-}
-qrLink.href = `print-qr.html?id=${encodeURIComponent(itemId)}`;
-if(role === "viewer"){
-editLink.style.display = "none";
-} else {
-editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
-}
-const snap = await getDoc(doc(db,"items",itemId));
-if(!snap.exists()){
-document.getElementById("subtitle").textContent = "Device not found.";
-return;
-}
-const d = snap.data();
-document.getElementById("title").textContent = d.deviceName || d.assetId || "Device";
-document.getElementById("subtitle").textContent = d.assetType || "";
-field("f_assetId").textContent = show(d.assetId);
-field("f_deviceName").textContent = show(d.deviceName);
-field("f_assetType").textContent = show(d.assetType);
-field("f_manufacturer").textContent = show(d.manufacturer);
-field("f_serialNumber").textContent = show(d.serialNumber);
-field("f_status").textContent = show(d.status);
-field("f_assignedTo").textContent = show(d.assignedTo);
-field("f_department").textContent = show(d.department);
-field("f_location").textContent = show(d.location);
-field("f_buildingFloor").textContent = show(d.buildingFloor);
-field("f_ipAddress").textContent = show(d.ipAddress);
-field("f_macAddress").textContent = show(d.macAddress);
-field("f_osVersion").textContent = show(d.osVersion);
-field("f_notes").textContent = d.notes || "No notes recorded.";
-}
+    allowedRoles: ["admin", "it", "viewer"],
+    whoEl: who,
+    onReady: async (_user, role) => {
+        if (!itemId) {
+            titleEl.textContent = "No ID Provided";
+            subtitleEl.textContent = "Please provide a valid device ID in the URL.";
+            editLink.style.display = "none";
+            qrLink.style.display = "none";
+            return;
+        }
+
+        try {
+            // Setup Links
+            qrLink.href = `print-qr.html?id=${encodeURIComponent(itemId)}`;
+            if (role === "viewer") {
+                editLink.style.display = "none";
+            } else {
+                editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`;
+            }
+
+            // Fetch Data
+            const docRef = doc(db, "items", itemId);
+            const snap = await getDoc(docRef);
+
+            if (!snap.exists()) {
+                titleEl.textContent = "Device Not Found";
+                subtitleEl.textContent = `The document ID "${itemId}" does not exist in the inventory database.`;
+                editLink.style.display = "none";
+                qrLink.style.display = "none";
+                return;
+            }
+
+            const d = snap.data();
+
+            // Populate Header
+            titleEl.textContent = d.deviceName || d.assetId || "Unnamed Device";
+            subtitleEl.textContent = d.assetType || "Hardware Item";
+
+            // Populate Fields
+            field("f_assetId").textContent = show(d.assetId);
+            field("f_deviceName").textContent = show(d.deviceName);
+            field("f_assetType").textContent = show(d.assetType);
+            field("f_manufacturer").textContent = show(d.manufacturer);
+            field("f_serialNumber").textContent = show(d.serialNumber);
+            field("f_status").textContent = show(d.status);
+            field("f_assignedTo").textContent = show(d.assignedTo);
+            field("f_department").textContent = show(d.department);
+            field("f_location").textContent = show(d.location);
+            field("f_buildingFloor").textContent = show(d.buildingFloor);
+            field("f_ipAddress").textContent = show(d.ipAddress);
+            field("f_macAddress").textContent = show(d.macAddress);
+            field("f_osVersion").textContent = show(d.osVersion);
+            field("f_notes").textContent = d.notes || "No notes recorded.";
+
+        } catch (error) {
+            console.error("Firestore Load Error:", error);
+            titleEl.textContent = "Error Loading Device";
+            subtitleEl.textContent = "There was a problem connecting to the database.";
+        }
+    }
 });
 </script>
 </body>
