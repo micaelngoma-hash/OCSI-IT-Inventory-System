@@ -10,9 +10,11 @@
     --bg2:#0b1020;
     --brand:#1a73e8;
     --border:#e5e7eb;
+    --danger: #ef4444;
+    --success: #22c55e;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
+  body{margin:0;font-family:system-ui;background:#f5f7fb; padding-bottom: 80px;} /* Space for bulk bar */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -75,7 +77,6 @@
     text-decoration:none;
   }
   .btn-primary{background:var(--brand);color:white;}
-  .btn-primary:hover{background:#1558b0;}
   .btn-ghost{
     background:white;
     border:1px solid #cbd5e1;
@@ -105,6 +106,15 @@
   .pill-blue{background:#dbeafe;color:#1d4ed8;}
   .pill-gray{background:#e5e7eb;color:#374151;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
+
+  /* Bulk Bar Styles */
+  #bulkBar {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1e293b; color: white; padding: 12px 24px;
+    border-radius: 999px; display: none; align-items: center; gap: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100;
+  }
+  #bulkBar select { background: #334155; color: white; border: none; }
 </style>
 </head>
 <body>
@@ -150,7 +160,6 @@
         <button id="exportBtn" class="btn btn-ghost">⬇️ Export CSV</button>
         <button id="importBtn" class="btn btn-ghost">📤 Import CSV</button>
         <button id="addBtn" class="btn btn-primary">+ New Device</button>
-
         <button id="btnBulkQR" class="btn btn-primary">Download QR Codes</button>
       </div>
     </div>
@@ -180,9 +189,24 @@
   </main>
 </div>
 
+<div id="bulkBar">
+    <span id="bulkCount">0 selected</span>
+    <select id="bulkStatus">
+        <option value="">Update Status...</option>
+        <option value="in-use">In use</option>
+        <option value="in-storage">In storage</option>
+        <option value="loaned">Loaned</option>
+        <option value="retired">Retired</option>
+        <option value="repair">Under repair</option>
+    </select>
+    <button id="btnBulkUpdate" class="btn" style="background:var(--success); color:white;">Apply</button>
+    <button id="btnBulkDelete" class="btn" style="background:var(--danger); color:white;">🗑️ Delete</button>
+    <button onclick="clearSelection()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.8rem;">Cancel</button>
+</div>
+
 <script type="module">
   import { db, watchAuth } from "./firebase.js";
-  import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   const whoEl        = document.getElementById("who");
   const tbody        = document.getElementById("tbody");
@@ -193,6 +217,11 @@
   const exportBtn    = document.getElementById("exportBtn");
   const selectAll    = document.getElementById("selectAll");
   const btnBulkQR    = document.getElementById("btnBulkQR");
+  
+  const bulkBar      = document.getElementById("bulkBar");
+  const bulkCount    = document.getElementById("bulkCount");
+  const btnBulkUpdate = document.getElementById("btnBulkUpdate");
+  const btnBulkDelete = document.getElementById("btnBulkDelete");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
@@ -208,6 +237,7 @@
         addBtn.style.display = "none";
         importBtn.style.display = "none";
         exportBtn.style.display = "none";
+        bulkBar.remove(); // Viewers can't see bulk actions
       } else {
         addBtn.onclick    = () => location.href="item-form.html";
         importBtn.onclick = () => location.href="import-devices.html";
@@ -240,6 +270,7 @@
     }
 
     tbody.innerHTML = rows.map(makeRow).join("");
+    updateBulkUI(); // Reset UI on render
   }
 
   function makeRow(it){
@@ -271,11 +302,61 @@
       </tr>`;
   }
 
+  // --- BULK ACTION LOGIC ---
+  
+  function updateBulkUI() {
+    const checked = document.querySelectorAll(".rowChk:checked");
+    if (checked.length > 0 && EDIT_ROLES.includes(currentRole)) {
+        bulkBar.style.display = "flex";
+        bulkCount.textContent = `${checked.length} selected`;
+    } else {
+        bulkBar.style.display = "none";
+    }
+  }
+
+  window.clearSelection = () => {
+    selectAll.checked = false;
+    document.querySelectorAll(".rowChk").forEach(c => c.checked = false);
+    updateBulkUI();
+  }
+
+  tbody.addEventListener("change", (e) => {
+    if (e.target.classList.contains("rowChk")) updateBulkUI();
+  });
+
   selectAll.onclick = () => {
     document.querySelectorAll(".rowChk").forEach(chk =>
       chk.checked = selectAll.checked
     );
+    updateBulkUI();
   };
+
+  btnBulkUpdate.onclick = async () => {
+    const newStatus = document.getElementById("bulkStatus").value;
+    if (!newStatus) return alert("Please select a status");
+    const ids = [...document.querySelectorAll(".rowChk:checked")].map(c => c.value);
+    
+    if (confirm(`Update status to "${newStatus}" for ${ids.length} items?`)) {
+        btnBulkUpdate.disabled = true;
+        for (const id of ids) {
+            await updateDoc(doc(db, "items", id), { status: newStatus });
+        }
+        location.reload();
+    }
+  };
+
+  btnBulkDelete.onclick = async () => {
+    const ids = [...document.querySelectorAll(".rowChk:checked")].map(c => c.value);
+    if (confirm(`⚠️ PERMANENTLY DELETE ${ids.length} items? This cannot be undone.`)) {
+        btnBulkDelete.disabled = true;
+        for (const id of ids) {
+            await deleteDoc(doc(db, "items", id));
+        }
+        location.reload();
+    }
+  };
+
+  // --- QR & UTILS ---
 
   btnBulkQR.onclick = () => {
     const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
@@ -283,7 +364,6 @@
       alert("Please select at least one device.");
       return;
     }
-    // clean query string with comma-separated IDs
     location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
   };
 
