@@ -3,69 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Device Details</title>
+    <title>OCSI IT Inventory – QR Scan Device</title>
     <style>
         :root{ --bg:#0f172a; --brand:#1a73e8; --border:#e5e7eb; }
         body{ margin:0; font-family:system-ui; background:#f5f7fb; }
-        .content{ padding:20px; max-width:800px; margin:0 auto; }
-        .toolbar{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
-        .card{ background:white; padding:20px; border-radius:12px; border:1px solid var(--border); margin-bottom:15px; }
-        .field-label{ font-size:0.8rem; color:#64748b; text-transform:uppercase; }
-        .field-value{ font-size:1rem; margin-bottom:10px; font-weight:500; }
-        .btn{ padding:8px 16px; border-radius:999px; text-decoration:none; font-weight:500; border:none; cursor:pointer; }
+        .topbar{ position:sticky; top:0; z-index:20; background:var(--bg); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+        .layout{ display:grid; grid-template-columns:240px 1fr; min-height:calc(100vh - 52px); }
+        .sidebar{ background:#0b1020; color:white; padding:14px; }
+        .nav a{ display:flex; align-items:center; gap:8px; padding:9px 11px; border-radius:9px; color:#dbe4ff; text-decoration:none; margin-bottom:6px; font-size:0.9rem; }
+        .nav a.active{ background:#111a33; }
+        .content{ padding:18px; max-width:1100px; margin:0 auto; width:100%; }
+        .card{ background:white; border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+        #reader{ width:100%; max-width:450px; margin:0 auto; border-radius:12px; overflow:hidden; border:2px solid var(--border); background:#000; min-height:300px; position:relative; }
+        .scan-overlay{ position:absolute; top:50%; left:50%; width:60%; height:60%; transform:translate(-50%,-50%); border:2px solid rgba(255,255,255,0.8); border-radius:12px; box-shadow:0 0 0 100vmax rgba(0,0,0,0.4); pointer-events:none; }
+        .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:6px; }
+        .btn-primary{ background:var(--brand); color:white; }
+        .history-list{ list-style:none; padding:0; margin:0; }
+        .history-list li{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #eee; font-size:0.9rem; }
+        .code-link{ color:var(--brand); font-weight:600; cursor:pointer; text-decoration:none; }
+        @media(max-width:960px){ .layout{ grid-template-columns:1fr; } .sidebar{ display:none; } }
     </style>
 </head>
 <body>
-    <div class="content">
-        <div class="toolbar">
-            <a href="scan.html" class="btn" style="background:#22c55e; color:white;">📱 Scan Another</a>
-            <a id="editLink" class="btn" style="background:var(--brand); color:white;">✏️ Edit</a>
-            <button class="btn" style="background:#64748b; color:white;" onclick="history.back()">⬅ Back</button>
-        </div>
+    <div class="topbar">
+        <div><strong>OCSI IT Inventory</strong></div>
+        <div id="who">Checking session…</div>
+    </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="nav">
+                <a href="index.html">📊 Dashboard</a>
+                <a href="inventory-list.html">💻 Hardware</a>
+                <a class="active" href="scan.html">📱 QR Scan</a>
+                <a href="login.html">🚪 Logout</a>
+            </nav>
+        </aside>
+        <main class="content">
+            <div class="card">
+                <h2>Camera Scanner</h2>
+                <div id="reader"></div>
+                <div style="margin-top:15px; display:flex; gap:10px;">
+                    <button class="btn btn-primary" id="btnStartScan">🎥 Start Scanner</button>
+                    <button class="btn" style="background:#64748b; color:white;" id="btnStopScan" style="display:none;">⏹️ Stop</button>
+                </div>
+                <div id="scanStatus" style="margin-top:10px; color:#64748b;">Ready</div>
+            </div>
 
-        <h1 id="title">Loading...</h1>
-        <p id="subtitle" style="color:#64748b;"></p>
-
-        <section class="card">
-            <div class="field-label">Asset ID</div><div id="f_assetId" class="field-value"></div>
-            <div class="field-label">Serial Number</div><div id="f_serial" class="field-value"></div>
-            <div class="field-label">Status</div><div id="f_status" class="field-value"></div>
-            <div class="field-label">Location</div><div id="f_loc" class="field-value"></div>
-        </section>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2>Scan History</h2>
+                    <input type="text" id="historySearch" placeholder="Filter history..." style="padding:5px; border-radius:5px; border:1px solid #ccc;">
+                </div>
+                <ul id="historyList" class="history-list" style="margin-top:15px;"></ul>
+                <button onclick="clearHistory()" style="margin-top:10px; color:red; border:none; background:none; cursor:pointer;">Clear History</button>
+            </div>
+        </main>
     </div>
 
+    <script src="https://unpkg.com/html5-qrcode@2.3.8"></script>
     <script type="module">
         import { db, watchAuth } from "./firebase.js";
-        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-        const id = new URLSearchParams(window.location.search).get("id");
+        
+        let html5QrCode = null;
+        let scanHistory = JSON.parse(localStorage.getItem("inventory_scan_history") || "[]");
 
         watchAuth({
             allowedRoles: ["admin", "it", "viewer"],
-            onReady: async (_user, role) => {
-                if(!id) {
-                    document.getElementById("title").textContent = "No ID Provided";
-                    return;
-                }
-
-                const snap = await getDoc(doc(db, "items", id));
-                if(!snap.exists()) {
-                    document.getElementById("title").textContent = "Not Found";
-                    document.getElementById("subtitle").textContent = `ID: ${id}`;
-                    return;
-                }
-
-                const d = snap.data();
-                document.getElementById("title").textContent = d.deviceName || "Unnamed Device";
-                document.getElementById("f_assetId").textContent = d.assetId || "—";
-                document.getElementById("f_serial").textContent = d.serialNumber || "—";
-                document.getElementById("f_status").textContent = d.status || "—";
-                document.getElementById("f_loc").textContent = d.location || "—";
-                
-                if(role !== 'viewer') document.getElementById("editLink").href = `item-form.html?id=${id}`;
-                else document.getElementById("editLink").style.display = 'none';
+            whoEl: document.getElementById("who"),
+            onReady: () => {
+                html5QrCode = new Html5Qrcode("reader");
+                renderHistory();
             }
         });
+
+        document.getElementById("btnStartScan").onclick = async () => {
+            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
+            document.getElementById("reader").innerHTML += '<div class="scan-overlay"></div>';
+        };
+
+        function onScanSuccess(decodedText) {
+            let code = decodedText.trim();
+            try {
+                if (code.includes('id=')) {
+                    code = new URL(code).searchParams.get('id');
+                }
+            } catch(e) {}
+
+            saveToHistory(code);
+            html5QrCode.stop();
+            window.location.href = `item.html?id=${encodeURIComponent(code)}`;
+        }
+
+        function saveToHistory(code) {
+            scanHistory = [{text: code, time: new Date().toISOString()}, ...scanHistory].slice(0, 20);
+            localStorage.setItem("inventory_scan_history", JSON.stringify(scanHistory));
+            renderHistory();
+        }
+
+        window.clearHistory = () => {
+            if(confirm("Clear history?")) {
+                localStorage.removeItem("inventory_scan_history");
+                scanHistory = [];
+                renderHistory();
+            }
+        };
+
+        function renderHistory() {
+            const term = document.getElementById("historySearch").value.toLowerCase();
+            const list = document.getElementById("historyList");
+            const filtered = scanHistory.filter(h => h.text.toLowerCase().includes(term));
+            list.innerHTML = filtered.map(h => `
+                <li>
+                    <a class="code-link" href="item.html?id=${h.text}">${h.text}</a>
+                    <span>${new Date(h.time).toLocaleTimeString()}</span>
+                </li>
+            `).join("");
+        }
+        document.getElementById("historySearch").oninput = renderHistory;
     </script>
 </body>
 </html>
