@@ -1,256 +1,210 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OCSI IT Inventory – Audits</title>
-<style>
-  :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--bg);color:white;
-    padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-
-  .layout{
-    display:grid;
-    grid-template-columns:240px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-
-  .sidebar{ background:var(--bg2);color:white;padding:14px; }
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
-
-  .content{ padding:18px; max-width:1200px; margin:0 auto; width:100%; }
-  h1{margin:0 0 4px;font-size:1.4rem;}
-  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-
-  .toolbar{
-    display:flex; justify-content:space-between; align-items:center;
-    gap:10px; flex-wrap:wrap; margin-bottom:15px;
-  }
-  .search-box{
-    display:flex;align-items:center;gap:6px;
-    background:white;border:1px solid var(--border);
-    border-radius:8px;padding:6px 12px;
-    max-width:400px;width:100%;
-  }
-  .search-box input{ border:none;outline:none;font-size:.88rem;width:100%; }
-
-  .card{
-    background:white;border:1px solid var(--border);
-    border-radius:14px; padding:16px; margin-bottom:12px;
-  }
-  
-  .table-wrap{
-    background:white;border:1px solid var(--border);
-    border-radius:12px;overflow:auto;
-  }
-  table{ border-collapse:collapse; width:100%; min-width:900px; }
-  th,td{ padding:12px 10px; border-bottom:1px solid #f1f5f9; font-size:.85rem; text-align:left; }
-  th{ background:#f8fafc; font-weight:600; color:#475569; position:sticky; top:0; }
-
-  .pill{
-    display:inline-flex; padding:2px 8px; border-radius:4px;
-    font-size:.7rem; font-weight: 600; text-transform: uppercase;
-  }
-  .pill-create{background:#dcfce7;color:#166534;}
-  .pill-update{background:#dbeafe;color:#1d4ed8;}
-  .pill-delete{background:#fee2e2;color:#b91c1c;}
-  .pill-role{background:#f3e8ff;color:#6b21a8;} /* Purple for Admin actions */
-  .pill-invite{background:#ffedd5;color:#9a3412;} /* Orange for invites */
-  .pill-gray{background:#f1f5f9;color:#475569;}
-
-  .status-bar{ font-size:.8rem; color:#64748b; margin-top:10px; }
-</style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>OCSI IT Inventory - Admin Console</title>
+    <style>
+        :root {
+            --bg: #0f172a; --bg2: #0b1020; --brand: #1a73e8; --border: #e5e7eb;
+            --good: #22c55e; --warn: #f97316; --bad: #ef4444;
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui; background: #f5f7fb; }
+        .topbar {
+            position: sticky; top: 0; z-index: 20;
+            background: var(--bg); color: white; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .layout { display: grid; grid-template-columns: 240px 1fr; min-height: calc(100vh - 52px); }
+        .sidebar { background: var(--bg2); color: white; padding: 14px; }
+        .nav a {
+            display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 9px;
+            color: #dbe4ff; text-decoration: none; margin-bottom: 6px; font-size: 0.92rem;
+        }
+        .nav a:hover, .nav a.active { background: #111a33; }
+        .content { padding: 18px; max-width: 1100px; margin: 0 auto; width: 100%; }
+        h1 { margin: 0 0 4px; font-size: 1.4rem; }
+        .subtitle { margin: 0 0 14px; font-size: .9rem; color: #94a3b8; }
+        .grid { display: grid; grid-template-columns: 2.1fr 1.2fr; gap: 16px; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+        .card h2 { margin: 0 0 8px; font-size: 1.05rem; display: flex; justify-content: space-between; align-items: center; }
+        .muted { font-size: .82rem; color: #94a3b8; margin-bottom: 10px; }
+        .status-bar { font-size: .82rem; margin-top: 6px; min-height: 18px; }
+        .status-ok { color: #166534; }
+        .status-error { color: #b91c1c; }
+        .table-wrap { border-radius: 12px; border: 1px solid var(--border); overflow: auto; }
+        table { border-collapse: collapse; width: 100%; min-width: 720px; }
+        th, td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; font-size: .88rem; text-align: left; }
+        th { background: #f8fafc; font-weight: 600; color: #475569; position: sticky; top: 0; z-index: 1; }
+        .pill { display: inline-flex; padding: 2px 8px; border-radius: 999px; font-size: .75rem; }
+        .pill-admin { background: #dcfce7; color: #166534; }
+        .pill-it { background: #dbeafe; color: #1d4ed8; }
+        .pill-viewer { background: #e5e7eb; color: #374151; }
+        .tag { display: inline-flex; padding: 2px 7px; border-radius: 999px; font-size: .75rem; background: #eff6ff; color: #1d4ed8; margin-right: 4px; }
+        .tag-danger { background: #fef2f2; color: #b91c1c; }
+        .legend-list { list-style: none; padding: 0; margin: 0; font-size: .85rem; }
+        .legend-list li { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    </style>
 </head>
 <body>
+    <div class="topbar">
+        <div><strong>OCSI IT Inventory</strong> - Admin Console</div>
+        <div id="who" style="font-size: .85rem; opacity: .9;">Checking session...</div>
+    </div>
+    <div class="layout">
+        <aside class="sidebar">
+            <nav class="nav">
+                <a href="index.html"><span>Main Dashboard</span></a>
+                <a href="software-licenses.html"><span>Software Licenses</span></a>
+                <a href="inventory-list.html"><span>Hardware</span></a>
+                <a href="audits.html"><span>Audits</span></a>
+                <a class="active" href="admin-console.html"><span>Admin Console</span></a>
+                <a href="login.html"><span>Logout</span></a>
+            </nav>
+        </aside>
+        <main class="content">
+            <h1>Admin Console</h1>
+            <p class="subtitle">Manage system access and assign roles.</p>
+            <div class="grid">
+                <section class="card">
+                    <h2>User &amp; Role Management</h2>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width:34%;">User (email)</th>
+                                    <th style="width:18%;">Display name</th>
+                                    <th style="width:16%;">Role</th>
+                                    <th style="width:18%;">Last seen (UTC)</th>
+                                    <th style="width:14%;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userBody">
+                                <tr><td colspan="5">Loading users...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="adminStatus" class="status-bar"></div>
+                </section>
+                <section class="card">
+                    <h2>Role Legend</h2>
+                    <ul class="legend-list">
+                        <li><span class="pill pill-admin">admin</span> <span>Full control</span></li>
+                        <li><span class="pill pill-it">it</span> <span>Inventory management</span></li>
+                        <li><span class="pill pill-viewer">viewer</span> <span>Read-only</span></li>
+                    </ul>
+                </section>
+            </div>
+        </main>
+    </div>
 
-<div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Audits</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
-</div>
+    <script type="module">
+        import { db, watchAuth } from "./firebase.js";
+        import { collection, getDocs, doc, updateDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-<div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
-      <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
-      <a class="active" href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
-  </aside>
+        const whoEl = document.getElementById("who");
+        const userBody = document.getElementById("userBody");
+        const adminStatus = document.getElementById("adminStatus");
+        let usersCache = [];
 
-  <main class="content">
-    <h1>Audit Log</h1>
-    <p class="subtitle">Real-time history of system changes and administrative actions.</p>
+        watchAuth({
+            allowedRoles: ["admin"],
+            whoEl,
+            onReady: async () => { await loadUsers(); }
+        });
 
-    <section class="card">
-      <div class="toolbar">
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search by user, asset tag, or action details..."/>
-        </div>
-        <div class="filters">
-          <select id="actionFilter">
-            <option value="">All Event Types</option>
-            <option value="create">Item Created</option>
-            <option value="update">Item Updated</option>
-            <option value="delete">Item Deleted</option>
-            <option value="user-invited">User Invited</option>
-            <option value="role-change">Role Updated</option>
-            <option value="login">Logins</option>
-          </select>
-        </div>
-      </div>
+        async function loadUsers() {
+            adminStatus.textContent = "Loading users from Firestore...";
+            adminStatus.className = "status-bar";
+            try {
+                // Fixed: Corrected query variable and loop syntax 
+                const q = query(collection(db, "users"), orderBy("email"));
+                const snap = await getDocs(q);
+                usersCache = []; 
+                snap.forEach(ds => {
+                    usersCache.push({ id: ds.id, ...ds.data() });
+                });
+                renderUsers();
+                adminStatus.textContent = `Loaded ${usersCache.length} user(s).`;
+                adminStatus.className = "status-bar status-ok";
+            } catch (err) {
+                console.error(err);
+                userBody.innerHTML = `<tr><td colspan="5">Error: ${escapeHtml(err.message)}</td></tr>`;
+                adminStatus.className = "status-bar status-error";
+            }
+        }
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:180px;">Date & Time</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Target ID</th>
-              <th>Category</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6" style="text-align:center; padding:30px;">Initializing secure connection...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="status-bar" id="statusBar"></div>
-    </section>
-  </main>
-</div>
+        function renderUsers() {
+            if (!usersCache.length) {
+                userBody.innerHTML = '<tr><td colspan="5">No users found.</td></tr>';
+                return; // Fixed: Now correctly returns only when empty [cite: 663-667]
+            }
+            
+            userBody.innerHTML = usersCache.map(u => {
+                const role = u.role || "viewer";
+                const pillClass = role === "admin" ? "pill pill-admin" : (role === "it" ? "pill pill-it" : "pill pill-viewer");
+                
+                return `
+                    <tr data-uid="${escapeHtml(u.id)}">
+                        <td>${escapeHtml(u.email || "(no email)")}</td>
+                        <td>${escapeHtml(u.displayName || "")}</td>
+                        <td>
+                            <select class="roleSel" data-uid="${escapeHtml(u.id)}">
+                                <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
+                                <option value="it" ${role === "it" ? "selected" : ""}>it</option>
+                                <option value="viewer" ${role === "viewer" ? "selected" : ""}>viewer</option>
+                            </select>
+                        </td>
+                        <td>${escapeHtml(formatLastSeen(u.lastLoginAt || u.lastSeenAt || ""))}</td>
+                        <td><span class="${pillClass}">${escapeHtml(role)}</span></td>
+                    </tr>`;
+            }).join("");
 
-<script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import {
-    collection, query, orderBy, limit, onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+            userBody.querySelectorAll(".roleSel").forEach(sel => {
+                sel.addEventListener("change", onRoleChange);
+            });
+        }
 
-  const whoEl = document.getElementById("who");
-  const tbody = document.getElementById("tbody");
-  const statusBar = document.getElementById("statusBar");
-  const searchEl = document.getElementById("search");
-  const actionFilter = document.getElementById("actionFilter");
+        async function onRoleChange(e) {
+            const sel = e.target;
+            const uid = sel.getAttribute("data-uid");
+            const newRole = sel.value;
 
-  let allAudits = [];
+            if (!uid || !newRole) return;
 
-  watchAuth({
-    allowedRoles: ["admin", "it"],
-    whoEl,
-    onReady: () => {
-      initRealtimeAudits();
-      searchEl.addEventListener("input", render);
-      actionFilter.addEventListener("change", render);
-    }
-  });
+            adminStatus.textContent = 'Updating role...';
+            adminStatus.className = "status-bar";
+            try {
+                const ref = doc(db, "users", uid);
+                await updateDoc(ref, { role: newRole });
+                
+                // Fixed: Corrected variable name 'newRole' [cite: 729]
+                const idx = usersCache.findIndex(u => u.id === uid);
+                if (idx >= 0) usersCache[idx].role = newRole;
+                
+                renderUsers();
+                adminStatus.textContent = `Role updated to "${newRole}".`;
+                adminStatus.className = "status-bar status-ok";
+            } catch (err) {
+                console.error(err);
+                adminStatus.textContent = "Failed to update: " + err.message;
+                adminStatus.className = "status-bar status-error";
+            }
+        }
 
-  // Real-time listener: The UI updates automatically when anyone saves a change
-  function initRealtimeAudits() {
-    setStatus("Syncing with Firestore...");
-    
-    const q = query(
-      collection(db, "audits"),
-      orderBy("timestamp", "desc"),
-      limit(150)
-    );
+        function formatLastSeen(val) {
+            if (!val) return "-";
+            try {
+                const date = val.toDate ? val.toDate() : new Date(val);
+                return date.toISOString().replace("T", " ").substring(0, 16);
+            } catch { return String(val); }
+        }
 
-    onSnapshot(q, (snap) => {
-      allAudits = [];
-      snap.forEach(doc => {
-        allAudits.push({ id: doc.id, ...doc.data() });
-      });
-      render();
-      setStatus(`System Synced. Showing latest ${allAudits.length} events.`);
-    }, (err) => {
-      console.error("Audit Sync Error:", err);
-      setStatus("Error: Connection lost.");
-    });
-  }
-
-  function render() {
-    const term = searchEl.value.toLowerCase();
-    const actionVal = actionFilter.value;
-
-    const filtered = allAudits.filter(ev => {
-      const action = (ev.action || "").toLowerCase();
-      
-      // Action Dropdown Filter
-      if (actionVal && action !== actionVal.toLowerCase()) return false;
-
-      // Text Search Filter
-      if (term) {
-        const content = [
-          ev.userEmail,
-          ev.targetId,
-          ev.targetType,
-          ev.details,
-          ev.action
-        ].join(" ").toLowerCase();
-        if (!content.includes(term)) return false;
-      }
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#94a3b8;">No matching audit logs found.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = filtered.map(ev => {
-      const ts = ev.timestamp?.toDate ? ev.timestamp.toDate().toLocaleString() : "—";
-      const action = (ev.action || "other").toLowerCase();
-      
-      // Determine Pill Style
-      let pClass = "pill-gray";
-      if (action.includes("create")) pClass = "pill-create";
-      else if (action.includes("update")) pClass = "pill-update";
-      else if (action.includes("delete")) pClass = "pill-delete";
-      else if (action.includes("invite")) pClass = "pill-invite";
-      else if (action.includes("role") || action.includes("admin")) pClass = "pill-role";
-
-      return `
-        <tr>
-          <td style="color:#64748b; font-family:monospace;">${ts}</td>
-          <td><strong>${escapeHtml(ev.userEmail || "System")}</strong></td>
-          <td><span class="pill ${pClass}">${action}</span></td>
-          <td><code style="background:#f1f5f9; padding:2px 4px; border-radius:4px;">${escapeHtml(ev.targetId || "N/A")}</code></td>
-          <td style="text-transform: capitalize;">${escapeHtml(ev.targetType || "—")}</td>
-          <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(ev.details || "")}">
-            ${escapeHtml(ev.details || "—")}
-          </td>
-        </tr>
-      `;
-    }).join("");
-  }
-
-  function setStatus(msg) { statusBar.textContent = msg; }
-
-  function escapeHtml(s) {
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
-  }
-</script>
-
+        function escapeHtml(s) {
+            if (!s) return "";
+            return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]));
+        }
+    </script>
 </body>
 </html>
