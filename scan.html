@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OCSI IT Inventory – QR Scan Device</title>
     <style>
-        :root{ --bg:#0f172a; --brand:#1a73e8; --border:#e5e7eb; }
+        :root{ --bg:#0f172a; --brand:#1a73e8; --border:#e5e7eb; --danger:#ef4444; }
         body{ margin:0; font-family:system-ui; background:#f5f7fb; }
         .topbar{ position:sticky; top:0; z-index:20; background:var(--bg); color:white; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
         .layout{ display:grid; grid-template-columns:240px 1fr; min-height:calc(100vh - 52px); }
@@ -14,13 +14,24 @@
         .nav a.active{ background:#111a33; }
         .content{ padding:18px; max-width:1100px; margin:0 auto; width:100%; }
         .card{ background:white; border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+        
+        /* Scanner Container */
         #reader{ width:100%; max-width:450px; margin:0 auto; border-radius:12px; overflow:hidden; border:2px solid var(--border); background:#000; min-height:300px; position:relative; }
-        .scan-overlay{ position:absolute; top:50%; left:50%; width:60%; height:60%; transform:translate(-50%,-50%); border:2px solid rgba(255,255,255,0.8); border-radius:12px; box-shadow:0 0 0 100vmax rgba(0,0,0,0.4); pointer-events:none; }
-        .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:6px; }
+        .scan-overlay{ position:absolute; top:50%; left:50%; width:60%; height:60%; transform:translate(-50%,-50%); border:2px solid rgba(255,255,255,0.8); border-radius:12px; box-shadow:0 0 0 100vmax rgba(0,0,0,0.4); pointer-events:none; z-index: 5; }
+        
+        .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-weight:500; display:inline-flex; align-items:center; gap:6px; font-size: 0.85rem; }
         .btn-primary{ background:var(--brand); color:white; }
+        .btn-stop{ background:#64748b; color:white; display: none; }
+        
+        /* History Styles */
         .history-list{ list-style:none; padding:0; margin:0; }
-        .history-list li{ display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #eee; font-size:0.9rem; }
+        .history-list li{ display:flex; justify-content:space-between; align-items: center; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:0.9rem; }
         .code-link{ color:var(--brand); font-weight:600; cursor:pointer; text-decoration:none; }
+        .history-meta { color: #94a3b8; font-size: 0.75rem; }
+        
+        #historySearch { padding:6px 12px; border-radius:999px; border:1px solid var(--border); width: 180px; font-size: 0.8rem; outline: none; }
+        #historySearch:focus { border-color: var(--brand); }
+
         @media(max-width:960px){ .layout{ grid-template-columns:1fr; } .sidebar{ display:none; } }
     </style>
 </head>
@@ -44,18 +55,21 @@
                 <div id="reader"></div>
                 <div style="margin-top:15px; display:flex; gap:10px;">
                     <button class="btn btn-primary" id="btnStartScan">🎥 Start Scanner</button>
-                    <button class="btn" style="background:#64748b; color:white;" id="btnStopScan" style="display:none;">⏹️ Stop</button>
+                    <button class="btn btn-stop" id="btnStopScan">⏹️ Stop Scanner</button>
                 </div>
-                <div id="scanStatus" style="margin-top:10px; color:#64748b;">Ready</div>
+                <div id="scanStatus" style="margin-top:10px; color:#64748b;">Status: Ready</div>
             </div>
 
             <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <h2>Scan History</h2>
-                    <input type="text" id="historySearch" placeholder="Filter history..." style="padding:5px; border-radius:5px; border:1px solid #ccc;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+                    <h2 style="margin:0;">Recent Scans</h2>
+                    <input type="text" id="historySearch" placeholder="Search history...">
                 </div>
-                <ul id="historyList" class="history-list" style="margin-top:15px;"></ul>
-                <button onclick="clearHistory()" style="margin-top:10px; color:red; border:none; background:none; cursor:pointer;">Clear History</button>
+                <ul id="historyList" class="history-list">
+                    </ul>
+                <div style="margin-top: 15px; border-top: 1px solid #eee; pt: 10px;">
+                    <button onclick="clearHistory()" style="color:var(--danger); border:none; background:none; cursor:pointer; font-size: 0.8rem; padding: 0;">🗑️ Clear Local History</button>
+                </div>
             </div>
         </main>
     </div>
@@ -64,7 +78,13 @@
     <script type="module">
         import { db, watchAuth } from "./firebase.js";
         
+        const btnStart = document.getElementById("btnStartScan");
+        const btnStop = document.getElementById("btnStopScan");
+        const statusEl = document.getElementById("scanStatus");
+        const historySearch = document.getElementById("historySearch");
+
         let html5QrCode = null;
+        // Persistence: Load from LocalStorage
         let scanHistory = JSON.parse(localStorage.getItem("inventory_scan_history") || "[]");
 
         watchAuth({
@@ -76,32 +96,83 @@
             }
         });
 
-        document.getElementById("btnStartScan").onclick = async () => {
-            await html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, onScanSuccess);
-            document.getElementById("reader").innerHTML += '<div class="scan-overlay"></div>';
+        btnStart.onclick = async () => {
+            try {
+                btnStart.style.display = "none";
+                btnStop.style.display = "inline-flex";
+                statusEl.textContent = "Status: Accessing Camera...";
+
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } }, 
+                    onScanSuccess
+                );
+                
+                statusEl.textContent = "Status: Scanning active";
+                // Add the visual overlay after start
+                const reader = document.getElementById("reader");
+                if(!reader.querySelector('.scan-overlay')) {
+                    reader.insertAdjacentHTML('beforeend', '<div class="scan-overlay"></div>');
+                }
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Error: Camera access denied.";
+                resetButtons();
+            }
         };
+
+        btnStop.onclick = async () => {
+            if (html5QrCode) {
+                await html5QrCode.stop();
+                const overlay = document.querySelector('.scan-overlay');
+                if(overlay) overlay.remove();
+                resetButtons();
+                statusEl.textContent = "Status: Stopped";
+            }
+        };
+
+        function resetButtons() {
+            btnStart.style.display = "inline-flex";
+            btnStop.style.display = "none";
+        }
 
         function onScanSuccess(decodedText) {
             let code = decodedText.trim();
+            
+            // Intelligence: Extract ID from URL if necessary
             try {
                 if (code.includes('id=')) {
-                    code = new URL(code).searchParams.get('id');
+                    const url = new URL(code);
+                    const idParam = url.searchParams.get('id');
+                    if (idParam) code = idParam;
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.warn("URL Parse skipped, using raw code");
+            }
 
             saveToHistory(code);
-            html5QrCode.stop();
-            window.location.href = `item.html?id=${encodeURIComponent(code)}`;
+            
+            // Stop camera and redirect
+            html5QrCode.stop().then(() => {
+                statusEl.textContent = "Status: Found " + code + ". Redirecting...";
+                setTimeout(() => {
+                    window.location.href = `item.html?id=${encodeURIComponent(code)}`;
+                }, 600);
+            });
         }
 
         function saveToHistory(code) {
-            scanHistory = [{text: code, time: new Date().toISOString()}, ...scanHistory].slice(0, 20);
+            // Add to top of list
+            const newEntry = { text: code, time: new Date().toISOString() };
+            // Filter out existing instances of this code to keep list clean
+            scanHistory = [newEntry, ...scanHistory.filter(h => h.text !== code)].slice(0, 25);
+            
             localStorage.setItem("inventory_scan_history", JSON.stringify(scanHistory));
             renderHistory();
         }
 
         window.clearHistory = () => {
-            if(confirm("Clear history?")) {
+            if(confirm("Permanently clear your scan history on this device?")) {
                 localStorage.removeItem("inventory_scan_history");
                 scanHistory = [];
                 renderHistory();
@@ -109,17 +180,29 @@
         };
 
         function renderHistory() {
-            const term = document.getElementById("historySearch").value.toLowerCase();
+            const term = historySearch.value.toLowerCase();
             const list = document.getElementById("historyList");
+            
             const filtered = scanHistory.filter(h => h.text.toLowerCase().includes(term));
+            
+            if (filtered.length === 0) {
+                list.innerHTML = `<li style="color:#94a3b8; border:none;">No recent scans found.</li>`;
+                return;
+            }
+
             list.innerHTML = filtered.map(h => `
                 <li>
-                    <a class="code-link" href="item.html?id=${h.text}">${h.text}</a>
-                    <span>${new Date(h.time).toLocaleTimeString()}</span>
+                    <a class="code-link" href="item.html?id=${encodeURIComponent(h.text)}">${escapeHtml(h.text)}</a>
+                    <span class="history-meta">${new Date(h.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                 </li>
             `).join("");
         }
-        document.getElementById("historySearch").oninput = renderHistory;
+
+        function escapeHtml(s){
+            return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]));
+        }
+
+        historySearch.oninput = renderHistory;
     </script>
 </body>
 </html>
