@@ -12,11 +12,34 @@
   *{box-sizing:border-box;}
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
+  /* --- UPDATED TOPBAR STYLES --- */
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
-    padding:12px 16px;
+    padding:8px 16px;
     display:flex;justify-content:space-between;align-items:center;
+    height: 52px;
+  }
+  .user-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  #who {
+    font-size: 0.85rem;
+    font-weight: 500;
+    opacity: 0.9;
+  }
+  .logout-link {
+    font-size: 0.72rem;
+    color: #94a3b8;
+    text-decoration: none;
+    margin-top: -2px;
+    transition: color 0.2s;
+  }
+  .logout-link:hover {
+    color: #f87171;
+    text-decoration: underline;
   }
 
   .layout{
@@ -39,7 +62,7 @@
 
   .content{
     padding:18px;
-    max-width:1100px;
+    max-width:1150px;
     margin:0 auto;
     width:100%;
   }
@@ -47,19 +70,15 @@
   h1{margin:0 0 4px;font-size:1.4rem;}
   .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
 
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
-
   .grid{
     display:grid;
-    grid-template-columns:2.1fr 1.2fr;
+    grid-template-columns:2.1fr 1fr;
     gap:16px;
   }
-  @media(max-width:960px){
+  @media(max-width:1024px){
     .layout{grid-template-columns:1fr;}
     .grid{grid-template-columns:1fr;}
+    .sidebar{display:none;}
   }
 
   .card{
@@ -80,17 +99,20 @@
 
   .status-bar{
     font-size:.82rem;
-    margin-top:6px;
+    margin-top:10px;
+    padding:8px 12px;
+    border-radius:8px;
+    background:#f8fafc;
     min-height:18px;
   }
-  .status-ok{color:#166534;}
-  .status-warn{color:#b45309;}
-  .status-error{color:#b91c1c;}
+  .status-ok{background:#dcfce7; color:#166534;}
+  .status-error{background:#fee2e2; color:#b91c1c;}
 
   .table-wrap{
     border-radius:12px;
     border:1px solid var(--border);
     overflow:auto;
+    max-height: 60vh;
   }
   table{
     border-collapse:collapse;
@@ -98,7 +120,7 @@
     min-width:720px;
   }
   th,td{
-    padding:8px 10px;
+    padding:10px;
     border-bottom:1px solid #f1f5f9;
     font-size:.88rem;
     text-align:left;
@@ -114,11 +136,12 @@
   tr:hover td{background:#f9fafb;}
 
   select{
-    padding:4px 6px;
-    border-radius:999px;
+    padding:4px 8px;
+    border-radius:6px;
     border:1px solid #cbd5e1;
     font-size:.8rem;
     background:white;
+    cursor: pointer;
   }
 
   .pill{
@@ -127,10 +150,11 @@
     padding:2px 8px;
     border-radius:999px;
     font-size:.75rem;
+    font-weight: 500;
   }
   .pill-admin{background:#dcfce7;color:#166534;}
   .pill-it{background:#dbeafe;color:#1d4ed8;}
-  .pill-viewer{background:#e5e7eb;color:#374151;}
+  .pill-viewer{background:#f1f5f9;color:#475569;}
 
   .tag{
     display:inline-flex;
@@ -141,31 +165,22 @@
     background:#eff6ff;
     color:#1d4ed8;
     margin-right:4px;
-    margin-top:2px;
+    margin-top:4px;
   }
-  .tag-danger{
-    background:#fef2f2;
-    color:#b91c1c;
-  }
-  .legend-list{
-    list-style:none;
-    padding:0;
-    margin:0;
-    font-size:.85rem;
-  }
-  .legend-list li{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-bottom:6px;
-  }
+  .tag-danger{ background:#fef2f2; color:#b91c1c; }
+  
+  .legend-list{ list-style:none; padding:0; margin:0; font-size:.85rem; }
+  .legend-list li{ display:flex; align-items:flex-start; gap:8px; margin-bottom:10px; }
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Admin Console</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
+  <div><strong>OCSI IT Inventory</strong></div>
+  <div class="user-control">
+    <div id="who">Checking session…</div>
+    <a href="login.html" class="logout-link" id="logoutBtn" style="display:none;">Logout</a>
+  </div>
 </div>
 
 <div class="layout">
@@ -177,225 +192,134 @@
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
       <a class="active" href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
+      </nav>
   </aside>
 
   <main class="content">
     <h1>Admin Console</h1>
-    <p class="subtitle">
-      Manage who can access the IT inventory, assign roles, and review administrative notes.
-    </p>
+    <p class="subtitle">Manage user access levels and system permissions in real-time.</p>
 
     <div class="grid">
-      <!-- LEFT: User & role management -->
       <section class="card">
-        <h2>
-          User &amp; Role Management
-        </h2>
-        <p class="muted">
-          Only <strong>admins</strong> can see this page. Use it to control access levels for IT staff.
-        </p>
-
+        <h2>User &amp; Role Management</h2>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
-                <th style="width:34%;">User (email)</th>
-                <th style="width:18%;">Display name</th>
-                <th style="width:16%;">Role</th>
-                <th style="width:18%;">Last seen (UTC)</th>
-                <th style="width:14%;">Status</th>
+                <th style="width:35%;">User (email)</th>
+                <th style="width:20%;">Role Selection</th>
+                <th style="width:15%;">Current Pill</th>
+                <th style="width:30%;">Last Seen (UTC)</th>
               </tr>
             </thead>
             <tbody id="userBody">
-              <tr><td colspan="5">Loading users…</td></tr>
+              <tr><td colspan="4" style="text-align:center; padding:20px;">Initializing secure connection...</td></tr>
             </tbody>
           </table>
         </div>
-
-        <div id="adminStatus" class="status-bar"></div>
+        <div id="adminStatus" class="status-bar">Waiting for connection...</div>
       </section>
 
-      <!-- RIGHT: Legend & guidance -->
       <section class="card">
-        <h2>Role Legend &amp; Safety</h2>
-        <p class="muted">Quick explanation of what each role can do in the system.</p>
-
+        <h2>Role Capabilities</h2>
         <ul class="legend-list">
-          <li>
-            <span class="pill pill-admin">admin</span>
-            <span>Full control: manage users &amp; roles, edit all devices, software and licenses.</span>
-          </li>
-          <li>
-            <span class="pill pill-it">it</span>
-            <span>Operational: add / edit devices, software and licenses, but cannot change user roles.</span>
-          </li>
-          <li>
-            <span class="pill pill-viewer">viewer</span>
-            <span>Read-only: can view dashboards and device details, but cannot edit anything.</span>
-          </li>
+          <li><span class="pill pill-admin">admin</span> <span>Full system access.</span></li>
+          <li><span class="pill pill-it">it</span> <span>Operational access.</span></li>
+          <li><span class="pill pill-viewer">viewer</span> <span>Read-only access.</span></li>
         </ul>
-
-        <hr style="border:none;border-top:1px solid #e5e7eb;margin:12px 0;"/>
-
-        <p class="muted"><strong>Recommended usage</strong></p>
-        <div>
-          <span class="tag">1–2 admins</span>
-          <span class="tag">IT team as "it"</span>
-          <span class="tag tag-danger">Avoid many admins</span>
-        </div>
-        <p class="muted" style="margin-top:10px;">
-          When you promote someone to <strong>admin</strong>, they can change other users’ roles –
-          including yours. Use with care.
-        </p>
       </section>
     </div>
   </main>
 </div>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
+  import { db, watchAuth, logAudit } from "./firebase.js";
   import {
-    collection, getDocs, doc, updateDoc, orderBy, query
+    collection, onSnapshot, doc, updateDoc, query, orderBy
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl       = document.getElementById("who");
-  const userBody    = document.getElementById("userBody");
+  const whoEl = document.getElementById("who");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const userBody = document.getElementById("userBody");
   const adminStatus = document.getElementById("adminStatus");
 
-  let usersCache = [];
+  let currentAdminEmail = "";
 
   watchAuth({
-    // Only admins are allowed here
-    allowedRoles:["admin"],
+    allowedRoles: ["admin"],
     whoEl,
-    onReady: async ()=>{
-      await loadUsers();
+    onReady: (user) => {
+      // Show logout button upon successful auth
+      if(logoutBtn) logoutBtn.style.display = 'block';
+      
+      currentAdminEmail = user.email;
+      initRealtimeUsers();
     }
   });
 
-  async function loadUsers(){
-    adminStatus.textContent = "Loading users from Firestore…";
-    adminStatus.className = "status-bar";
+  function initRealtimeUsers() {
+    const q = query(collection(db, "users"), orderBy("email"));
+    onSnapshot(q, (snap) => {
+      adminStatus.textContent = "Syncing with Firestore...";
+      const rows = [];
+      snap.forEach(ds => {
+        const u = ds.data();
+        const role = u.role || "viewer";
+        const email = u.email || "(no email)";
+        const pillClass = role === "admin" ? "pill-admin" : role === "it" ? "pill-it" : "pill-viewer";
+        const isSelf = email === currentAdminEmail;
 
-    try{
-      // Assuming your users are stored in a top-level "users" collection
-      const q = query(collection(db,"users"), orderBy("email"));
-      const snap = await getDocs(q);
-
-      usersCache = [];
-      snap.forEach(ds=>{
-        usersCache.push({ id: ds.id, ...ds.data() });
+        rows.push(`
+          <tr>
+            <td>
+                <div style="font-weight:500;">${escapeHtml(u.displayName || 'Unnamed User')}</div>
+                <div style="font-size:0.75rem; color:#64748b;">${escapeHtml(email)}</div>
+            </td>
+            <td>
+              <select class="roleSel" data-uid="${ds.id}" ${isSelf ? 'disabled' : ''}>
+                <option value="admin" ${role === "admin" ? "selected" : ""}>admin</option>
+                <option value="it" ${role === "it" ? "selected" : ""}>it</option>
+                <option value="viewer" ${role === "viewer" ? "selected" : ""}>viewer</option>
+              </select>
+            </td>
+            <td><span class="pill ${pillClass}">${role}</span></td>
+            <td style="color:#64748b; font-family:monospace;">${formatTimestamp(u.lastLoginAt || u.lastSeenAt)}</td>
+          </tr>
+        `);
       });
-
-      renderUsers();
-      adminStatus.textContent = `Loaded ${usersCache.length} user(s).`;
+      userBody.innerHTML = rows.join("");
+      userBody.querySelectorAll(".roleSel").forEach(sel => sel.addEventListener("change", onRoleChange));
+      adminStatus.textContent = `Live: Monitoring ${snap.size} users.`;
       adminStatus.className = "status-bar status-ok";
-    }catch(err){
-      console.error(err);
-      userBody.innerHTML = `<tr><td colspan="5">Failed to load users: ${escapeHtml(err.message)}</td></tr>`;
-      adminStatus.textContent = "Error while loading users.";
-      adminStatus.className = "status-bar status-error";
-    }
-  }
-
-  function renderUsers(){
-    if(!usersCache.length){
-      userBody.innerHTML = `<tr><td colspan="5">No users found in the <code>users</code> collection.</td></tr>`;
-      return;
-    }
-
-    userBody.innerHTML = usersCache.map(u=>{
-      const email = u.email || "(no email)";
-      const name  = u.displayName || "";
-      const role  = u.role || "viewer";
-      const last  = formatLastSeen(u.lastLoginAt || u.lastSeenAt || "");
-
-      const pillClass =
-        role==="admin" ? "pill pill-admin" :
-        role==="it"    ? "pill pill-it"    :
-                         "pill pill-viewer";
-
-      return `
-        <tr data-uid="${escapeHtml(u.id)}">
-          <td>${escapeHtml(email)}</td>
-          <td>${escapeHtml(name)}</td>
-          <td>
-            <select class="roleSel" data-uid="${escapeHtml(u.id)}">
-              <option value="admin" ${role==="admin"?"selected":""}>admin</option>
-              <option value="it" ${role==="it"?"selected":""}>it</option>
-              <option value="viewer" ${role==="viewer"?"selected":""}>viewer</option>
-            </select>
-          </td>
-          <td>${escapeHtml(last)}</td>
-          <td><span class="${pillClass}">${escapeHtml(role)}</span></td>
-        </tr>`;
-    }).join("");
-
-    // attach listeners
-    userBody.querySelectorAll(".roleSel").forEach(sel=>{
-      sel.addEventListener("change", onRoleChange);
     });
   }
 
-  function formatLastSeen(val){
-    if(!val) return "—";
-    try{
-      // support Firestore Timestamp or ISO string or millis
-      if(val.toDate){
-        return val.toDate().toISOString().replace("T"," ").substring(0,16);
-      }
-      if(typeof val === "number"){
-        return new Date(val).toISOString().replace("T"," ").substring(0,16);
-      }
-      return String(val).substring(0,16);
-    }catch{
-      return String(val);
-    }
-  }
-
-  async function onRoleChange(e){
+  async function onRoleChange(e) {
     const sel = e.target;
-    const uid = sel.getAttribute("data-uid");
+    const uid = sel.dataset.uid;
     const newRole = sel.value;
+    if (!confirm(`Change user role to "${newRole}"?`)) { initRealtimeUsers(); return; }
 
-    if(!uid || !newRole){
-      return;
-    }
-
-    adminStatus.textContent = `Updating role for user…`;
-    adminStatus.className = "status-bar";
-
-    try{
-      const ref = doc(db,"users",uid);
-      await updateDoc(ref,{ role:newRole });
-
-      // update local cache
-      const idx = usersCache.findIndex(u=>u.id===uid);
-      if(idx>=0){
-        usersCache[idx].role = newRole;
-      }
-
-      // refresh table so pill color matches new role
-      renderUsers();
-
-      adminStatus.textContent = `Role updated to "${newRole}" for user.`;
-      adminStatus.className = "status-bar status-ok";
-    }catch(err){
-      console.error(err);
-      adminStatus.textContent = "Failed to update role: " + err.message;
+    try {
+      await updateDoc(doc(db, "users", uid), { role: newRole });
+      if (typeof logAudit === "function") await logAudit("role-change", `Changed ${uid} to ${newRole}`);
+      adminStatus.textContent = "Role updated successfully.";
+    } catch (err) {
+      adminStatus.textContent = "Update failed: " + err.message;
       adminStatus.className = "status-bar status-error";
     }
   }
 
-  function escapeHtml(s){
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g,c=>(
-      { "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]
-    ));
+  function formatTimestamp(ts) {
+    if (!ts) return "Never";
+    const date = ts.toDate ? ts.toDate() : new Date(ts);
+    return date.toISOString().replace("T", " ").substring(0, 16);
+  }
+
+  function escapeHtml(s) {
+    if (!s) return "";
+    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
   }
 </script>
-
 </body>
 </html>
