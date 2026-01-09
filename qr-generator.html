@@ -2,48 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>QR Code</title>
+<title>QR Generator</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ✅ Correct CDN -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
-body{font-family:system-ui;background:#f5f7fb;padding:30px;text-align:center;}
-.card{background:white;padding:20px;border-radius:14px;max-width:420px;margin:auto;}
-canvas{max-width:100%}
+  body { font-family: system-ui; padding: 30px; }
+  canvas { margin-top: 20px; }
 </style>
 </head>
+
 <body>
 
-<div class="card">
-<h2 id="name">Loading…</h2>
-<p>Asset ID: <span id="asset"></span></p>
+<h2>Generated QR Code</h2>
 <div id="qr"></div>
-<button id="dl">⬇ Download</button>
-</div>
 
-<script type="module">
-import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+<script>
+  // Example data (this usually comes from Firebase)
+  const dataToEncode = "https://your-firebase-app.web.app/item?id=ABC123";
 
-const id = new URLSearchParams(location.search).get("id");
-const snap = await getDoc(doc(db,"items",id));
-if(!snap.exists()) throw "";
+  // Create canvas
+  const canvas = document.createElement("canvas");
 
-const d=snap.data();
-name.textContent=d.deviceName||"Device";
-asset.textContent=d.assetId||"";
-
-const canvas=document.createElement("canvas");
-await QRCode.toCanvas(canvas,`${location.origin}/item.html?id=${id}`,{
-  width:280,margin:2,errorCorrectionLevel:"H"
-});
-qr.appendChild(canvas);
-
-dl.onclick=()=>{
-  const a=document.createElement("a");
-  a.href=canvas.toDataURL("image/png");
-  a.download=`OCSI-${id}.png`;
-  a.click();
-};
+  // Generate QR code
+  QRCode.toCanvas(canvas, dataToEncode, {
+    width: 200,
+    margin: 1,
+    errorCorrectionLevel: "H"
+  }, function (error) {
+    if (error) console.error(error);
+    document.getElementById("qr").appendChild(canvas);
+  });
 </script>
+
 </body>
 </html>
