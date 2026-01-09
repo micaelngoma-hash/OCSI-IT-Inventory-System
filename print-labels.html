@@ -5,74 +5,52 @@
 <title>Print QR Labels – OCSI IT Inventory</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Libraries -->
+<!-- REQUIRED LIBRARIES -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body{font-family:system-ui;background:#f5f7fb;margin:0;padding:20px;}
-h1{margin-top:0;font-size:2rem;}
-.top-controls{
-  background:white;padding:14px 18px;border-radius:12px;
-  border:1px solid #e5e7eb;margin-bottom:20px;
-}
-.layout-option{
-  padding:8px 16px;border-radius:12px;border:1px solid #cbd5e1;
-  cursor:pointer;margin-right:8px;background:white;font-size:.9rem;
-}
-.layout-option.active{background:#1a73e8;color:white;border-color:#1a73e8;}
+.top-controls{background:white;padding:14px;border-radius:12px;border:1px solid #e5e7eb;margin-bottom:20px;}
+.layout-option{padding:8px 14px;border-radius:999px;border:1px solid #cbd5e1;margin-right:6px;cursor:pointer;}
+.layout-option.active{background:#1a73e8;color:white;}
 #labelsArea{display:grid;gap:12px;justify-content:center;}
-.label{
-  background:white;border:1px solid #e5e7eb;padding:12px;
-  text-align:center;border-radius:8px;
-}
-.label img{width:100%;max-width:220px;height:auto;}
-
-@media print{
-  body{background:white;padding:0;margin:0;}
-  .top-controls{display:none!important;}
-}
+.label{background:white;border:1px solid #e5e7eb;padding:12px;border-radius:8px;text-align:center;}
+.label img{width:100%;max-width:220px;}
+@media print{.top-controls{display:none}}
 </style>
 </head>
 
 <body>
-<h1>Bulk QR Label Printing</h1>
+<h2>Bulk QR Label Printing</h2>
 
 <div class="top-controls">
-  <strong>Choose label layout:</strong><br><br>
-  <button id="btn6" class="layout-option">6 per page</button>
-  <button id="btn12" class="layout-option active">12 per page</button>
-  <button id="btn24" class="layout-option">24 per page</button>
+  <button id="btn6"  class="layout-option">6</button>
+  <button id="btn12" class="layout-option active">12</button>
+  <button id="btn24" class="layout-option">24</button>
   <br><br>
-
-  <button onclick="printLabels()" style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
-    🖨 Print Labels
-  </button>
-
-  <button id="btnPDF" style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
-    📄 Download PDF
-  </button>
+  <button onclick="printLabels()">🖨 Print</button>
+  <button id="btnPDF">📄 PDF</button>
 </div>
 
 <div id="labelsArea"></div>
 
 <script type="module">
-import { watchAuth, db } from "./firebase.js";
+import { db, watchAuth } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const labelsArea = document.getElementById("labelsArea");
 const btnPDF = document.getElementById("btnPDF");
-
-const params = new URLSearchParams(location.search);
-const ids = (params.get("ids")||"").split(",").filter(Boolean);
+const ids = (new URLSearchParams(location.search).get("ids") || "")
+  .split(",").filter(Boolean);
 
 let layout = 12;
 setLayout(12);
 
-document.getElementById("btn6").onclick  = ()=>setLayout(6);
-document.getElementById("btn12").onclick = ()=>setLayout(12);
-document.getElementById("btn24").onclick = ()=>setLayout(24);
+btn6.onclick  = () => setLayout(6);
+btn12.onclick = () => setLayout(12);
+btn24.onclick = () => setLayout(24);
 
 function setLayout(n){
   layout=n;
@@ -90,36 +68,42 @@ watchAuth({
 });
 
 async function loadLabels(){
-  labelsArea.innerHTML="Loading labels…";
-  const items=[];
-
-  for(const id of ids){
-    const snap=await getDoc(doc(db,"items",id));
-    if(snap.exists()) items.push({id,...snap.data()});
-  }
+  labelsArea.innerHTML="Loading QR codes…";
 
   labelsArea.innerHTML="";
-  for(const it of items){
-    const div=document.createElement("div");
-    div.className="label";
+  for(const id of ids){
+    const snap = await getDoc(doc(db,"items",id));
+    if(!snap.exists()) continue;
 
-    const img=document.createElement("img");
-    await QRCode.toCanvas(img, `${location.origin}/item.html?id=${it.id}`,{
-      width:220, margin:1, errorCorrectionLevel:"H"
+    const d = snap.data();
+    const url = `${location.origin}/item.html?id=${id}`;
+
+    // ✅ CORRECT QR FLOW
+    const canvas = document.createElement("canvas");
+    await QRCode.toCanvas(canvas, url, {
+      width:220,
+      margin:1,
+      errorCorrectionLevel:"H"
     });
 
-    div.appendChild(img);
-    div.innerHTML+=`
-      <div style="font-weight:600;margin-top:6px;">${it.assetId||""}</div>
-      <div style="font-size:.8rem;color:#555;">${it.deviceName||""}</div>
+    const img = document.createElement("img");
+    img.src = canvas.toDataURL("image/png");
+
+    const box = document.createElement("div");
+    box.className="label";
+    box.appendChild(img);
+    box.innerHTML += `
+      <div style="font-weight:600;margin-top:6px">${d.assetId||""}</div>
+      <div style="font-size:.8rem;color:#555">${d.deviceName||""}</div>
     `;
-    labelsArea.appendChild(div);
+
+    labelsArea.appendChild(box);
   }
 }
 
 async function waitForImages(){
   const imgs=[...labelsArea.querySelectorAll("img")];
-  await Promise.all(imgs.map(img=>img.complete?Promise.resolve():new Promise(r=>img.onload=r)));
+  await Promise.all(imgs.map(i=>i.complete?Promise.resolve():new Promise(r=>i.onload=r)));
 }
 
 window.printLabels = async ()=>{
@@ -132,10 +116,7 @@ btnPDF.onclick = async ()=>{
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF("p","mm","a4");
   const canvas = await html2canvas(labelsArea,{scale:2,backgroundColor:"#fff"});
-  const img=canvas.toDataURL("image/png");
-  const w=210-10;
-  const h=(canvas.height*w)/canvas.width;
-  pdf.addImage(img,"PNG",5,5,w,h);
+  pdf.addImage(canvas.toDataURL("image/png"),"PNG",5,5,200,0);
   pdf.save("OCSI-QR-labels.pdf");
 };
 </script>
