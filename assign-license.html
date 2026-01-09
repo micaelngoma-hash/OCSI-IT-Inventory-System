@@ -10,26 +10,37 @@
   body{margin:0;font-family:system-ui;background:#f5f7fb;}
 
   .topbar{
+    position:sticky; top:0; z-index:20;
     background:var(--bg);color:white;padding:12px 16px;
     display:flex;justify-content:space-between;align-items:center;
   }
-  .layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+  .layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 52px);}
   .sidebar{background:var(--bg2);padding:14px;color:white;}
 
-  .content{padding:26px;max-width:900px;margin:0 auto;width:100%;}
+  .content{padding:26px;max-width:1000px;margin:0 auto;width:100%;}
 
+  .card{background:white; border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:20px;}
   table{width:100%;border-collapse:collapse;background:white;border-radius:10px;overflow:hidden;}
-  th,td{padding:10px;border-bottom:1px solid #f1f5f9;font-size:.88rem;}
-  th{background:#f8fafc;text-align:left;}
-  .btn{padding:6px 12px;background:var(--brand);color:white;border-radius:8px;text-decoration:none;cursor:pointer;font-size:.85rem;}
-  .btn-red{background:#dc2626;}
+  th,td{padding:12px;border-bottom:1px solid #f1f5f9;font-size:.88rem;}
+  th{background:#f8fafc;text-align:left;color:#64748b;font-weight:600;}
+  
+  .btn{border:none;padding:8px 16px;background:var(--brand);color:white;border-radius:999px;text-decoration:none;cursor:pointer;font-size:.85rem;font-weight:500;display:inline-flex;align-items:center;gap:6px;}
+  .btn-red{background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:0.75rem;}
+  .btn-red:hover{background:#dc2626;}
+  
+  .badge{padding:2px 8px; border-radius:999px; font-size:0.75rem; background:#e0e7ff; color:#4338ca;}
+  
+  @media(max-width:768px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+  }
 </style>
 
 </head>
 <body>
 
 <div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Assign License</div>
+  <div><strong>OCSI IT Inventory</strong> – License Management</div>
   <div id="who" style="opacity:.8;font-size:.85rem;">Checking session…</div>
 </div>
 
@@ -37,43 +48,47 @@
   <aside class="sidebar" id="sidebar-root"></aside>
 
   <main class="content">
-    <h1 id="title">Assign License</h1>
-    <p id="subtitle">Loading…</p>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px;">
+        <div>
+            <h1 id="title" style="margin:0;">License Detail</h1>
+            <p id="subtitle" style="color:#64748b; margin:5px 0 0 0;">Loading data...</p>
+        </div>
+        <button id="assignBtn" class="btn">➕ Assign to Device</button>
+    </div>
 
-    <h2>Assigned Devices</h2>
+    <section class="card">
+        <h2 style="font-size:1.1rem; margin-top:0;">Assigned Devices</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Asset ID</th>
+              <th>Device Name</th>
+              <th>Serial Number</th>
+              <th>Location</th>
+              <th style="width:80px; text-align:center;">Action</th>
+            </tr>
+          </thead>
+          <tbody id="assigned-body">
+            <tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">Fetching assigned devices...</td></tr>
+          </tbody>
+        </table>
+    </section>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Device</th>
-          <th>Serial</th>
-          <th>Location</th>
-          <th>Revoke</th>
-        </tr>
-      </thead>
-      <tbody id="assigned-body">
-        <tr><td colspan="4">Loading…</td></tr>
-      </tbody>
-    </table>
-
-    <h2 style="margin-top:30px;">Assign New Device</h2>
-
-    <button id="assignBtn" class="btn">Assign to Device</button>
-
+    <button class="btn" style="background:#64748b;" onclick="history.back()">⬅ Back to Licenses</button>
   </main>
 </div>
 
 <script src="sidebar.js"></script>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
+  import { db, watchAuth, logAudit } from "./firebase.js";
   import {
-    doc, getDoc, updateDoc, collection, getDocs
+    doc, getDoc, updateDoc, collection, query, where, documentId, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const who       = document.getElementById("who");
-  const title     = document.getElementById("title");
-  const subtitle  = document.getElementById("subtitle");
+  const who = document.getElementById("who");
+  const title = document.getElementById("title");
+  const subtitle = document.getElementById("subtitle");
   const assignedBody = document.getElementById("assigned-body");
   const assignBtn = document.getElementById("assignBtn");
 
@@ -90,67 +105,89 @@
 
   async function loadLicense(){
     if(!licenseId){
-      subtitle.textContent = "Missing license ID.";
+      subtitle.textContent = "Error: Missing license ID.";
       return;
     }
 
-    const snap = await getDoc(doc(db,"software_license",licenseId));
-    if(!snap.exists()){
-      subtitle.textContent = "License not found.";
-      return;
-    }
+    try {
+        const snap = await getDoc(doc(db,"software_license",licenseId));
+        if(!snap.exists()){
+          subtitle.textContent = "License not found.";
+          return;
+        }
 
-    licenseData = snap.data();
+        licenseData = snap.data();
+        const assigned = licenseData.assignedTo || [];
 
-    title.textContent = "Assign License — " + (licenseData.licenseKey || "No Key");
-    subtitle.textContent = `Seats: ${licenseData.assignedSeats}/${licenseData.totalSeats}`;
+        title.textContent = licenseData.softwareName || "Software License";
+        subtitle.innerHTML = `Key: <code>${licenseData.licenseKey || "N/A"}</code> • Seats: <strong>${assigned.length} / ${licenseData.totalSeats || 0}</strong>`;
 
-    renderAssigned();
-  }
-
-  async function renderAssigned(){
-    const devices = await getDocs(collection(db,"items"));
-
-    const assigned = (licenseData.assignedTo || []);
-
-    if(assigned.length === 0){
-      assignedBody.innerHTML = `<tr><td colspan="4">No devices assigned.</td></tr>`;
-      return;
-    }
-
-    assignedBody.innerHTML = "";
-
-    for(const devId of assigned){
-      const dSnap = await getDoc(doc(db,"items",devId));
-      if(!dSnap.exists()) continue;
-      const d = dSnap.data();
-
-      assignedBody.innerHTML += `
-        <tr>
-          <td>${d.deviceName||"(no name)"}</td>
-          <td>${d.serialNumber||"—"}</td>
-          <td>${d.location||"—"}</td>
-          <td><button class="btn-red" onclick="revoke('${devId}')">Revoke</button></td>
-        </tr>`;
+        renderAssigned(assigned);
+    } catch (err) {
+        console.error(err);
+        subtitle.textContent = "Error loading license data.";
     }
   }
 
-  window.revoke = async function(id){
-    const arr = (licenseData.assignedTo || []).filter(x=>x!==id);
+  async function renderAssigned(assignedIds){
+    if(assignedIds.length === 0){
+      assignedBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:40px; color:#94a3b8;">No devices currently assigned to this license.</td></tr>`;
+      return;
+    }
 
-    await updateDoc(doc(db,"software_license",licenseId),{
-      assignedTo: arr,
-      assignedSeats: arr.length
-    });
+    try {
+        // PERFORMANCE IMPROVEMENT: Single query for all assigned device details
+        // Note: Firestore 'in' queries support up to 30 items. 
+        // For larger enterprise sets, you'd chunk this, but for school inventory 30 is usually plenty.
+        const q = query(collection(db, "items"), where(documentId(), "in", assignedIds));
+        const dSnaps = await getDocs(q);
+        
+        assignedBody.innerHTML = "";
+        
+        dSnaps.forEach(dSnap => {
+            const d = dSnap.data();
+            assignedBody.innerHTML += `
+                <tr>
+                  <td><span class="badge">${d.assetId || "—"}</span></td>
+                  <td style="font-weight:500;">${d.deviceName || "(Unnamed)"}</td>
+                  <td>${d.serialNumber || "—"}</td>
+                  <td>${d.location || "—"}</td>
+                  <td style="text-align:center;">
+                    <button class="btn-red" onclick="revoke('${dSnap.id}', '${d.deviceName || d.assetId}')">Revoke</button>
+                  </td>
+                </tr>`;
+        });
+    } catch (err) {
+        console.error("Error fetching device details:", err);
+        assignedBody.innerHTML = `<tr><td colspan="5" style="color:red; text-align:center;">Failed to load device details.</td></tr>`;
+    }
+  }
 
-    licenseData.assignedTo = arr;
-    licenseData.assignedSeats = arr.length;
+  window.revoke = async function(deviceId, deviceName){
+    if(!confirm(`Are you sure you want to revoke the license from ${deviceName}?`)) return;
 
-    subtitle.textContent = `Seats: ${arr.length}/${licenseData.totalSeats}`;
-    renderAssigned();
+    try {
+        const arr = (licenseData.assignedTo || []).filter(x => x !== deviceId);
+
+        await updateDoc(doc(db, "software_license", licenseId), {
+          assignedTo: arr,
+          assignedSeats: arr.length
+        });
+
+        // Audit the change
+        if (typeof logAudit === "function") {
+            await logAudit("license-revoke", `Revoked license ${licenseData.softwareName} from ${deviceName} (${deviceId})`);
+        }
+
+        // Local UI update
+        licenseData.assignedTo = arr;
+        loadLicense(); // Refresh UI
+    } catch (err) {
+        alert("Failed to revoke: " + err.message);
+    }
   };
 
-  assignBtn.onclick = ()=>{
+  assignBtn.onclick = () => {
     location.href = `assign-device-select.html?license=${licenseId}`;
   };
 
