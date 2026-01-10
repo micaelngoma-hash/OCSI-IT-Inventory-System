@@ -28,7 +28,7 @@
   .sidebar{background:var(--bg2);color:white;padding:14px;}
   .nav a{
     display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
+    padding:9px 11px;border-radius:999px;
     color:#dbe4ff;text-decoration:none;margin-bottom:6px;
     font-size:.92rem;
   }
@@ -97,7 +97,7 @@
     <nav class="nav">
       <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
       <a class="active" href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
-      <a href="inventory-list.html"><span class="icon">💻</span><span>hardware</span></a>
+      <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
@@ -112,7 +112,6 @@
     </p>
 
     <form id="licenseForm">
-      <!-- General -->
       <section class="card">
         <h2>License Details</h2>
         <div class="grid-2">
@@ -135,7 +134,6 @@
         </div>
       </section>
 
-      <!-- Seats & Expiry -->
       <section class="card">
         <h2>Capacity &amp; Expiry</h2>
         <div class="grid-2">
@@ -161,7 +159,6 @@
         </div>
       </section>
 
-      <!-- Notes -->
       <section class="card">
         <h2>Notes</h2>
         <textarea id="notes" name="notes" placeholder="Deployment notes, assignment rules, renewal details…"></textarea>
@@ -177,7 +174,8 @@
 </div>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
+  // ONLY NECESSARY UPDATE: Added logAudit to the import
+  import { db, watchAuth, logAudit } from "./firebase.js";
   import {
     doc, getDoc, setDoc, addDoc, collection, serverTimestamp
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -288,8 +286,12 @@
     try{
       if(licenseId){
         await setDoc(doc(db,"software_license",licenseId), data, { merge:true });
+        // NECESSARY UPDATE: Added Audit Logging for update
+        await logAudit("update", "Software", `Updated license for ${data.softwareName}`);
       }else{
         await addDoc(collection(db,"software_license"), data);
+        // NECESSARY UPDATE: Added Audit Logging for creation
+        await logAudit("create", "Software", `Added new software license: ${data.softwareName}`);
       }
       alert("License saved.");
       window.location.href = "software-licenses.html";
