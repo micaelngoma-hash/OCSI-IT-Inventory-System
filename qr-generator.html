@@ -1,172 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Generate QR Code – OCSI IT Inventory</title>
-<style>
-/* --- UI STYLES (Screen) --- */
-body { 
-  font-family: system-ui, sans-serif; background: #f5f7fb; margin: 0; 
-  display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
-}
-.page-container { width: 100%; max-width: 400px; padding: 10px; text-align: center; }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generate QR Code – OCSI IT Inventory</title>
+    <style>
+        /* --- UI STYLES (Screen) --- */
+        body { 
+            font-family: system-ui, sans-serif; background: #f5f7fb; margin: 0; 
+            display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
+        }
+        .page-container { width: 100%; max-width: 400px; padding: 10px; text-align: center; }
 
-/* The Label Preview (2x1 ratio) */
-.label-preview-box {
-  background: white; margin: 0 auto 20px;
-  border-radius: 4px; border: 1px solid #cbd5e1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 2.5in; height: 1.25in; /* Sized for visibility on screen */
-}
+        /* The Label Preview (Strict 2x1 ratio) */
+        .label-preview-box {
+            background: white; margin: 0 auto 20px;
+            border-radius: 4px; border: 1px solid #cbd5e1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 2.5in; height: 1.25in; 
+            padding: 10px;
+            box-sizing: border-box;
+        }
 
-#assetId { 
-  margin: 0 0 5px 0; color: #000; font-weight: 800; 
-  font-size: 0.9rem; width: 100%; text-align: center;
-}
+        #assetId { 
+            margin: 0 0 5px 0; color: #000; font-weight: 800; 
+            font-size: 0.95rem; width: 100%; text-align: center;
+        }
 
-#qrBox { width: 100%; display: flex; justify-content: center; }
-#qrBox svg { height: auto; display: block; width: 0.85in; } /* Increased from 0.7in */
+        #qrBox { width: 100%; display: flex; justify-content: center; }
+        /* Sizing matched to your reference code's max-width logic */
+        #qrBox canvas { height: auto !important; width: 0.9in !important; max-width: 150px; display: block; } 
 
-/* Buttons */
-.controls-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-.btn-group { display: flex; flex-direction: column; gap: 10px; }
-button { 
-  padding: 12px; border-radius: 8px; border: none; cursor: pointer; 
-  font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
-}
-.btn-primary { background: #1a73e8; color: white; }
-.btn-success { background: #16a34a; color: white; }
-.btn-ghost { background: #f1f5f9; color: #334155; }
+        /* Buttons Section */
+        .controls-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .btn-group { display: flex; flex-direction: column; gap: 10px; }
+        button { 
+            padding: 12px; border-radius: 8px; border: none; cursor: pointer; 
+            font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
+        }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-ghost { background: #f1f5f9; color: #334155; }
 
-/* --- PRINT LOGIC --- */
-@media print {
-  @page { size: 2in 1in; margin: 0; }
-  body * { visibility: hidden; }
-  #labelContainer, #labelContainer * { visibility: visible; }
-  #labelContainer {
-    position: fixed; left: 0; top: 0;
-    width: 2in !important; height: 1in !important;
-    margin: 0 !important; padding: 0 !important;
-    display: flex !important; flex-direction: column !important;
-    align-items: center !important; justify-content: center !important;
-    border: none !important;
-  }
-  #assetId { 
-    font-size: 10pt !important; 
-    margin-bottom: 2px !important; 
-    font-weight: bold !important;
-  }
-  #qrBox svg { 
-    width: 0.75in !important; height: 0.75in !important; /* Maximized for 1in height */
-  }
-}
-</style>
-
-<script type="module">
-import QRCode from 'https://cdn.skypack.dev/qrcode';
-import { db } from "./firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const params = new URLSearchParams(location.search);
-  const itemId = params.get("id");
-  const assetEl = document.getElementById("assetId");
-  const qrBox = document.getElementById("qrBox");
-
-  if (!itemId) { assetEl.textContent = "ID Missing"; return; }
-
-  try {
-    const snap = await getDoc(doc(db, "items", itemId));
-    if (!snap.exists()) { assetEl.textContent = "Not Found"; return; }
-
-    const d = snap.data();
-    const assetId = d.assetId || "No ID";
-    assetEl.innerHTML = `<strong>Asset ID: ${assetId}</strong>`;
-
-    const url = window.location.origin + window.location.pathname.replace('qr-generator.html', 'item.html') + '?id=' + itemId;
-    
-    const svgString = await QRCode.toString(url, { 
-      type: 'svg', 
-      margin: 1, 
-      errorCorrectionLevel: 'M',
-      width: 150 
-    });
-    qrBox.innerHTML = svgString;
-
-    // CENTERED SVG DOWNLOAD LOGIC
-    document.getElementById("btnDownload").onclick = () => {
-      const parser = new DOMParser();
-      const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
-      const svgEl = svgDoc.documentElement;
-      
-      // Define a fixed canvas size for the label (e.g., 100x50 units)
-      const canvasW = 100;
-      const canvasH = 50;
-      const qrSize = 35;
-      
-      // Reconstruct the SVG to be perfectly centered
-      const newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      newSvg.setAttribute("viewBox", `0 0 ${canvasW} ${canvasH}`);
-      newSvg.setAttribute("width", "200");
-      newSvg.setAttribute("height", "100");
-      newSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-
-      // Add Text (Centered)
-      const textAsset = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textAsset.setAttribute("x", "50%");
-      textAsset.setAttribute("y", "12");
-      textAsset.setAttribute("text-anchor", "middle");
-      textAsset.setAttribute("style", "font-family:sans-serif; font-size:6px; font-weight:bold; fill:black;");
-      textAsset.textContent = `Asset ID: ${assetId}`;
-      
-      // Add QR Code (Centered)
-      // We wrap the original QR paths in a group and scale/move it
-      const qrGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-      const originalPaths = svgEl.innerHTML;
-      qrGroup.innerHTML = originalPaths;
-      
-      // Position the QR group
-      // Assuming original QR svg was roughly 35x35 based on paths
-      qrGroup.setAttribute("transform", `translate(${(canvasW - qrSize)/2}, 16) scale(${qrSize/35})`);
-
-      newSvg.appendChild(textAsset);
-      newSvg.appendChild(qrGroup);
-
-      const blob = new Blob([new XMLSerializer().serializeToString(newSvg)], { type: "image/svg+xml" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `Label-${assetId}.svg`;
-      a.click();
-    };
-
-  } catch (err) { assetEl.textContent = "Error"; }
-});
-
-window.goBack = () => {
-    const params = new URLSearchParams(location.search);
-    const itemId = params.get("id");
-    if (itemId) window.location.href = `item.html?id=${itemId}`;
-    else history.back();
-};
-</script>
+        /* --- PRINT LOGIC --- */
+        @media print {
+            @page { size: 2in 1in; margin: 0; }
+            body * { visibility: hidden; }
+            #labelContainer, #labelContainer * { visibility: visible; }
+            #labelContainer {
+                position: fixed; left: 0; top: 0;
+                width: 2in !important; height: 1in !important;
+                margin: 0 !important; padding: 0 !important;
+                display: flex !important; flex-direction: column !important;
+                align-items: center !important; justify-content: center !important;
+                border: none !important;
+            }
+            #assetId { 
+                font-size: 10pt !important; 
+                margin-bottom: 2px !important; 
+                font-weight: bold !important;
+            }
+            #qrBox canvas { 
+                width: 0.75in !important; height: 0.75in !important; 
+            }
+        }
+    </style>
 </head>
 <body>
 
 <div class="page-container">
-  <div id="labelContainer" class="label-preview-box">
-    <div id="assetId"></div>
-    <div id="qrBox"></div>
-  </div>
-
-  <div class="controls-card">
-    <div class="btn-group">
-      <button onclick="window.print()" class="btn-success">🖨️ Print Label (2x1")</button>
-      <button id="btnDownload" class="btn-primary">⬇️ Download SVG</button>
-      <button onclick="goBack()" class="btn-ghost">⬅ Back to Device</button>
+    <div id="labelContainer" class="label-preview-box">
+        <div id="assetId"></div>
+        <div id="qrBox"></div>
     </div>
-  </div>
+
+    <div class="controls-card">
+        <div class="btn-group">
+            <button onclick="window.print()" class="btn-success">🖨️ Print Label (2x1")</button>
+            <button id="btnDownload" class="btn-primary">⬇️ Download PNG</button>
+            <button onclick="goBack()" class="btn-ghost">⬅ Back to Device</button>
+        </div>
+    </div>
 </div>
+
+<script type="module">
+    import QRCode from 'https://cdn.skypack.dev/qrcode';
+    import { db } from "./firebase.js";
+    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const assetEl = document.getElementById("assetId");
+    const qrBox = document.getElementById("qrBox");
+
+    document.addEventListener("DOMContentLoaded", async () => {
+        const params = new URLSearchParams(location.search);
+        const itemId = params.get("id");
+
+        if (!itemId) { assetEl.textContent = "ID Missing"; return; }
+
+        try {
+            const snap = await getDoc(doc(db, "items", itemId));
+            if (!snap.exists()) { assetEl.textContent = "Not Found"; return; }
+
+            const d = snap.data();
+            const assetId = d.assetId || "No ID";
+            assetEl.innerHTML = `<strong>Asset ID: ${assetId}</strong>`;
+
+            const url = `${window.location.origin}/item.html?id=${itemId}`;
+            
+            // Generate QR Code as Canvas for display and PNG export
+            QRCode.toCanvas(url, { 
+                width: 300, 
+                margin: 2, 
+                errorCorrectionLevel: 'H' 
+            }, (err, canvas) => {
+                if (err) throw err;
+                qrBox.innerHTML = '';
+                qrBox.appendChild(canvas);
+                
+                // PNG Download Logic
+                document.getElementById("btnDownload").onclick = () => {
+                    const downloadCanvas = document.createElement("canvas");
+                    const ctx = downloadCanvas.getContext("2d");
+                    
+                    // High-res label canvas (2:1 ratio)
+                    downloadCanvas.width = 600;
+                    downloadCanvas.height = 300;
+                    
+                    // Background
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
+                    
+                    // Draw Text (Centered)
+                    ctx.fillStyle = "black";
+                    ctx.font = "bold 28px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.fillText(`Asset ID: ${assetId}`, 300, 50);
+                    
+                    // Draw QR Code (Centered)
+                    const qrSize = 200;
+                    const xPos = (downloadCanvas.width - qrSize) / 2;
+                    const yPos = 70;
+                    ctx.drawImage(canvas, xPos, yPos, qrSize, qrSize);
+                    
+                    // Trigger Download
+                    const link = document.createElement('a');
+                    link.download = `Label-${assetId}.png`;
+                    link.href = downloadCanvas.toDataURL("image/png");
+                    link.click();
+                };
+            });
+
+        } catch (err) {
+            console.error(err);
+            assetEl.textContent = "Error loading data";
+        }
+    });
+
+    window.goBack = () => {
+        const params = new URLSearchParams(location.search);
+        const itemId = params.get("id");
+        if (itemId) window.location.href = `item.html?id=${itemId}`;
+        else history.back();
+    };
+</script>
 
 </body>
 </html>
