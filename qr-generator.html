@@ -12,12 +12,12 @@
         }
         .page-container { width: 100%; max-width: 420px; padding: 10px; text-align: center; }
 
-        /* The Label Preview (Large on Screen) */
+        /* Larger Preview on Screen */
         .label-preview-box {
             background: white; margin: 0 auto 20px;
             border-radius: 8px; border: 1px solid #cbd5e1;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            width: 3.2in; height: 1.8in; /* Bigger on web for visibility */
+            width: 3.5in; height: 2in; 
             padding: 15px;
             box-sizing: border-box;
             box-shadow: 0 4px 20px rgba(0,0,0,0.08);
@@ -25,13 +25,13 @@
 
         #assetId { 
             margin: 0 0 10px 0; color: #000; font-weight: 800; 
-            font-size: 1.2rem; width: 100%; text-align: center;
+            font-size: 1.3rem; width: 100%; text-align: center;
         }
 
         #qrBox { width: 100%; display: flex; justify-content: center; }
-        #qrBox canvas { height: auto !important; width: 1.2in !important; display: block; } 
+        #qrBox canvas { height: auto !important; width: 1.4in !important; display: block; } 
 
-        /* Buttons Section */
+        /* Buttons */
         .controls-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; }
         .btn-group { display: flex; flex-direction: column; gap: 10px; }
         button { 
@@ -51,7 +51,7 @@
             #labelContainer {
                 position: fixed; left: 0; top: 0;
                 width: 2in !important; height: 1in !important;
-                max-height: 1in !important; /* Forces one page */
+                max-height: 1in !important; 
                 margin: 0 !important; padding: 0 !important;
                 display: flex !important; flex-direction: column !important;
                 align-items: center !important; justify-content: center !important;
@@ -110,9 +110,9 @@
 
             const url = `${window.location.origin}/item.html?id=${itemId}`;
             
-            // Generate QR Code with high resolution internal canvas
+            // Base canvas with high internal resolution
             QRCode.toCanvas(url, { 
-                width: 600, // Higher res for the base canvas
+                width: 800, 
                 margin: 2, 
                 errorCorrectionLevel: 'H' 
             }, (err, canvas) => {
@@ -120,36 +120,31 @@
                 qrBox.innerHTML = '';
                 qrBox.appendChild(canvas);
                 
-                // HIGH QUALITY PNG DOWNLOAD LOGIC
+                // HIGH QUALITY PNG LOGIC
                 document.getElementById("btnDownload").onclick = () => {
                     const downloadCanvas = document.createElement("canvas");
                     const ctx = downloadCanvas.getContext("2d", { alpha: false });
                     
-                    // Ultra High-res label canvas (4x scaling for crisp printing)
-                    downloadCanvas.width = 1200;
-                    downloadCanvas.height = 600;
+                    // 2400x1200 for maximum print sharpness
+                    downloadCanvas.width = 2400;
+                    downloadCanvas.height = 1200;
                     
-                    // Enable high quality scaling
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                     
-                    // White Background
                     ctx.fillStyle = "white";
                     ctx.fillRect(0, 0, downloadCanvas.width, downloadCanvas.height);
                     
-                    // Draw Text (Crisp & Centered)
                     ctx.fillStyle = "black";
-                    ctx.font = "bold 60px sans-serif";
+                    ctx.font = "bold 120px sans-serif";
                     ctx.textAlign = "center";
-                    ctx.fillText(`Asset ID: ${assetId}`, 600, 110);
+                    ctx.fillText(`Asset ID: ${assetId}`, 1200, 220);
                     
-                    // Draw QR Code (Centered)
-                    const qrSize = 400;
+                    const qrSize = 800;
                     const xPos = (downloadCanvas.width - qrSize) / 2;
-                    const yPos = 160;
+                    const yPos = 320;
                     ctx.drawImage(canvas, xPos, yPos, qrSize, qrSize);
                     
-                    // Trigger Download
                     const link = document.createElement('a');
                     link.download = `Label-${assetId}.png`;
                     link.href = downloadCanvas.toDataURL("image/png", 1.0);
@@ -163,6 +158,7 @@
         }
     });
 
+    // Updated to go back to item details
     window.goBack = () => {
         const params = new URLSearchParams(location.search);
         const itemId = params.get("id");
@@ -170,6 +166,5 @@
         else history.back();
     };
 </script>
-
 </body>
 </html>
