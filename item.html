@@ -182,8 +182,9 @@ watchAuth({
         }
 
         try {
-            // Setup Links
-            qrLink.href = `print-qr.html?id=${encodeURIComponent(itemId)}`;
+            // UPDATED: Changed print-qr.html to qr-generator.html
+            qrLink.href = `qr-generator.html?id=${encodeURIComponent(itemId)}`;
+            
             if (role === "viewer") {
                 editLink.style.display = "none";
             } else {
@@ -204,11 +205,9 @@ watchAuth({
 
             const d = snap.data();
 
-            // Populate Header
             titleEl.textContent = d.deviceName || d.assetId || "Unnamed Device";
             subtitleEl.textContent = d.assetType || "Hardware Item";
 
-            // Populate Fields
             field("f_assetId").textContent = show(d.assetId);
             field("f_deviceName").textContent = show(d.deviceName);
             field("f_assetType").textContent = show(d.assetType);
