@@ -6,30 +6,82 @@
     <style>
         :root { --bg: #0f172a; --border: #e5e7eb; --blue: #1a73e8; }
         body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fb; margin: 0; color: #1e293b; }
-        .content { padding: 30px; max-width: 1100px; margin: 0 auto; }
+        .content { padding: 30px; max-width: 1150px; margin: 0 auto; }
+        
+        .filter-bar { 
+            display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; 
+            background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border);
+            align-items: flex-end;
+        }
+        .filter-group { display: flex; flex-direction: column; gap: 4px; }
+        .filter-group label { font-size: 0.75rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+        input, select { 
+            padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); 
+            font-size: 0.9rem; outline-color: var(--blue);
+        }
+        .search-input { min-width: 250px; flex-grow: 1; }
+
         .card { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
         table { width: 100%; border-collapse: collapse; }
         th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
         th { background: #f8fafc; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.025em; }
+        tr:hover td { background: #fdfdfd; }
+
         .pill { padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .pill-update { background: #dbeafe; color: #1e40af; }
         .pill-create { background: #dcfce7; color: #166534; }
         .pill-delete { background: #fee2e2; color: #991b1b; }
         .pill-login { background: #fef9c3; color: #854d0e; }
-        code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-weight: 600; }
+        
+        .btn {
+            padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); 
+            font-size: 0.85rem; cursor: pointer; font-weight: 500;
+            display: flex; align-items: center; gap: 6px; background: white;
+        }
+        .btn-primary { background: var(--blue); color: white; border: none; }
+        .btn:hover { opacity: 0.9; }
+
+        code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.8rem; }
         .error-box { background: #fff1f2; border: 1px solid #fda4af; color: #9f1239; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
 
     <div class="content">
-        <h1>System Audit Log</h1>
-        <p style="color: #64748b; margin-bottom: 25px;">History of all inventory and user actions. Updates automatically.</p>
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+                <h1 style="margin:0;">System Audit Log</h1>
+                <p style="color: #64748b; margin: 5px 0 0 0;">History of all inventory and user actions.</p>
+            </div>
+            <button id="downloadCsv" class="btn btn-primary">📥 Export CSV</button>
+        </div>
         
         <div id="errorBox" class="error-box"></div>
 
+        <div class="filter-bar">
+            <div class="filter-group search-input">
+                <label>Global Search</label>
+                <input type="text" id="searchInput" placeholder="Search Email, Item, ID, or Details...">
+            </div>
+            <div class="filter-group">
+                <label>Action</label>
+                <select id="actionFilter">
+                    <option value="all">All Actions</option>
+                    <option value="create">Create</option>
+                    <option value="update">Update</option>
+                    <option value="delete">Delete</option>
+                    <option value="login">Login</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" id="dateFilter">
+            </div>
+            <button id="resetFilters" class="btn">Reset</button>
+        </div>
+
         <div class="card">
-            <table>
+            <table id="auditTable">
                 <thead>
                     <tr>
                         <th style="width: 180px;">Date & Time</th>
@@ -52,41 +104,106 @@
 
         const tbody = document.getElementById("auditTableBody");
         const errorBox = document.getElementById("errorBox");
+        const searchInput = document.getElementById("searchInput");
+        const actionFilter = document.getElementById("actionFilter");
+        const dateFilter = document.getElementById("dateFilter");
+        const resetBtn = document.getElementById("resetFilters");
+        const downloadBtn = document.getElementById("downloadCsv");
+
+        let allLogs = []; 
+        let currentFiltered = []; // Track what's currently on screen for the CSV
 
         watchAuth({
             allowedRoles: ["admin", "it"],
             onReady: () => {
-                // IMPORTANT: This query needs a manual index in Firebase Console
-                const q = query(collection(db, "audits"), orderBy("timestamp", "desc"), limit(50));
+                const q = query(collection(db, "audits"), orderBy("timestamp", "desc"), limit(200));
                 
                 onSnapshot(q, (snap) => {
                     errorBox.style.display = "none";
                     if (snap.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">No logs found yet. Try logging out and back in to generate a log.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">No logs found.</td></tr>';
                         return;
                     }
                     
-                    tbody.innerHTML = snap.docs.map(doc => {
-                        const d = doc.data();
-                        const date = d.timestamp ? d.timestamp.toDate().toLocaleString() : '<span style="color:#cbd5e1">Syncing...</span>';
-                        const action = d.action || 'other';
-                        return `
-                            <tr>
-                                <td style="color: #64748b">${date}</td>
-                                <td><strong>${d.userEmail || 'System'}</strong></td>
-                                <td><span class="pill pill-${action}">${action}</span></td>
-                                <td><code>${d.targetId || '—'}</code></td>
-                                <td style="color: #475569">${d.details || ''}</td>
-                            </tr>
-                        `;
-                    }).join('');
+                    allLogs = snap.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        dateStr: doc.data().timestamp ? doc.data().timestamp.toDate().toLocaleDateString('en-CA') : '',
+                        displayDate: doc.data().timestamp ? doc.data().timestamp.toDate().toLocaleString() : 'Syncing...'
+                    }));
+
+                    renderTable();
                 }, (err) => {
-                    console.error("Firestore Error:", err);
                     errorBox.style.display = "block";
-                    errorBox.innerHTML = `<strong>Data Load Error:</strong> ${err.message}<br><br><em>Note: If this says "Index Missing," check your Browser Console (F12) for the auto-generate link.</em>`;
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #ef4444;">Failed to load logs.</td></tr>';
+                    errorBox.innerHTML = `<strong>Data Load Error:</strong> ${err.message}`;
                 });
             }
+        });
+
+        function renderTable() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const actionTerm = actionFilter.value;
+            const dateTerm = dateFilter.value;
+
+            currentFiltered = allLogs.filter(l => {
+                const matchesSearch = (
+                    (l.userEmail || '').toLowerCase().includes(searchTerm) ||
+                    (l.targetId || '').toLowerCase().includes(searchTerm) ||
+                    (l.details || '').toLowerCase().includes(searchTerm)
+                );
+                const matchesAction = actionTerm === "all" || l.action === actionTerm;
+                const matchesDate = !dateTerm || l.dateStr === dateTerm;
+                return matchesSearch && matchesAction && matchesDate;
+            });
+
+            if (currentFiltered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">No matching logs.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = currentFiltered.map(d => `
+                <tr>
+                    <td style="color: #64748b">${d.displayDate}</td>
+                    <td><strong>${d.userEmail || 'System'}</strong></td>
+                    <td><span class="pill pill-${d.action || 'other'}">${d.action || 'other'}</span></td>
+                    <td><code>${d.targetId || '—'}</code></td>
+                    <td style="color: #475569">${d.details || ''}</td>
+                </tr>
+            `).join('');
+        }
+
+        // CSV Export Logic
+        downloadBtn.addEventListener("click", () => {
+            if (currentFiltered.length === 0) return alert("No data to export");
+
+            const headers = ["Date_Time", "User", "Action", "Target_ID", "Details"];
+            const rows = currentFiltered.map(l => [
+                l.displayDate,
+                l.userEmail || "System",
+                l.action || "other",
+                l.targetId || "",
+                `"${(l.details || "").replace(/"/g, '""')}"` // Escape quotes for CSV
+            ]);
+
+            const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute("href", url);
+            link.setAttribute("download", `OCSI_Audit_Log_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        searchInput.addEventListener("input", renderTable);
+        actionFilter.addEventListener("change", renderTable);
+        dateFilter.addEventListener("change", renderTable);
+        resetBtn.addEventListener("click", () => {
+            searchInput.value = ""; actionFilter.value = "all"; dateFilter.value = "";
+            renderTable();
         });
     </script>
 </body>
