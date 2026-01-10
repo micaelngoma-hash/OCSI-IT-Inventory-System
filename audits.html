@@ -1,269 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>OCSI IT Inventory – Audits</title>
-<style>
-  :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-    --good:#22c55e;--warn:#f97316;--bad:#ef4444;
-  }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb;}
-
-  .topbar{
-    position:sticky;top:0;z-index:20;
-    background:var(--bg);color:white;
-    padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;
-  }
-
-  .layout{
-    display:grid;
-    grid-template-columns:240px 1fr;
-    min-height:calc(100vh - 52px);
-  }
-
-  .sidebar{ background:var(--bg2);color:white;padding:14px; }
-  .nav a{
-    display:flex;align-items:center;gap:8px;
-    padding:9px 11px;border-radius:9px;
-    color:#dbe4ff;text-decoration:none;margin-bottom:6px;
-    font-size:0.92rem;
-  }
-  .nav a:hover,.nav a.active{background:#111a33;}
-  .nav .icon{width:18px;text-align:center;opacity:.8;}
-
-  .content{ padding:18px; max-width:1200px; margin:0 auto; width:100%; }
-  h1{margin:0 0 4px;font-size:1.4rem;}
-  .subtitle{margin:0 0 14px;font-size:.9rem;color:#94a3b8;}
-
-  .toolbar{
-    display:flex; justify-content:space-between; align-items:center;
-    gap:10px; flex-wrap:wrap; margin-bottom:10px;
-  }
-  .search-box{
-    display:flex;align-items:center;gap:6px;
-    background:white;border:1px solid var(--border);
-    border-radius:999px;padding:4px 10px;
-    max-width:320px;width:100%;
-  }
-  .search-box input{ border:none;outline:none;font-size:.88rem;width:100%; }
-
-  .filters{ display:flex; gap:8px; flex-wrap:wrap; }
-  select{ padding:6px 8px;border-radius:999px; border:1px solid var(--border); font-size:.85rem; background:white; }
-
-  .card{ background:white;border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
-  .muted{font-size:.82rem;color:#94a3b8;margin-bottom:10px;}
-
-  .table-wrap{ background:white;border:1px solid var(--border); border-radius:12px; overflow:auto; }
-  table{ border-collapse:collapse; width:100%; min-width:900px; }
-  th,td{ padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:.85rem; text-align:left; }
-  th{ background:#f8fafc; font-weight:600; color:#475569; position:sticky; top:0; z-index:5; }
-
-  .pill{ display:inline-flex; padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight: 600; text-transform: uppercase; }
-  .pill-blue{background:#dbeafe;color:#1d4ed8;}
-  .pill-green{background:#dcfce7;color:#166534;}
-  .pill-red{background:#fee2e2;color:#b91c1c;}
-  .pill-orange{background:#ffedd5;color:#9a3412;}
-  .pill-gray{background:#e5e7eb;color:#374151;}
-
-  .status-bar{ font-size:.82rem; margin-top:4px; min-height:18px; color:#6b7280; font-style: italic; }
-</style>
+    <meta charset="UTF-8">
+    <title>Audit Logs – OCSI IT Inventory</title>
+    <style>
+        :root { --bg: #0f172a; --border: #e5e7eb; }
+        body { font-family: system-ui; background: #f5f7fb; margin: 0; }
+        .content { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+        th { background: #f8fafc; color: #64748b; }
+        .pill { padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .pill-update { background: #dbeafe; color: #1e40af; }
+        .pill-create { background: #dcfce7; color: #166534; }
+        .pill-delete { background: #fee2e2; color: #991b1b; }
+    </style>
 </head>
 <body>
-
-<div class="topbar">
-  <div><strong>OCSI IT Inventory</strong> – Audits</div>
-  <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
-</div>
-
-<div class="layout">
-  <aside class="sidebar">
-    <nav class="nav">
-      <a href="index.html"><span class="icon">📊</span><span>Main Dashboard</span></a>
-      <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
-      <a href="inventory-list.html"><span class="icon">💻</span><span>Hardware</span></a>
-      <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
-      <a class="active" href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
-      <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
-    </nav>
-  </aside>
-
-  <main class="content">
-    <h1>Audit Log</h1>
-    <p class="subtitle">Real-time history of system actions and inventory changes.</p>
-
-    <section class="card">
-      <div class="toolbar">
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search user, target, details…"/>
+    <div class="content">
+        <h1>System Audit Log</h1>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>User</th>
+                        <th>Action</th>
+                        <th>Asset ID</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody id="auditTableBody">
+                    <tr><td colspan="5">Loading real-time logs...</td></tr>
+                </tbody>
+            </table>
         </div>
-        <div class="filters">
-          <select id="actionFilter">
-            <option value="">All actions</option>
-            <option value="create">Created</option>
-            <option value="update">Updated</option>
-            <option value="delete">Deleted</option>
-            <option value="user-invite">User Invite</option>
-            <option value="role-change">Role Change</option>
-            <option value="login">Login</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-      </div>
+    </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:180px;">Timestamp</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Target</th>
-              <th>Type</th>
-              <th>Details</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6" style="text-align:center; padding: 40px;">Establishing real-time connection…</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <script type="module">
+        import { db, watchAuth } from "./firebase.js";
+        import { collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-      <div class="status-bar" id="statusBar">Initializing...</div>
-    </section>
-  </main>
-</div>
+        const tbody = document.getElementById("auditTableBody");
 
-<script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import {
-    collection, query, orderBy, limit, onSnapshot
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-  const whoEl        = document.getElementById("who");
-  const tbody        = document.getElementById("tbody");
-  const statusBar    = document.getElementById("statusBar");
-  const searchEl     = document.getElementById("search");
-  const actionFilter = document.getElementById("actionFilter");
-
-  let allAudits = [];
-
-  watchAuth({
-    allowedRoles:["admin","it"],
-    whoEl,
-    onReady: () => {
-      initAuditListener();
-      searchEl.addEventListener("input", render);
-      actionFilter.addEventListener("change", render);
-    }
-  });
-
-  function initAuditListener() {
-    setStatus("Connecting to live audit stream...");
-    
-    // Set up real-time listener
-    const q = query(
-      collection(db, "audits"),
-      orderBy("timestamp", "desc"),
-      limit(150)
-    );
-
-    onSnapshot(q, (snap) => {
-      allAudits = [];
-      snap.forEach(ds => {
-        allAudits.push({ id: ds.id, ...ds.data() });
-      });
-
-      if (!allAudits.length) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No audit events found. Ensure your system is logging actions.</td></tr>`;
-        setStatus('Sync complete. No records found.');
-      } else {
-        render();
-        setStatus(`Live: Displaying last ${allAudits.length} events.`);
-      }
-    }, (err) => {
-      console.error("Live Sync Error:", err);
-      setStatus("Sync Error: Check your Firebase Security Rules or Indexing.");
-      tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:20px;">Permission Denied. Contact Admin.</td></tr>`;
-    });
-  }
-
-  function render() {
-    const term = (searchEl.value || "").toLowerCase();
-    const actionVal = actionFilter.value;
-
-    const filtered = allAudits.filter(ev => {
-      const action = (ev.action || "other").toLowerCase();
-      
-      if (actionVal && actionVal !== "other" && action !== actionVal) return false;
-      if (actionVal === "other" && ["create","update","delete","login","user-invite","role-change"].includes(action)) return false;
-
-      if (!term) return true;
-      const hay = [
-        ev.userEmail || "", 
-        ev.targetId || "", 
-        ev.targetType || "", 
-        ev.details || "", 
-        ev.action || ""
-      ].join(" ").toLowerCase();
-      return hay.includes(term);
-    });
-
-    if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No matches found for "${term}".</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = filtered.map(ev => {
-      const ts = formatDate(ev.timestamp);
-      const email = ev.userEmail || "System/Unknown";
-      const action = (ev.action || "other").toLowerCase();
-      
-      let pClass = "pill-gray";
-      if (action === "create") pClass = "pill-green";
-      else if (action === "update" || action === "login") pClass = "pill-blue";
-      else if (action === "delete") pClass = "pill-red";
-      else if (action.includes("invite") || action.includes("role")) pClass = "pill-orange";
-
-      return `
-        <tr>
-          <td style="white-space:nowrap;">${ts}</td>
-          <td><span style="font-weight:500;">${escapeHtml(email)}</span></td>
-          <td><span class="pill ${pClass}">${escapeHtml(action)}</span></td>
-          <td><code>${escapeHtml(ev.targetId || "—")}</code></td>
-          <td style="text-transform: capitalize;">${escapeHtml(ev.targetType || "—")}</td>
-          <td style="max-width:300px; font-size:0.8rem; color:#475569;">${escapeHtml(ev.details || "")}</td>
-        </tr>`;
-    }).join("");
-  }
-
-  function formatDate(val) {
-    if (!val) return `<span style="color:#94a3b8;">Processing...</span>`;
-    // Handle Firestore Timestamp vs JS Date
-    const d = val.toDate ? val.toDate() : new Date(val);
-    if (isNaN(d.getTime())) return "Invalid Date";
-    
-    return d.toLocaleString('en-GB', { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit',
-        second: '2-digit'
-    });
-  }
-
-  function setStatus(msg) { statusBar.textContent = msg; }
-
-  function escapeHtml(s) {
-    if(!s) return "";
-    return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
-  }
-</script>
+        watchAuth({
+            allowedRoles: ["admin", "it"],
+            onReady: () => {
+                const q = query(collection(db, "audits"), orderBy("timestamp", "desc"), limit(100));
+                
+                onSnapshot(q, (snap) => {
+                    if (snap.empty) {
+                        tbody.innerHTML = '<tr><td colspan="5">No logs found. Perform an action to see it here.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = snap.docs.map(doc => {
+                        const d = doc.data();
+                        const date = d.timestamp?.toDate().toLocaleString() || "Syncing...";
+                        const actionClass = `pill-${d.action}`;
+                        return `
+                            <tr>
+                                <td>${date}</td>
+                                <td>${d.userEmail}</td>
+                                <td><span class="pill ${actionClass}">${d.action}</span></td>
+                                <td><strong>${d.targetId || "—"}</strong></td>
+                                <td style="color:#64748b">${d.details || ""}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }, (err) => {
+                    console.error(err);
+                    tbody.innerHTML = '<tr><td colspan="5" style="color:red">Permission Denied or Index Missing.</td></tr>';
+                });
+            }
+        });
+    </script>
 </body>
 </html>
