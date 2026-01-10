@@ -5,92 +5,60 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Generate QR Code – OCSI IT Inventory</title>
 <style>
-/* --- UI STYLES (Screen Only) --- */
+/* --- UI STYLES (Screen) --- */
 body { 
-  font-family: system-ui, sans-serif; 
-  background: #f5f7fb; 
-  margin: 0; 
-  display: flex; 
-  align-items: center; 
-  justify-content: center; 
-  height: 100vh; 
-  overflow: hidden; 
+  font-family: system-ui, sans-serif; background: #f5f7fb; margin: 0; 
+  display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
 }
-.page-container { width: 100%; max-width: 400px; padding: 10px; text-align: center; }
+.page-container { width: 100%; max-width: 380px; padding: 10px; text-align: center; }
 
-/* The Label Preview on Screen */
+/* The Label Preview: Forced to look like a small sticker on screen */
 .label-preview-box {
-  background: white; 
-  padding: 15px; 
-  margin: 0 auto 20px;
-  border-radius: 12px; 
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  justify-content: center;
+  background: white; margin: 0 auto 20px;
+  border-radius: 4px; border: 1px solid #cbd5e1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 2.2in; height: 1.1in; /* Slightly larger than print for visibility */
 }
 
 #assetId { 
-  margin: 0 0 8px 0; 
-  color: #0f172a; 
-  font-weight: 800; 
-  font-size: 1.1rem;
+  margin: 0 0 2px 0; color: #000; font-weight: 800; 
+  font-size: 0.8rem; width: 100%; text-align: center;
 }
 
 #qrBox { width: 100%; display: flex; justify-content: center; }
-#qrBox svg { height: auto; display: block; width: 180px; } 
+#qrBox svg { height: auto; display: block; width: 0.7in; } 
 
-/* Buttons */
+/* Buttons Section */
 .controls-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e5e7eb; }
 .btn-group { display: flex; flex-direction: column; gap: 8px; }
 button { 
-  padding: 12px; border-radius: 999px; border: none; cursor: pointer; 
-  font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
+  padding: 10px; border-radius: 8px; border: none; cursor: pointer; 
+  font-size: .9rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
 }
 .btn-primary { background: #1a73e8; color: white; }
 .btn-success { background: #16a34a; color: white; }
 .btn-ghost { background: #f1f5f9; color: #334155; }
 
-/* --- CRITICAL PRINT LOGIC (Fixed for 1-Page) --- */
+/* --- CRITICAL PRINT LOGIC (Strict 1-Page Fix) --- */
 @media print {
-  /* Forces the printer to use exactly 2x1 inches */
-  @page { 
-    size: 2in 1in; 
-    margin: 0; 
-  }
-  
-  /* Hide everything except the labelContainer */
+  @page { size: 2in 1in; margin: 0; }
   body * { visibility: hidden; }
   #labelContainer, #labelContainer * { visibility: visible; }
-  
-  /* Position the label container at the top-left of the print area */
   #labelContainer {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 2in !important;
-    height: 1in !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
+    position: fixed; left: 0; top: 0;
+    width: 2in !important; height: 1in !important;
+    margin: 0 !important; padding: 0 !important;
+    display: flex !important; flex-direction: column !important;
+    align-items: center !important; justify-content: center !important;
     border: none !important;
-    box-shadow: none !important;
   }
-
   #assetId { 
-    font-size: 10pt !important; 
-    margin-bottom: 2px !important; 
-    font-weight: bold !important;
+    font-size: 8pt !important; /* Smaller to fit QR width */
+    margin-bottom: 1px !important; 
+    width: 1.8in !important;
   }
-  
   #qrBox svg { 
-    max-width: 0.7in !important; 
-    max-height: 0.7in !important; 
+    width: 0.65in !important; height: 0.65in !important; 
   }
 }
 </style>
@@ -118,25 +86,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const url = window.location.origin + window.location.pathname.replace('qr-generator.html', 'item.html') + '?id=' + itemId;
     
-    const svgString = await QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'H' });
+    // QR Generation with small margin to save space
+    const svgString = await QRCode.toString(url, { 
+      type: 'svg', 
+      margin: 1, 
+      errorCorrectionLevel: 'M', // Lower correction = simpler/smaller QR patterns
+      width: 100 
+    });
     qrBox.innerHTML = svgString;
 
-    // SVG Download
+    // SVG Download Logic (Compact SVG with Text)
     document.getElementById("btnDownload").onclick = () => {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
       const svgEl = svgDoc.documentElement;
-      svgEl.setAttribute("viewBox", `0 -12 40 52`);
+      
+      // Resize Viewbox to fit text on top
+      svgEl.setAttribute("viewBox", `0 -15 35 50`);
       const textAsset = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textAsset.setAttribute("x", "20");
-      textAsset.setAttribute("y", "-4");
+      textAsset.setAttribute("x", "17.5");
+      textAsset.setAttribute("y", "-5");
       textAsset.setAttribute("text-anchor", "middle");
-      textAsset.setAttribute("style", "font-family:sans-serif; font-size:4.5px; font-weight:bold;");
+      textAsset.setAttribute("style", "font-family:sans-serif; font-size:3.5px; font-weight:bold; fill:black;");
       textAsset.textContent = `Asset ID: ${assetId}`;
       svgEl.appendChild(textAsset);
+
       const blob = new Blob([new XMLSerializer().serializeToString(svgEl)], { type: "image/svg+xml" });
-      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `Label-${assetId}.svg`; a.click();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `Label-${assetId}.svg`;
+      a.click();
     };
+
   } catch (err) { assetEl.textContent = "Error"; }
 });
 
@@ -151,8 +132,6 @@ window.goBack = () => {
 <body>
 
 <div class="page-container">
-  <h2 style="margin-bottom:10px; font-size:1.1rem;">QR Label Generator</h2>
-
   <div id="labelContainer" class="label-preview-box">
     <div id="assetId"></div>
     <div id="qrBox"></div>
