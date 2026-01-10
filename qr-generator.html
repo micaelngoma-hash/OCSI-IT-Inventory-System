@@ -10,36 +10,36 @@ body {
   font-family: system-ui, sans-serif; background: #f5f7fb; margin: 0; 
   display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; 
 }
-.page-container { width: 100%; max-width: 380px; padding: 10px; text-align: center; }
+.page-container { width: 100%; max-width: 400px; padding: 10px; text-align: center; }
 
-/* The Label Preview: Forced to look like a small sticker on screen */
+/* The Label Preview (2x1 ratio) */
 .label-preview-box {
   background: white; margin: 0 auto 20px;
   border-radius: 4px; border: 1px solid #cbd5e1;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  width: 2.2in; height: 1.1in; /* Slightly larger than print for visibility */
+  width: 2.5in; height: 1.25in; /* Sized for visibility on screen */
 }
 
 #assetId { 
-  margin: 0 0 2px 0; color: #000; font-weight: 800; 
-  font-size: 0.8rem; width: 100%; text-align: center;
+  margin: 0 0 5px 0; color: #000; font-weight: 800; 
+  font-size: 0.9rem; width: 100%; text-align: center;
 }
 
 #qrBox { width: 100%; display: flex; justify-content: center; }
-#qrBox svg { height: auto; display: block; width: 0.7in; } 
+#qrBox svg { height: auto; display: block; width: 0.85in; } /* Increased from 0.7in */
 
-/* Buttons Section */
-.controls-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e5e7eb; }
-.btn-group { display: flex; flex-direction: column; gap: 8px; }
+/* Buttons */
+.controls-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.btn-group { display: flex; flex-direction: column; gap: 10px; }
 button { 
-  padding: 10px; border-radius: 8px; border: none; cursor: pointer; 
-  font-size: .9rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
+  padding: 12px; border-radius: 8px; border: none; cursor: pointer; 
+  font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
 }
 .btn-primary { background: #1a73e8; color: white; }
 .btn-success { background: #16a34a; color: white; }
 .btn-ghost { background: #f1f5f9; color: #334155; }
 
-/* --- CRITICAL PRINT LOGIC (Strict 1-Page Fix) --- */
+/* --- PRINT LOGIC --- */
 @media print {
   @page { size: 2in 1in; margin: 0; }
   body * { visibility: hidden; }
@@ -53,12 +53,12 @@ button {
     border: none !important;
   }
   #assetId { 
-    font-size: 8pt !important; /* Smaller to fit QR width */
-    margin-bottom: 1px !important; 
-    width: 1.8in !important;
+    font-size: 10pt !important; 
+    margin-bottom: 2px !important; 
+    font-weight: bold !important;
   }
   #qrBox svg { 
-    width: 0.65in !important; height: 0.65in !important; 
+    width: 0.75in !important; height: 0.75in !important; /* Maximized for 1in height */
   }
 }
 </style>
@@ -86,32 +86,54 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const url = window.location.origin + window.location.pathname.replace('qr-generator.html', 'item.html') + '?id=' + itemId;
     
-    // QR Generation with small margin to save space
     const svgString = await QRCode.toString(url, { 
       type: 'svg', 
       margin: 1, 
-      errorCorrectionLevel: 'M', // Lower correction = simpler/smaller QR patterns
-      width: 100 
+      errorCorrectionLevel: 'M',
+      width: 150 
     });
     qrBox.innerHTML = svgString;
 
-    // SVG Download Logic (Compact SVG with Text)
+    // CENTERED SVG DOWNLOAD LOGIC
     document.getElementById("btnDownload").onclick = () => {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
       const svgEl = svgDoc.documentElement;
       
-      // Resize Viewbox to fit text on top
-      svgEl.setAttribute("viewBox", `0 -15 35 50`);
-      const textAsset = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textAsset.setAttribute("x", "17.5");
-      textAsset.setAttribute("y", "-5");
-      textAsset.setAttribute("text-anchor", "middle");
-      textAsset.setAttribute("style", "font-family:sans-serif; font-size:3.5px; font-weight:bold; fill:black;");
-      textAsset.textContent = `Asset ID: ${assetId}`;
-      svgEl.appendChild(textAsset);
+      // Define a fixed canvas size for the label (e.g., 100x50 units)
+      const canvasW = 100;
+      const canvasH = 50;
+      const qrSize = 35;
+      
+      // Reconstruct the SVG to be perfectly centered
+      const newSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      newSvg.setAttribute("viewBox", `0 0 ${canvasW} ${canvasH}`);
+      newSvg.setAttribute("width", "200");
+      newSvg.setAttribute("height", "100");
+      newSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
 
-      const blob = new Blob([new XMLSerializer().serializeToString(svgEl)], { type: "image/svg+xml" });
+      // Add Text (Centered)
+      const textAsset = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      textAsset.setAttribute("x", "50%");
+      textAsset.setAttribute("y", "12");
+      textAsset.setAttribute("text-anchor", "middle");
+      textAsset.setAttribute("style", "font-family:sans-serif; font-size:6px; font-weight:bold; fill:black;");
+      textAsset.textContent = `Asset ID: ${assetId}`;
+      
+      // Add QR Code (Centered)
+      // We wrap the original QR paths in a group and scale/move it
+      const qrGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      const originalPaths = svgEl.innerHTML;
+      qrGroup.innerHTML = originalPaths;
+      
+      // Position the QR group
+      // Assuming original QR svg was roughly 35x35 based on paths
+      qrGroup.setAttribute("transform", `translate(${(canvasW - qrSize)/2}, 16) scale(${qrSize/35})`);
+
+      newSvg.appendChild(textAsset);
+      newSvg.appendChild(qrGroup);
+
+      const blob = new Blob([new XMLSerializer().serializeToString(newSvg)], { type: "image/svg+xml" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = `Label-${assetId}.svg`;
