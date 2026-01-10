@@ -62,14 +62,14 @@
   th,td{ padding:8px 10px; border-bottom:1px solid #f1f5f9; font-size:.85rem; text-align:left; }
   th{ background:#f8fafc; font-weight:600; color:#475569; position:sticky; top:0; z-index:5; }
 
-  .pill{ display:inline-flex; padding:2px 8px; border-radius:999px; font-size:.75rem; }
+  .pill{ display:inline-flex; padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight: 600; text-transform: uppercase; }
   .pill-blue{background:#dbeafe;color:#1d4ed8;}
   .pill-green{background:#dcfce7;color:#166534;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
   .pill-orange{background:#ffedd5;color:#9a3412;}
   .pill-gray{background:#e5e7eb;color:#374151;}
 
-  .status-bar{ font-size:.82rem; margin-top:4px; min-height:18px; color:#6b7280; }
+  .status-bar{ font-size:.82rem; margin-top:4px; min-height:18px; color:#6b7280; font-style: italic; }
 </style>
 </head>
 <body>
@@ -94,7 +94,7 @@
 
   <main class="content">
     <h1>Audit Log</h1>
-    <p class="subtitle">History of system actions. Updates automatically in real-time.</p>
+    <p class="subtitle">Real-time history of system actions and inventory changes.</p>
 
     <section class="card">
       <div class="toolbar">
@@ -120,21 +120,21 @@
         <table>
           <thead>
             <tr>
-              <th style="width:160px;">Timestamp</th>
+              <th style="width:180px;">Timestamp</th>
               <th>User</th>
               <th>Action</th>
               <th>Target</th>
-              <th>Target Type</th>
+              <th>Type</th>
               <th>Details</th>
             </tr>
           </thead>
           <tbody id="tbody">
-            <tr><td colspan="6">Establishing real-time connection…</td></tr>
+            <tr><td colspan="6" style="text-align:center; padding: 40px;">Establishing real-time connection…</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="status-bar" id="statusBar"></div>
+      <div class="status-bar" id="statusBar">Initializing...</div>
     </section>
   </main>
 </div>
@@ -157,7 +157,6 @@
     allowedRoles:["admin","it"],
     whoEl,
     onReady: () => {
-      // Initialize the real-time listener
       initAuditListener();
       searchEl.addEventListener("input", render);
       actionFilter.addEventListener("change", render);
@@ -167,14 +166,13 @@
   function initAuditListener() {
     setStatus("Connecting to live audit stream...");
     
-    // Set up a real-time listener (onSnapshot)
+    // Set up real-time listener
     const q = query(
       collection(db, "audits"),
       orderBy("timestamp", "desc"),
       limit(150)
     );
 
-    // This function triggers every time the 'audits' collection changes
     onSnapshot(q, (snap) => {
       allAudits = [];
       snap.forEach(ds => {
@@ -182,15 +180,16 @@
       });
 
       if (!allAudits.length) {
-        tbody.innerHTML = `<tr><td colspan="6">No audit events found.</td></tr>`;
-        setStatus('Ready. No logs found in "audits" yet.');
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No audit events found. Ensure your system is logging actions.</td></tr>`;
+        setStatus('Sync complete. No records found.');
       } else {
         render();
-        setStatus(`Live: Showing latest ${allAudits.length} events.`);
+        setStatus(`Live: Displaying last ${allAudits.length} events.`);
       }
     }, (err) => {
       console.error("Live Sync Error:", err);
-      setStatus("Error: Connection lost. Check permissions.");
+      setStatus("Sync Error: Check your Firebase Security Rules or Indexing.");
+      tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center; padding:20px;">Permission Denied. Contact Admin.</td></tr>`;
     });
   }
 
@@ -205,18 +204,24 @@
       if (actionVal === "other" && ["create","update","delete","login","user-invite","role-change"].includes(action)) return false;
 
       if (!term) return true;
-      const hay = [ev.userEmail, ev.targetId, ev.targetType, ev.details, ev.action].join(" ").toLowerCase();
+      const hay = [
+        ev.userEmail || "", 
+        ev.targetId || "", 
+        ev.targetType || "", 
+        ev.details || "", 
+        ev.action || ""
+      ].join(" ").toLowerCase();
       return hay.includes(term);
     });
 
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="6">No matches found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No matches found for "${term}".</td></tr>`;
       return;
     }
 
     tbody.innerHTML = filtered.map(ev => {
       const ts = formatDate(ev.timestamp);
-      const email = ev.userEmail || "System";
+      const email = ev.userEmail || "System/Unknown";
       const action = (ev.action || "other").toLowerCase();
       
       let pClass = "pill-gray";
@@ -227,20 +232,30 @@
 
       return `
         <tr>
-          <td>${escapeHtml(ts)}</td>
-          <td><strong>${escapeHtml(email)}</strong></td>
+          <td style="white-space:nowrap;">${ts}</td>
+          <td><span style="font-weight:500;">${escapeHtml(email)}</span></td>
           <td><span class="pill ${pClass}">${escapeHtml(action)}</span></td>
-          <td><code>${escapeHtml(ev.targetId || "")}</code></td>
-          <td>${escapeHtml(ev.targetType || "")}</td>
-          <td>${escapeHtml(ev.details || "")}</td>
+          <td><code>${escapeHtml(ev.targetId || "—")}</code></td>
+          <td style="text-transform: capitalize;">${escapeHtml(ev.targetType || "—")}</td>
+          <td style="max-width:300px; font-size:0.8rem; color:#475569;">${escapeHtml(ev.details || "")}</td>
         </tr>`;
     }).join("");
   }
 
   function formatDate(val) {
-    if (!val) return "";
+    if (!val) return `<span style="color:#94a3b8;">Processing...</span>`;
+    // Handle Firestore Timestamp vs JS Date
     const d = val.toDate ? val.toDate() : new Date(val);
-    return isNaN(d) ? "" : d.toLocaleString();
+    if (isNaN(d.getTime())) return "Invalid Date";
+    
+    return d.toLocaleString('en-GB', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit',
+        second: '2-digit'
+    });
   }
 
   function setStatus(msg) { statusBar.textContent = msg; }
