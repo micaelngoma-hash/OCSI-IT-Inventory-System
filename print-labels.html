@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Print QR Labels – OCSI IT Inventory</title>
+    <title>Bulk Print QR Labels – OCSI IT Inventory</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -10,27 +10,70 @@
 
     <style>
         body { font-family: system-ui, sans-serif; background: #f5f7fb; margin: 0; padding: 20px; }
-        h1 { margin-top: 0; font-size: 2rem; }
+        h1 { margin-top: 0; font-size: 1.8rem; color: #0f172a; }
+        
         .top-controls {
-            background: white; padding: 14px 18px; border-radius: 12px;
+            background: white; padding: 16px; border-radius: 12px;
             border: 1px solid #e5e7eb; margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        
         .layout-option {
             padding: 8px 16px; border-radius: 12px; border: 1px solid #cbd5e1;
             cursor: pointer; margin-right: 8px; background: white; font-size: .9rem;
+            font-weight: 600;
         }
         .layout-option.active { background: #1a73e8; color: white; border-color: #1a73e8; }
-        #labelsArea { display: grid; gap: 12px; justify-content: center; }
-        .label {
-            background: white; border: 1px solid #e5e7eb; padding: 12px;
-            text-align: center; border-radius: 8px; width: 100%;
-            box-sizing: border-box;
+        
+        #labelsArea { 
+            display: grid; 
+            gap: 15px; 
+            justify-content: center; 
+            background: white; 
+            padding: 20px;
+            border-radius: 8px;
         }
-        .label svg { width: 100% !important; height: auto !important; max-width: 150px; }
+
+        /* The Label Design */
+        .label {
+            background: white; 
+            border: 1px solid #cbd5e1; /* Visual cutting line */
+            padding: 10px;
+            text-align: center; 
+            border-radius: 4px; 
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .label-id {
+            font-size: 10pt;
+            font-weight: 800;
+            color: #000;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .qr-container {
+            padding: 2mm; /* 2mm safe zone for cutting */
+            display: inline-block;
+        }
+
+        .qr-container canvas {
+            display: block;
+            width: 100% !important;
+            height: auto !important;
+            max-width: 120px; /* Adjusted for bulk layout */
+        }
         
         @media print {
             body { background: white; padding: 0; margin: 0; }
-            .top-controls { display: none !important; }
+            .top-controls, h1 { display: none !important; }
+            #labelsArea { padding: 0; gap: 5px; }
+            .label { border: 1px solid #eee; } /* Light line for printer cutting */
         }
     </style>
 </head>
@@ -44,10 +87,10 @@
     <button id="btn12" class="layout-option active">12 per page (Medium)</button>
     <button id="btn24" class="layout-option">24 per page (Small)</button>
     <br><br>
-    <button onclick="window.print()" style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;margin-right:10px;">
+    <button onclick="window.print()" style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;margin-right:10px;font-weight:bold;">
         🖨 Print Labels
     </button>
-    <button id="btnPDF" style="padding:10px 22px;border-radius:999px;background:#16a34a;color:white;border:none;cursor:pointer;">
+    <button id="btnPDF" style="padding:10px 22px;border-radius:999px;background:#1a73e8;color:white;border:none;cursor:pointer;font-weight:bold;">
         📄 Download PDF
     </button>
 </div>
@@ -55,7 +98,6 @@
 <div id="labelsArea"></div>
 
 <script type="module">
-    // Modern Module Imports
     import QRCode from 'https://cdn.skypack.dev/qrcode';
     import { watchAuth, db } from "./firebase.js";
     import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -124,34 +166,34 @@
             const div = document.createElement("div");
             div.className = "label";
 
-            // The URL the QR code will point to
             const qrURL = `${window.location.origin}/item.html?id=${item.id}`;
+            const assetIdStr = item.assetId || "No ID";
+
+            // Create Asset ID Label
+            const idDiv = document.createElement("div");
+            idDiv.className = "label-id";
+            idDiv.textContent = assetIdStr;
+            div.appendChild(idDiv);
+
+            // Create QR Container
+            const qrContainer = document.createElement("div");
+            qrContainer.className = "qr-container";
+            div.appendChild(qrContainer);
 
             try {
-                // Generate SVG using the imported QRCode module
-                const svgString = await QRCode.toString(qrURL, {
-                    type: 'svg',
-                    margin: 2,
-                    errorCorrectionLevel: 'H',
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    }
+                // Generate Canvas QR (Higher Quality than SVG for PDF/Print)
+                await QRCode.toCanvas(qrURL, {
+                    width: 300,
+                    margin: 1,
+                    errorCorrectionLevel: 'H'
+                }, (err, canvas) => {
+                    if (err) throw err;
+                    qrContainer.appendChild(canvas);
                 });
-
-                div.innerHTML = `
-                    <div class="qr-container">${svgString}</div>
-                    <div style="font-size:.85rem; margin-top:8px; font-weight:700; color:#111;">
-                        ${item.assetId || "No ID"}
-                    </div>
-                    <div style="font-size:.7rem; color:#666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                        ${item.deviceName || "Unnamed Device"}
-                    </div>
-                `;
             } catch (qrErr) {
-                console.error("QR Error:", qrErr);
-                div.innerHTML = `<p style="font-size:10px;">Error generating QR</p>`;
+                qrContainer.innerHTML = `<p style="font-size:10px;">Error</p>`;
             }
+            
             labelsArea.appendChild(div);
         }
     }
@@ -159,7 +201,8 @@
     // PDF Generation
     btnPDF.onclick = async () => {
         const { jsPDF } = window.jspdf;
-        const canvas = await html2canvas(labelsArea, { scale: 2, useCORS: true });
+        // Increase scale to 3 for very crisp PDF prints
+        const canvas = await html2canvas(labelsArea, { scale: 3, useCORS: true });
         const imgData = canvas.toDataURL("image/png");
         
         const pdf = new jsPDF("p", "mm", "a4");
@@ -167,7 +210,7 @@
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save("Inventory-Labels.pdf");
+        pdf.save("Inventory-Labels-Bulk.pdf");
     };
 </script>
 
