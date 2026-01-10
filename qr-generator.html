@@ -5,46 +5,53 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Generate QR Code – OCSI IT Inventory</title>
 <style>
-/* --- UI STYLES (What stays on screen) --- */
+/* --- UI STYLES (Screen Only) --- */
 body { font-family: system-ui, sans-serif; background: #f5f7fb; padding: 20px; text-align: center; margin: 0; }
 .page-container { max-width: 600px; margin: 0 auto; }
 
-/* The Label Container: This mimics the physical sticker */
+/* The Preview Box: Displays the label on your screen */
 .label-preview-box {
   background: white; margin: 20px auto;
   border: 1px solid #e5e7eb; border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transition: all 0.3s ease; overflow: hidden;
+  transition: all 0.2s ease;
+  padding: 20px; /* Added padding so text doesn't touch edges on screen */
 }
 
-/* Specific Sizes for Screen Preview */
-.size-small { width: 3in; height: 1.5in; padding: 10px; }
-.size-large { width: 4in; height: 6in; padding: 20px; }
+/* Screen Preview Sizing */
+.size-small { min-width: 2.5in; min-height: 1.8in; }
+.size-large { width: 4in; height: 6in; }
 
-#assetId { margin: 0 0 5px 0; color: #0f172a; line-height: 1.2; }
+#assetId { 
+  margin: 0 0 10px 0; 
+  color: #0f172a; 
+  font-weight: bold; /* Ensures the whole line is bold */
+  font-size: 1.2rem;
+}
+
 #qrBox { width: 100%; display: flex; justify-content: center; }
-#qrBox svg { height: auto; display: block; }
+#qrBox svg { height: auto; display: block; width: 100%; max-width: 200px; }
 
-/* Controls Section (Hidden during print) */
-.controls-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e5e7eb; margin-top: 20px; }
-.size-selector { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; width: 100%; max-width: 300px; }
+/* Controls (Hidden when printing) */
+.controls-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e5e7eb; margin-top: 20px; }
+.size-selector { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; width: 100%; max-width: 320px; font-size: 1rem; }
 .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-button { 
-  padding: 12px 20px; border-radius: 999px; border: none; cursor: pointer; 
-  font-size: .9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; 
-}
+button { padding: 12px 20px; border-radius: 999px; border: none; cursor: pointer; font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
 .btn-primary { background: #1a73e8; color: white; }
 .btn-success { background: #16a34a; color: white; }
 .btn-ghost { background: #f1f5f9; color: #334155; }
 
-/* --- PRINT LOGIC --- */
+/* --- PRINT LOGIC (Strict physical dimensions) --- */
 @media print {
   body { background: white; padding: 0; margin: 0; }
   .controls-card, h1 { display: none !important; }
   .label-preview-box { 
     border: none !important; box-shadow: none !important; 
-    margin: 0 !important; width: 100% !important; height: 100% !important;
+    margin: 0 !important; padding: 0 !important;
+    width: 100% !important; height: 100% !important;
+    display: flex !important; flex-direction: column !important;
+    align-items: center !important; justify-content: center !important;
   }
 }
 </style>
@@ -63,17 +70,20 @@ const qrBox = document.getElementById("qrBox");
 function updateLayout() {
   const isSmall = sizeSelector.value === 'small';
   
-  // Set Screen Preview Class
+  // Set Screen Class
   labelContainer.className = isSmall ? 'label-preview-box size-small' : 'label-preview-box size-large';
   
-  // Set Printer Instructions
+  // Set Dynamic Print CSS (The physical sticker rules)
   printSetup.innerHTML = `
     @media print {
       @page { size: ${isSmall ? '2in 1in' : '4in 6in'}; margin: 0; }
-      #assetId { font-size: ${isSmall ? '11pt' : '22pt'} !important; font-weight: bold !important; margin-bottom: 4px !important; }
+      #assetId { 
+        font-size: ${isSmall ? '10pt' : '22pt'} !important; 
+        margin-bottom: ${isSmall ? '2px' : '15px'} !important;
+      }
       #qrBox svg { 
-        max-width: ${isSmall ? '0.7in' : '3.6in'} !important; 
-        max-height: ${isSmall ? '0.7in' : '3.6in'} !important; 
+        max-width: ${isSmall ? '0.65in' : '3.5in'} !important; 
+        max-height: ${isSmall ? '0.65in' : '3.5in'} !important; 
       }
     }
   `;
@@ -95,12 +105,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const d = snap.data();
     const assetId = d.assetId || "No ID";
 
-    // Bold Label and Bold ID Number
-    assetEl.innerHTML = `<strong>Asset ID: ${assetId}</strong>`;
+    // Entire text is bold
+    assetEl.innerHTML = `Asset ID: ${assetId}`;
 
+    // Link points back to the item page
     const url = window.location.origin + window.location.pathname.replace('qr-generator.html', 'item.html') + '?id=' + itemId;
     
-    // Generate QR with minimal internal margin to maximize size
     const svgString = await QRCode.toString(url, { 
         type: 'svg', 
         margin: 1, 
@@ -110,7 +120,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     updateLayout();
 
-    // SVG Download with Bold Text Injected
+    // SVG Download with Bold Text
     document.getElementById("btnDownload").onclick = () => {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
@@ -136,18 +146,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
   } catch (err) {
-    assetEl.textContent = "Error loading data";
+    assetEl.textContent = "Error";
   }
 });
 
-// Fix Back Button
+// Fixed Back Button behavior
 window.goBack = () => {
     const params = new URLSearchParams(location.search);
     const itemId = params.get("id");
     if (itemId) {
         window.location.href = `item.html?id=${itemId}`;
     } else {
-        window.location.href = 'index.html'; // Fallback
+        window.location.href = 'index.html';
     }
 };
 </script>
@@ -157,13 +167,13 @@ window.goBack = () => {
 <div class="page-container">
   <h1>Device QR Label</h1>
 
-  <div id="labelContainer" class="label-preview-box size-large">
-    <p id="assetId"></p>
+  <div id="labelContainer" class="label-preview-box">
+    <div id="assetId"></div>
     <div id="qrBox"></div>
   </div>
 
   <div class="controls-card">
-    <label style="display:block; font-weight:bold; margin-bottom:8px;">Select Printer Label Size:</label>
+    <label style="display:block; font-weight:bold; margin-bottom:10px; color:#64748b;">Select Printer Label Size:</label>
     <select id="labelSize" class="size-selector">
       <option value="large">Large (4x6 inch Shipping Label)</option>
       <option value="small">Small (2x1 inch Asset Label)</option>
