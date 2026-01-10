@@ -5,96 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Generate QR Code – OCSI IT Inventory</title>
 <style>
-/* --- UI STYLES (Screen Only) --- */
-body { font-family: system-ui, sans-serif; background: #f5f7fb; padding: 20px; text-align: center; margin: 0; }
-.page-container { max-width: 600px; margin: 0 auto; }
+/* --- UI STYLES (Screen) --- */
+body { 
+  font-family: system-ui, sans-serif; 
+  background: #f5f7fb; 
+  margin: 0; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  height: 100vh; /* Fits screen height exactly */
+  overflow: hidden; /* Prevents scrolling */
+}
+.page-container { width: 100%; max-width: 450px; padding: 10px; }
 
-/* The Preview Box: Displays the label on your screen */
+/* The Label Preview (Optimized for 2x1 ratio) */
 .label-preview-box {
-  background: white; margin: 20px auto;
-  border: 1px solid #e5e7eb; border-radius: 8px;
+  background: white; 
+  padding: 15px; 
+  margin: 0 auto 15px;
+  border-radius: 12px; 
+  border: 1px solid #e5e7eb;
   box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  transition: all 0.2s ease;
-  padding: 20px; /* Added padding so text doesn't touch edges on screen */
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center;
 }
 
-/* Screen Preview Sizing */
-.size-small { min-width: 2.5in; min-height: 1.8in; }
-.size-large { width: 4in; height: 6in; }
-
 #assetId { 
-  margin: 0 0 10px 0; 
+  margin: 0 0 8px 0; 
   color: #0f172a; 
-  font-weight: bold; /* Ensures the whole line is bold */
-  font-size: 1.2rem;
+  font-weight: 800; /* Extra Bold */
+  font-size: 1.1rem;
 }
 
 #qrBox { width: 100%; display: flex; justify-content: center; }
-#qrBox svg { height: auto; display: block; width: 100%; max-width: 200px; }
+#qrBox svg { height: auto; display: block; width: 180px; } /* Large preview */
 
-/* Controls (Hidden when printing) */
-.controls-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e5e7eb; margin-top: 20px; }
-.size-selector { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; width: 100%; max-width: 320px; font-size: 1rem; }
-.btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-button { padding: 12px 20px; border-radius: 999px; border: none; cursor: pointer; font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; }
+/* Controls Card */
+.controls-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e5e7eb; }
+.btn-group { display: flex; flex-direction: column; gap: 8px; }
+button { 
+  padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer; 
+  font-size: .95rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; 
+}
 .btn-primary { background: #1a73e8; color: white; }
 .btn-success { background: #16a34a; color: white; }
 .btn-ghost { background: #f1f5f9; color: #334155; }
 
-/* --- PRINT LOGIC (Strict physical dimensions) --- */
+/* --- PRINT LOGIC (Forces 2x1 inch) --- */
 @media print {
-  body { background: white; padding: 0; margin: 0; }
+  @page { size: 2in 1in; margin: 0; }
+  body { background: white; height: auto; }
   .controls-card, h1 { display: none !important; }
   .label-preview-box { 
     border: none !important; box-shadow: none !important; 
     margin: 0 !important; padding: 0 !important;
-    width: 100% !important; height: 100% !important;
+    width: 2in !important; height: 1in !important;
     display: flex !important; flex-direction: column !important;
     align-items: center !important; justify-content: center !important;
   }
+  #assetId { font-size: 10pt !important; margin-bottom: 2px !important; }
+  #qrBox svg { max-width: 0.7in !important; max-height: 0.7in !important; }
 }
 </style>
-<style id="dynamic-print-setup"></style>
 
 <script type="module">
 import QRCode from 'https://cdn.skypack.dev/qrcode';
 import { db } from "./firebase.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const labelContainer = document.getElementById('labelContainer');
-const printSetup = document.getElementById('dynamic-print-setup');
-const sizeSelector = document.getElementById('labelSize');
-const qrBox = document.getElementById("qrBox");
-
-function updateLayout() {
-  const isSmall = sizeSelector.value === 'small';
-  
-  // Set Screen Class
-  labelContainer.className = isSmall ? 'label-preview-box size-small' : 'label-preview-box size-large';
-  
-  // Set Dynamic Print CSS (The physical sticker rules)
-  printSetup.innerHTML = `
-    @media print {
-      @page { size: ${isSmall ? '2in 1in' : '4in 6in'}; margin: 0; }
-      #assetId { 
-        font-size: ${isSmall ? '10pt' : '22pt'} !important; 
-        margin-bottom: ${isSmall ? '2px' : '15px'} !important;
-      }
-      #qrBox svg { 
-        max-width: ${isSmall ? '0.65in' : '3.5in'} !important; 
-        max-height: ${isSmall ? '0.65in' : '3.5in'} !important; 
-      }
-    }
-  `;
-}
-
-sizeSelector.addEventListener('change', updateLayout);
-
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(location.search);
   const itemId = params.get("id");
   const assetEl = document.getElementById("assetId");
+  const qrBox = document.getElementById("qrBox");
 
   if (!itemId) { assetEl.textContent = "ID Missing"; return; }
 
@@ -105,12 +90,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const d = snap.data();
     const assetId = d.assetId || "No ID";
 
-    // Entire text is bold
-    assetEl.innerHTML = `Asset ID: ${assetId}`;
+    // Bold formatting for Asset ID
+    assetEl.innerHTML = `<strong>Asset ID: ${assetId}</strong>`;
 
-    // Link points back to the item page
+    // Direct link to item.html
     const url = window.location.origin + window.location.pathname.replace('qr-generator.html', 'item.html') + '?id=' + itemId;
     
+    // Generate QR
     const svgString = await QRCode.toString(url, { 
         type: 'svg', 
         margin: 1, 
@@ -118,9 +104,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     qrBox.innerHTML = svgString;
 
-    updateLayout();
-
-    // SVG Download with Bold Text
+    // SVG Download Logic
     document.getElementById("btnDownload").onclick = () => {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
@@ -150,14 +134,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Fixed Back Button behavior
+// Fixed Back Button
 window.goBack = () => {
     const params = new URLSearchParams(location.search);
     const itemId = params.get("id");
     if (itemId) {
         window.location.href = `item.html?id=${itemId}`;
     } else {
-        window.location.href = 'index.html';
+        history.back();
     }
 };
 </script>
@@ -165,7 +149,7 @@ window.goBack = () => {
 <body>
 
 <div class="page-container">
-  <h1>Device QR Label</h1>
+  <h2 style="margin-bottom:10px; font-size:1.2rem;">Device QR Label</h2>
 
   <div id="labelContainer" class="label-preview-box">
     <div id="assetId"></div>
@@ -173,14 +157,8 @@ window.goBack = () => {
   </div>
 
   <div class="controls-card">
-    <label style="display:block; font-weight:bold; margin-bottom:10px; color:#64748b;">Select Printer Label Size:</label>
-    <select id="labelSize" class="size-selector">
-      <option value="large">Large (4x6 inch Shipping Label)</option>
-      <option value="small">Small (2x1 inch Asset Label)</option>
-    </select>
-
     <div class="btn-group">
-      <button onclick="window.print()" class="btn-success">🖨️ Print Label</button>
+      <button onclick="window.print()" class="btn-success">🖨️ Print Label (2x1")</button>
       <button id="btnDownload" class="btn-primary">⬇️ Download SVG</button>
       <button onclick="goBack()" class="btn-ghost">⬅ Back to Device</button>
     </div>
