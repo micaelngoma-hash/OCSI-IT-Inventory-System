@@ -5,27 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Generate QR Code – OCSI IT Inventory</title>
 <style>
-/* --- SCREEN STYLES (What you see in the browser) --- */
+/* --- SCREEN STYLES --- */
 body { font-family: system-ui, sans-serif; background: #f5f7fb; padding: 30px; text-align: center; margin: 0; }
 .card {
-  background: white; padding: 20px; margin: 0 auto;
+  background: white; padding: 15px; margin: 0 auto;
   border-radius: 14px; border: 1px solid #e5e7eb;
   box-shadow: 0 4px 14px rgba(0,0,0,0.1);
   display: flex; flex-direction: column; align-items: center;
-  transition: all 0.3s ease; /* Smooth transition when resizing */
+  transition: all 0.3s ease;
   overflow: hidden;
 }
 
-/* On-screen sizing previews */
-.preview-small { width: 2in; height: 1in; padding: 10px; border-radius: 4px; }
-.preview-large { width: 4in; height: 6in; padding: 40px; border-radius: 4px; }
+/* Fix for 2x1 inch on-screen preview */
+.preview-small { width: 2.2in; height: 1.2in; padding: 10px; }
+.preview-large { width: 4.2in; height: 6.2in; padding: 40px; }
 
-#qrBox svg { width: 100%; height: auto; display: block; }
+#qrBox { width: 100%; display: flex; justify-content: center; align-items: center; }
+#qrBox svg { height: auto; display: block; }
 
 .controls { margin-top: 30px; display: flex; flex-direction: column; gap: 12px; align-items: center; }
 .size-selector { padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; cursor: pointer; }
 .btn-group { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
-button { padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer; font-size: .9rem; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+button, .btn-link { 
+  padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer; 
+  font-size: .9rem; display: inline-flex; align-items: center; gap: 8px; 
+  font-weight: 500; text-decoration: none; 
+}
 .btn-primary { background: #1a73e8; color: white; }
 .btn-success { background: #16a34a; color: white; }
 .btn-ghost { background: white; border: 1px solid #cbd5e1; color: #334155; }
@@ -34,7 +39,11 @@ button { padding: 10px 18px; border-radius: 999px; border: none; cursor: pointer
 @media print {
   body { background: white; padding: 0 !important; margin: 0 !important; }
   h1, .controls, .btn-ghost { display: none !important; }
-  .card { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; width: 100% !important; height: 100% !important; border-radius: 0 !important; }
+  .card { 
+    border: none !important; box-shadow: none !important; margin: 0 !important; 
+    padding: 0 !important; width: 100% !important; height: 100% !important; 
+    justify-content: center !important; 
+  }
 }
 </style>
 <style id="dynamic-print-setup"></style>
@@ -49,20 +58,22 @@ const printSetup = document.getElementById('dynamic-print-setup');
 const sizeSelector = document.getElementById('labelSize');
 const qrBox = document.getElementById("qrBox");
 
-// Update visual preview and print settings
 function updateLayout() {
   const isSmall = sizeSelector.value === 'small';
   
-  // Update Screen Preview
   card.className = isSmall ? 'card preview-small' : 'card preview-large';
   
-  // Update Print CSS
   printSetup.innerHTML = `
     @media print {
       @page { size: ${isSmall ? '2in 1in' : '4in 6in'}; margin: 0; }
-      #deviceName { font-size: ${isSmall ? '10pt' : '24pt'} !important; }
-      #assetId { font-size: ${isSmall ? '7pt' : '14pt'} !important; }
-      #qrBox svg { max-width: ${isSmall ? '0.6in' : '3in'} !important; }
+      #assetId { 
+        font-size: ${isSmall ? '9pt' : '18pt'} !important; 
+        margin-bottom: ${isSmall ? '2px' : '15px'} !important; 
+      }
+      #qrBox svg { 
+        max-width: ${isSmall ? '0.65in' : '3.5in'} !important; 
+        max-height: ${isSmall ? '0.65in' : '3.5in'} !important; 
+      }
     }
   `;
 }
@@ -72,60 +83,50 @@ sizeSelector.addEventListener('change', updateLayout);
 document.addEventListener("DOMContentLoaded", async () => {
   const params = new URLSearchParams(location.search);
   const itemId = params.get("id");
-  const nameEl = document.getElementById("deviceName");
   const assetEl = document.getElementById("assetId");
 
-  if (!itemId) { nameEl.textContent = "ID Missing"; return; }
+  if (!itemId) { assetEl.textContent = "ID Missing"; return; }
 
   try {
     const snap = await getDoc(doc(db, "items", itemId));
-    if (!snap.exists()) { nameEl.textContent = "Not Found"; return; }
+    if (!snap.exists()) { assetEl.textContent = "Not Found"; return; }
 
     const d = snap.data();
-    const deviceName = d.deviceName || "Unnamed Device";
     const assetId = d.assetId || "No ID";
 
-    nameEl.textContent = deviceName;
-    assetEl.textContent = `Asset ID: ${assetId}`;
+    // Set formatting: Bold "Asset ID:" then the value
+    assetEl.innerHTML = `<strong>Asset ID:</strong> ${assetId}`;
 
     const url = window.location.href.split('?')[0].replace('qr-generator.html', 'item.html') + '?id=' + itemId;
     
-    // Generate QR as SVG
-    const svgString = await QRCode.toString(url, { type: 'svg', margin: 2, errorCorrectionLevel: 'H' });
+    const svgString = await QRCode.toString(url, { 
+        type: 'svg', 
+        margin: 1, // Reduced margin to prevent cutoff
+        errorCorrectionLevel: 'H' 
+    });
     qrBox.innerHTML = svgString;
 
-    updateLayout(); // Initial size set
+    updateLayout();
 
-    // Improved Download: Injects Text into SVG
+    // SVG Download Logic (Text Injection)
     document.getElementById("btnDownload").onclick = () => {
       const parser = new DOMParser();
       const svgDoc = parser.parseFromString(svgString, "image/svg+xml");
       const svgEl = svgDoc.documentElement;
+      const viewBox = svgEl.getAttribute("viewBox").split(" ");
+      const w = parseInt(viewBox[2]);
+      const h = parseInt(viewBox[3]);
       
-      // Expand SVG height to fit text on top
-      const originalViewBox = svgEl.getAttribute("viewBox").split(" ");
-      const width = parseInt(originalViewBox[2]);
-      const height = parseInt(originalViewBox[3]);
+      svgEl.setAttribute("viewBox", `0 -10 ${w} ${h + 10}`);
       
-      svgEl.setAttribute("viewBox", `0 -20 ${width} ${height + 20}`);
-      
-      const textName = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textName.setAttribute("x", width/2);
-      textName.setAttribute("y", "-10");
-      textName.setAttribute("text-anchor", "middle");
-      textName.setAttribute("style", "font-family:sans-serif; font-size:4px; font-weight:bold;");
-      textName.textContent = deviceName;
-
       const textAsset = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      textAsset.setAttribute("x", width/2);
-      textAsset.setAttribute("y", "-4");
+      textAsset.setAttribute("x", w/2);
+      textAsset.setAttribute("y", "-3");
       textAsset.setAttribute("text-anchor", "middle");
-      textAsset.setAttribute("style", "font-family:sans-serif; font-size:3px; fill:#666;");
-      textAsset.textContent = assetId;
+      textAsset.setAttribute("style", "font-family:sans-serif; font-size:3.5px; font-weight:bold;");
+      textAsset.textContent = `Asset ID: ${assetId}`;
 
-      svgEl.appendChild(textName);
       svgEl.appendChild(textAsset);
-
       const blob = new Blob([new XMLSerializer().serializeToString(svgEl)], { type: "image/svg+xml" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
@@ -134,9 +135,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
   } catch (err) {
-    nameEl.textContent = "Error";
+    assetEl.textContent = "Error";
   }
 });
+
+// Explicitly define the back button behavior to return to item.html
+window.goBack = () => {
+    const params = new URLSearchParams(location.search);
+    const itemId = params.get("id");
+    if (itemId) {
+        window.location.href = `item.html?id=${itemId}`;
+    } else {
+        history.back();
+    }
+};
 </script>
 </head>
 <body>
@@ -144,11 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 <h1>Device QR Label</h1>
 
 <div class="card preview-large" id="labelCard">
-  <div id="textWrapper">
-    <h2 id="deviceName" style="margin: 0; line-height: 1.2;">Loading...</h2>
-    <p id="assetId" style="margin: 0 0 10px 0; color:#64748b; font-weight: 500;"></p>
-  </div>
-  
+  <p id="assetId" style="margin: 0 0 10px 0; color:#0f172a;"></p>
   <div id="qrBox"></div>
 
   <div class="controls">
@@ -163,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     <div class="btn-group">
       <button onclick="window.print()" class="btn-success">🖨️ Print Label</button>
       <button id="btnDownload" class="btn-primary">⬇️ Download SVG</button>
-      <button onclick="history.back()" class="btn-ghost">Back</button>
+      <button onclick="goBack()" class="btn-ghost">Back</button>
     </div>
   </div>
 </div>
