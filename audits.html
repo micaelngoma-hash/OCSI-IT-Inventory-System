@@ -4,35 +4,43 @@
     <meta charset="UTF-8">
     <title>Audit Logs – OCSI IT Inventory</title>
     <style>
-        :root { --bg: #0f172a; --border: #e5e7eb; }
-        body { font-family: system-ui; background: #f5f7fb; margin: 0; }
-        .content { padding: 20px; max-width: 1200px; margin: 0 auto; }
-        .card { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-        th { background: #f8fafc; color: #64748b; }
-        .pill { padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        :root { --bg: #0f172a; --border: #e5e7eb; --blue: #1a73e8; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f5f7fb; margin: 0; color: #1e293b; }
+        .content { padding: 30px; max-width: 1100px; margin: 0 auto; }
+        .card { background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.025em; }
+        .pill { padding: 3px 10px; border-radius: 999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .pill-update { background: #dbeafe; color: #1e40af; }
         .pill-create { background: #dcfce7; color: #166534; }
         .pill-delete { background: #fee2e2; color: #991b1b; }
+        .pill-login { background: #fef9c3; color: #854d0e; }
+        code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-weight: 600; }
+        .error-box { background: #fff1f2; border: 1px solid #fda4af; color: #9f1239; padding: 15px; border-radius: 8px; display: none; margin-bottom: 20px; }
     </style>
 </head>
 <body>
+
     <div class="content">
         <h1>System Audit Log</h1>
+        <p style="color: #64748b; margin-bottom: 25px;">History of all inventory and user actions. Updates automatically.</p>
+        
+        <div id="errorBox" class="error-box"></div>
+
         <div class="card">
             <table>
                 <thead>
                     <tr>
-                        <th>Time</th>
+                        <th style="width: 180px;">Date & Time</th>
                         <th>User</th>
                         <th>Action</th>
-                        <th>Asset ID</th>
+                        <th>Target ID</th>
                         <th>Details</th>
                     </tr>
                 </thead>
                 <tbody id="auditTableBody">
-                    <tr><td colspan="5">Loading real-time logs...</td></tr>
+                    <tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">Connecting to database...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -43,34 +51,40 @@
         import { collection, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
         const tbody = document.getElementById("auditTableBody");
+        const errorBox = document.getElementById("errorBox");
 
         watchAuth({
             allowedRoles: ["admin", "it"],
             onReady: () => {
-                const q = query(collection(db, "audits"), orderBy("timestamp", "desc"), limit(100));
+                // IMPORTANT: This query needs a manual index in Firebase Console
+                const q = query(collection(db, "audits"), orderBy("timestamp", "desc"), limit(50));
                 
                 onSnapshot(q, (snap) => {
+                    errorBox.style.display = "none";
                     if (snap.empty) {
-                        tbody.innerHTML = '<tr><td colspan="5">No logs found. Perform an action to see it here.</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">No logs found yet. Try logging out and back in to generate a log.</td></tr>';
                         return;
                     }
+                    
                     tbody.innerHTML = snap.docs.map(doc => {
                         const d = doc.data();
-                        const date = d.timestamp?.toDate().toLocaleString() || "Syncing...";
-                        const actionClass = `pill-${d.action}`;
+                        const date = d.timestamp ? d.timestamp.toDate().toLocaleString() : '<span style="color:#cbd5e1">Syncing...</span>';
+                        const action = d.action || 'other';
                         return `
                             <tr>
-                                <td>${date}</td>
-                                <td>${d.userEmail}</td>
-                                <td><span class="pill ${actionClass}">${d.action}</span></td>
-                                <td><strong>${d.targetId || "—"}</strong></td>
-                                <td style="color:#64748b">${d.details || ""}</td>
+                                <td style="color: #64748b">${date}</td>
+                                <td><strong>${d.userEmail || 'System'}</strong></td>
+                                <td><span class="pill pill-${action}">${action}</span></td>
+                                <td><code>${d.targetId || '—'}</code></td>
+                                <td style="color: #475569">${d.details || ''}</td>
                             </tr>
                         `;
                     }).join('');
                 }, (err) => {
-                    console.error(err);
-                    tbody.innerHTML = '<tr><td colspan="5" style="color:red">Permission Denied or Index Missing.</td></tr>';
+                    console.error("Firestore Error:", err);
+                    errorBox.style.display = "block";
+                    errorBox.innerHTML = `<strong>Data Load Error:</strong> ${err.message}<br><br><em>Note: If this says "Index Missing," check your Browser Console (F12) for the auto-generate link.</em>`;
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: #ef4444;">Failed to load logs.</td></tr>';
                 });
             }
         });
