@@ -28,10 +28,6 @@
   .nav .icon{width:18px;text-align:center;opacity:.8;}
   .content{padding:18px;max-width:1100px;margin:0 auto;width:100%;}
   h1{margin:0 0 14px;font-size:1.4rem;}
-  .badge{padding:2px 7px;border-radius:999px;font-size:.75rem;}
-  .badge-admin{background:rgba(34,197,94,.12);color:#16a34a;}
-  .badge-it{background:rgba(59,130,246,.12);color:#1d4ed8;}
-  .badge-viewer{background:rgba(148,163,184,.2);color:#475569;}
   .card{
     background:white;border:1px solid var(--border);
     border-radius:12px;padding:16px 18px;margin-bottom:14px;
@@ -65,9 +61,7 @@
 <body>
 
 <div class="topbar">
-  <div>
-    <strong>OCSI IT Inventory</strong> – Device Form
-  </div>
+  <div><strong>OCSI IT Inventory</strong> – Device Form</div>
   <div id="who" style="font-size:.85rem;opacity:.9;">Checking session…</div>
 </div>
 
@@ -75,11 +69,10 @@
   <aside class="sidebar">
     <nav class="nav">
       <a href="index.html"><span class="icon">🏠</span><span>Main Dashboard</span></a>
+      <a href="inventory-list.html"><span class="icon">📦</span><span>Hardware List</span></a>
       <a href="software-licenses.html"><span class="icon">🔑</span><span>Software Licenses</span></a>
-      <a href="software-dashboard.html"><span class="icon">📋</span><span>Software Dashboard</span></a>
       <a href="scan.html"><span class="icon">📱</span><span>QR Scan Device</span></a>
       <a href="audits.html"><span class="icon">🕒</span><span>Audits</span></a>
-      <a href="admin-console.html"><span class="icon">⚙️</span><span>Admin Console</span></a>
       <a href="login.html"><span class="icon">🚪</span><span>Logout</span></a>
     </nav>
   </aside>
@@ -88,32 +81,13 @@
     <h1 id="formTitle">New Device</h1>
 
     <form id="deviceForm">
-      <!-- Identification -->
       <section class="card">
         <h2>Identification</h2>
         <div class="grid-2">
-          <div>
-            <label for="assetId">Asset ID</label>
-            <input id="assetId" name="assetId" required />
-          </div>
-          <div>
-            <label for="deviceName">Device Name</label>
-            <input id="deviceName" name="deviceName" required />
-          </div>
-          <div>
-            <label for="assetType">Asset Type / Device Type</label>
-            <input id="assetType" name="assetType" placeholder="Laptop, Switch, AP…" />
-          </div>
-          <div>
-            <label for="manufacturer">Manufacturer &amp; Model</label>
-            <input id="manufacturer" name="manufacturer" placeholder="Apple MacBook Pro 14&quot;" />
-          </div>
-          <div>
-            <label for="serialNumber">Serial Number</label>
-            <input id="serialNumber" name="serialNumber" />
-          </div>
-          <div>
-            <label for="status">Status</label>
+          <div><label for="assetId">Asset ID</label><input id="assetId" name="assetId" required /></div>
+          <div><label for="deviceName">Device Name</label><input id="deviceName" name="deviceName" required /></div>
+          <div><label for="assetType">Asset Type</label><input id="assetType" name="assetType" placeholder="Laptop, Switch..." /></div>
+          <div><label for="status">Status</label>
             <select id="status" name="status">
               <option value="in-use">In use</option>
               <option value="in-storage">In storage</option>
@@ -125,90 +99,17 @@
         </div>
       </section>
 
-      <!-- Location & Assignment -->
       <section class="card">
-        <h2>Location &amp; Assignment</h2>
+        <h2>Location & Assignment</h2>
         <div class="grid-2">
-          <div>
-            <label for="assignedTo">Assigned To</label>
-            <input id="assignedTo" name="assignedTo" placeholder="User / Room / Class" />
-          </div>
-          <div>
-            <label for="department">Department</label>
-            <input id="department" name="department" placeholder="IT, Music, Office…" />
-          </div>
-          <div>
-            <label for="location">Location</label>
-            <input id="location" name="location" placeholder="Campus / Building" />
-          </div>
-          <div>
-            <label for="buildingFloor">Building / Floor</label>
-            <input id="buildingFloor" name="buildingFloor" placeholder="Bldg A – 2F" />
-          </div>
+          <div><label for="assignedTo">Assigned To</label><input id="assignedTo" name="assignedTo" /></div>
+          <div><label for="location">Location</label><input id="location" name="location" /></div>
         </div>
       </section>
 
-      <!-- Network & System Info -->
       <section class="card">
-        <h2>Network &amp; System Info</h2>
-        <div class="grid-2">
-          <div>
-            <label for="ipAddress">IP Address</label>
-            <input id="ipAddress" name="ipAddress" placeholder="192.168.10.25" />
-          </div>
-          <div>
-            <label for="macAddress">MAC Address</label>
-            <input id="macAddress" name="macAddress" placeholder="AA:BB:CC:DD:EE:FF" />
-          </div>
-          <div>
-            <label for="osVersion">Operating System / Version</label>
-            <input id="osVersion" name="osVersion" placeholder="Windows 11, macOS 15…" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Procurement & Lifecycle -->
-      <section class="card">
-        <h2>Procurement &amp; Lifecycle</h2>
-        <div class="grid-2">
-          <div>
-            <label for="purchaseDate">Purchase Date</label>
-            <input type="date" id="purchaseDate" name="purchaseDate" />
-          </div>
-          <div>
-            <label for="installationDate">Date of Installation</label>
-            <input type="date" id="installationDate" name="installationDate" />
-          </div>
-          <div>
-            <label for="vendor">Vendor / Supplier</label>
-            <input id="vendor" name="vendor" />
-          </div>
-          <div>
-            <label for="warrantyEndDate">Warranty End Date</label>
-            <input type="date" id="warrantyEndDate" name="warrantyEndDate" />
-          </div>
-          <div>
-            <label for="replacementDate">Estimated Replacement Date</label>
-            <input type="date" id="replacementDate" name="replacementDate" />
-          </div>
-          <div>
-            <label>Replacement Alert</label>
-            <div class="row">
-              <input type="checkbox" id="replacementAlert" name="replacementAlert" />
-              <span class="hint">Send alert when near end of lifecycle</span>
-            </div>
-          </div>
-          <div>
-            <label for="removedDate">Removed Date</label>
-            <input type="date" id="removedDate" name="removedDate" />
-          </div>
-        </div>
-      </section>
-
-      <!-- Notes -->
-      <section class="card">
-        <h2>Notes &amp; Misc</h2>
-        <textarea id="notes" name="notes" placeholder="Condition notes, repair history, custom comments…"></textarea>
+        <h2>Notes & Misc</h2>
+        <textarea id="notes" name="notes" placeholder="Condition notes, repair history..."></textarea>
       </section>
 
       <div class="actions">
@@ -221,123 +122,64 @@
 </div>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import {
-    doc, getDoc, setDoc, addDoc, collection, serverTimestamp
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { db, watchAuth, logAudit } from "./firebase.js";
+  import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const who         = document.getElementById("who");
-  const form        = document.getElementById("deviceForm");
-  const formTitle   = document.getElementById("formTitle");
+  const form = document.getElementById("deviceForm");
+  const formTitle = document.getElementById("formTitle");
   const editWarning = document.getElementById("editWarning");
-
-  const EDIT_ROLES  = ["admin","it"];
-  const params      = new URLSearchParams(location.search);
-  const itemId      = params.get("id");
-
-  let currentRole   = "viewer";
+  const params = new URLSearchParams(location.search);
+  const itemId = params.get("id");
+  let currentRole = "viewer";
 
   watchAuth({
-    allowedRoles:["admin","it","viewer"],
-    whoEl: who,
-    onReady: async (_user, role)=>{
+    allowedRoles: ["admin", "it", "viewer"],
+    whoEl: document.getElementById("who"),
+    onReady: async (_user, role) => {
       currentRole = role;
-
-      if(!EDIT_ROLES.includes(currentRole)){
-        editWarning.textContent = "Read-only: viewers cannot save changes.";
+      if (role === "viewer") {
+        editWarning.textContent = "Read-only access.";
         form.querySelector("button[type='submit']").disabled = true;
       }
-
-      if(itemId){
+      if (itemId) {
         formTitle.textContent = "Edit Device";
-        await loadItem(itemId);
-      }else{
-        formTitle.textContent = "New Device";
+        loadItem(itemId);
       }
     }
   });
 
-  async function loadItem(id){
-    const snap = await getDoc(doc(db,"items",id));
-    if(!snap.exists()) return;
+  async function loadItem(id) {
+    const snap = await getDoc(doc(db, "items", id));
+    if (!snap.exists()) return;
     const d = snap.data();
-
-    const setVal = (id, v) => {
-      const el = document.getElementById(id);
-      if(!el) return;
-      if(el.type === "checkbox"){
-        el.checked = !!v;
-      }else if(el.type === "date" && v){
-        el.value = String(v).substring(0,10);
-      }else{
-        el.value = v || "";
-      }
-    };
-
-    setVal("assetId", d.assetId);
-    setVal("deviceName", d.deviceName);
-    setVal("assetType", d.assetType);
-    setVal("manufacturer", d.manufacturer);
-    setVal("serialNumber", d.serialNumber);
-    setVal("status", d.status);
-
-    setVal("assignedTo", d.assignedTo);
-    setVal("department", d.department);
-    setVal("location", d.location);
-    setVal("buildingFloor", d.buildingFloor);
-
-    setVal("ipAddress", d.ipAddress);
-    setVal("macAddress", d.macAddress);
-    setVal("osVersion", d.osVersion);
-
-    setVal("purchaseDate", d.purchaseDate);
-    setVal("installationDate", d.installationDate);
-    setVal("vendor", d.vendor);
-    setVal("warrantyEndDate", d.warrantyEndDate);
-    setVal("replacementDate", d.replacementDate);
-    setVal("replacementAlert", d.replacementAlert);
-    setVal("removedDate", d.removedDate);
-
-    setVal("notes", d.notes);
+    Object.keys(d).forEach(key => {
+      const el = document.getElementById(key);
+      if (el) el.value = d[key];
+    });
   }
 
-  form.addEventListener("submit", async e=>{
+  form.addEventListener("submit", async e => {
     e.preventDefault();
-    if(!EDIT_ROLES.includes(currentRole)){
-      alert("You do not have permission to save devices.");
-      return;
-    }
-
-    const fd   = new FormData(form);
+    const fd = new FormData(form);
     const data = Object.fromEntries(fd.entries());
-
-    // checkbox
-    data.replacementAlert = form.replacementAlert.checked;
-
-    // normalise date fields as plain strings
-    ["purchaseDate","installationDate","warrantyEndDate",
-     "replacementDate","removedDate"].forEach(f=>{
-      if(!data[f]) data[f] = "";
-    });
-
     data.updatedAt = serverTimestamp();
-    if(!itemId) data.createdAt = serverTimestamp();
 
-    try{
-      if(itemId){
-        await setDoc(doc(db,"items",itemId), data, { merge:true });
-      }else{
-        await addDoc(collection(db,"items"), data);   // <-- creates items collection if missing
+    try {
+      if (itemId) {
+        await setDoc(doc(db, "items", itemId), data, { merge: true });
+        // LOG UPDATE
+        await logAudit("update", data.assetId, `Updated device: ${data.deviceName} (Status: ${data.status})`);
+      } else {
+        const docRef = await addDoc(collection(db, "items"), data);
+        // LOG CREATE
+        await logAudit("create", data.assetId, `Created new device entry: ${data.deviceName}`);
       }
-      alert("Device saved.");
+      alert("Success!");
       location.href = "inventory-list.html";
-    }catch(err){
-      console.error(err);
-      alert("Error saving device: " + err.message);
+    } catch (err) {
+      alert("Error: " + err.message);
     }
   });
 </script>
-
 </body>
 </html>
-
