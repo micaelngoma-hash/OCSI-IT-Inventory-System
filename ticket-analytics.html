@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OCSI IT – Ticket Analytics & Performance</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root { 
+      --brand: #1a73e8; --border: #e2e8f0; --bg: #f8fafc; 
+      --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+    }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 24px; color: #1e293b; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+    .header h1 { margin: 0; font-size: 1.75rem; }
+
+    /* KPI Cards */
+    .metrics-grid { 
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); 
+        gap: 20px; margin-bottom: 32px; 
+    }
+    .metric-card { 
+        background: white; padding: 24px; border-radius: 12px; 
+        border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .metric-val { font-size: 2.25rem; font-weight: 800; color: var(--brand); line-height: 1; }
+    .metric-label { font-size: 0.8rem; color: #64748b; text-transform: uppercase; margin-top: 8px; font-weight: 600; letter-spacing: 0.025em; }
+
+    /* Chart Layout */
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .chart-box { background: white; padding: 24px; border-radius: 12px; border: 1px solid var(--border); min-height: 400px; }
+    h3 { margin: 0 0 20px 0; font-size: 1rem; color: #475569; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+
+    /* Performance Table */
+    .table-container { background: white; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; }
+    th { background: #f8fafc; padding: 16px; color: #64748b; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; }
+    td { padding: 16px; border-top: 1px solid #f1f5f9; }
+    .efficiency-pill { padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 0.75rem; }
+
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header class="header">
+    <div>
+        <h1>Service Performance Analytics</h1>
+        <p style="color: #64748b; margin: 4px 0 0 0;">Monitoring resolution times and departmental workload.</p>
+    </div>
+    <button onclick="window.location.href='tickets-admin.html'" style="padding: 10px 20px; cursor:pointer; border-radius: 8px; border: 1px solid var(--border); background: white; font-weight: 600;">← Dashboard</button>
+  </header>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+        <div id="totalTickets" class="metric-val">0</div>
+        <div class="metric-label">Total Tickets</div>
+    </div>
+    <div class="metric-card">
+        <div id="avgResolutionTime" class="metric-val">0h</div>
+        <div class="metric-label">Avg. Resolution Time</div>
+    </div>
+    <div class="metric-card">
+        <div id="completionRate" class="metric-val">0%</div>
+        <div class="metric-label">Resolution Rate</div>
+    </div>
+    <div class="metric-card">
+        <div id="avgUrgency" class="metric-val">0</div>
+        <div class="metric-label">Mean Urgency Score</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h3>Workload Distribution by Group</h3>
+      <canvas id="groupChart"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Ticket Status Mix</h3>
+      <canvas id="statusChart"></canvas>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <h3 style="padding: 24px 24px 0 24px; border:none;">Departmental Efficiency Report</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Department</th>
+                <th>Volume</th>
+                <th>Resolved</th>
+                <th>Avg. Resolution Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="performanceBody">
+            <tr><td colspan="5" style="text-align:center; padding: 40px; color: #94a3b8;">Analyzing performance data...</td></tr>
+        </tbody>
+    </table>
+  </div>
+</div>
+
+<script type="module">
+    import { db, watchAuth } from "./firebase.js";
+    import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    let groupChart, statusChart;
+
+    watchAuth({
+        allowedRoles: ["admin", "it"],
+        onReady: async () => {
+            const snap = await getDocs(collection(db, "tickets"));
+            const tickets = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            processAnalytics(tickets);
+        }
+    });
+
+    function processAnalytics(tickets) {
+        const stats = {
+            groups: {},
+            statuses: { 'open': 0, 'in-progress': 0, 'closed': 0 },
+            deptPerformance: {},
+            totalUrgency: 0,
+            totalResolvedTimeMs: 0,
+            resolvedCount: 0
+        };
+
+        tickets.forEach(t => {
+            // 1. Group Volume
+            const g = t.group || 'Unassigned';
+            stats.groups[g] = (stats.groups[g] || 0) + 1;
+
+            // 2. Status Breakdown
+            const s = t.status || 'open';
+            if(stats.statuses[s] !== undefined) stats.statuses[s]++;
+
+            // 3. Department Detailed Stats
+            if (!stats.deptPerformance[g]) {
+                stats.deptPerformance[g] = { total: 0, closed: 0, timeMs: 0 };
+            }
+            stats.deptPerformance[g].total++;
+
+            // 4. Resolution Time Calculation (The Core Metric)
+            if (s === 'closed' && t.resolvedAt && t.createdAt) {
+                const duration = t.resolvedAt.toMillis() - t.createdAt.toMillis();
+                stats.deptPerformance[g].closed++;
+                stats.deptPerformance[g].timeMs += duration;
+                stats.totalResolvedTimeMs += duration;
+                stats.resolvedCount++;
+            }
+
+            // 5. Urgency Average
+            stats.totalUrgency += Number(t.urgency || 3);
+        });
+
+        updateUI(tickets, stats);
+        renderCharts(stats);
+    }
+
+    function updateUI(tickets, stats) {
+        // KPI Updates
+        document.getElementById("totalTickets").textContent = tickets.length;
+        
+        const avgHours = stats.resolvedCount > 0 
+            ? (stats.totalResolvedTimeMs / stats.resolvedCount / (1000 * 60 * 60)).toFixed(1) 
+            : 0;
+        document.getElementById("avgResolutionTime").textContent = avgHours + "h";
+
+        const rate = tickets.length ? Math.round((stats.statuses.closed / tickets.length) * 100) : 0;
+        document.getElementById("completionRate").textContent = rate + "%";
+        
+        document.getElementById("avgUrgency").textContent = tickets.length ? (stats.totalUrgency / tickets.length).toFixed(1) : 0;
+
+        // Performance Table Render
+        const tbody = document.getElementById("performanceBody");
+        tbody.innerHTML = Object.keys(stats.deptPerformance).map(dept => {
+            const d = stats.deptPerformance[dept];
+            const avg = d.closed > 0 ? (d.timeMs / d.closed / (1000 * 60 * 60)).toFixed(1) : "—";
+            
+            // Logic for Efficiency Pill
+            let statusLabel = "No Data";
+            let pillClass = "background: #f1f5f9; color: #64748b;";
+            
+            if (avg !== "—") {
+                if (avg < 24) { statusLabel = "High"; pillClass = "background: #dcfce7; color: #166534;"; }
+                else if (avg < 72) { statusLabel = "Normal"; pillClass = "background: #fef3c7; color: #92400e;"; }
+                else { statusLabel = "Slow"; pillClass = "background: #fee2e2; color: #991b1b;"; }
+            }
+
+            return `
+                <tr>
+                    <td><strong>${dept}</strong></td>
+                    <td>${d.total}</td>
+                    <td>${d.closed}</td>
+                    <td>${avg}${avg !== "—" ? ' hrs' : ''}</td>
+                    <td><span class="efficiency-pill" style="${pillClass}">${statusLabel}</span></td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    function renderCharts(stats) {
+        // Group Chart
+        new Chart(document.getElementById('groupChart'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(stats.groups),
+                datasets: [{
+                    label: 'Total Tickets',
+                    data: Object.values(stats.groups),
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+
+        // Status Chart
+        new Chart(document.getElementById('statusChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Open', 'In Progress', 'Closed'],
+                datasets: [{
+                    data: [stats.statuses.open, stats.statuses['in-progress'], stats.statuses.closed],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                    borderWidth: 0
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '70%' }
+        });
+    }
+</script>
+</body>
+</html>
