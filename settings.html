@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>System Settings – OCSI IT</title>
+  <style>
+    :root { --brand: #1a73e8; --danger: #dc2626; --border: #e2e8f0; }
+    body { font-family: system-ui, sans-serif; background: #f8fafc; padding: 40px; color: #1e293b; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    
+    .setting-section { margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .setting-section:last-child { border-bottom: none; }
+    
+    .flex-row { display: flex; justify-content: space-between; align-items: center; }
+    .toggle-desc { font-size: 0.9rem; color: #64748b; margin-top: 4px; }
+    
+    /* Switch Styles */
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+    input:checked + .slider { background-color: var(--brand); }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider:before { transform: translateX(24px); }
+
+    .tag-input { display: flex; gap: 10px; margin-top: 15px; }
+    input[type="text"], input[type="number"] { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); outline-color: var(--brand); }
+    .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--brand); color: white; }
+    .status-msg { margin-top: 20px; font-size: 0.85rem; padding: 10px; border-radius: 6px; display: none; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>System Settings</h1>
+    
+    <div class="setting-section">
+        <div class="flex-row">
+            <div>
+                <div style="font-weight: 600;">Maintenance Mode</div>
+                <div class="toggle-desc">If enabled, users cannot submit new tickets. Existing tickets remain viewable.</div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="maintToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="setting-section">
+        <div style="font-weight: 600; margin-bottom: 10px;">Performance Thresholds</div>
+        <div class="flex-row">
+            <div class="toggle-desc">Mark tickets as "Critical/Late" after (hours):</div>
+            <input type="number" id="slaThreshold" value="72" style="width: 80px;">
+        </div>
+    </div>
+
+    <div class="setting-section">
+        <div style="font-weight: 600;">Authorized Departments</div>
+        <div class="toggle-desc">These appear in the "Group" dropdown for new tickets.</div>
+        <div id="deptList" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+        <div class="tag-input">
+            <input type="text" id="newDeptName" placeholder="e.g. Security" style="flex:1">
+            <button class="btn btn-primary" id="addDeptBtn">Add Group</button>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" id="saveAllBtn" style="width: 100%; padding: 12px; margin-top: 10px;">Save All Changes</button>
+    <div id="statusBox" class="status-msg"></div>
+</div>
+
+<script type="module">
+    import { db, watchAuth } from "./firebase.js";
+    import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const maintToggle = document.getElementById("maintToggle");
+    const slaInput = document.getElementById("slaThreshold");
+    const deptListEl = document.getElementById("deptList");
+    const statusBox = document.getElementById("statusBox");
+    
+    let currentDepts = ["IT", "Maintenance", "Front Office", "Nurse"];
+
+    watchAuth({
+        allowedRoles: ["admin"], // Only high-level admins
+        onReady: async () => {
+            // Load existing config
+            const docRef = doc(db, "system_config", "settings");
+            const snap = await getDoc(docRef);
+            
+            if (snap.exists()) {
+                const data = snap.data();
+                maintToggle.checked = data.maintenanceMode || false;
+                slaInput.value = data.slaHours || 72;
+                currentDepts = data.departments || currentDepts;
+            }
+            renderDepts();
+        }
+    });
+
+    function renderDepts() {
+        deptListEl.innerHTML = currentDepts.map(d => `
+            <span style="background: #eff6ff; color: #1e40af; padding: 4px 12px; border-radius: 999px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px;">
+                ${d} <span onclick="removeDept('${d}')" style="cursor:pointer; font-weight:bold;">&times;</span>
+            </span>
+        `).join('');
+    }
+
+    window.removeDept = (name) => {
+        currentDepts = currentDepts.filter(d => d !== name);
+        renderDepts();
+    };
+
+    document.getElementById("addDeptBtn").onclick = () => {
+        const val = document.getElementById("newDeptName").value.trim();
+        if (val && !currentDepts.includes(val)) {
+            currentDepts.push(val);
+            document.getElementById("newDeptName").value = "";
+            renderDepts();
+        }
+    };
+
+    document.getElementById("saveAllBtn").onclick = async () => {
+        try {
+            await setDoc(doc(db, "system_config", "settings"), {
+                maintenanceMode: maintToggle.checked,
+                slaHours: Number(slaInput.value),
+                departments: currentDepts,
+                updatedAt: serverTimestamp()
+            });
+            showStatus("Settings updated successfully!", "#dcfce7", "#166534");
+        } catch (e) {
+            showStatus("Error: " + e.message, "#fee2e2", "#991b1b");
+        }
+    };
+
+    function showStatus(msg, bg, color) {
+        statusBox.textContent = msg;
+        statusBox.style.background = bg;
+        statusBox.style.color = color;
+        statusBox.style.display = "block";
+        setTimeout(() => statusBox.style.display = "none", 4000);
+    }
+</script>
+</body>
+</html>
