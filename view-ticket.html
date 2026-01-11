@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ticket Details – OCSI Support</title>
+  <style>
+    :root { --brand: #1a73e8; --bg: #f8fafc; --border: #e2e8f0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); padding: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    
+    .status-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 15px; }
+    .badge { padding: 4px 12px; border-radius: 999px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+    
+    .chat-box { background: #f1f5f9; border-radius: 8px; padding: 15px; margin: 20px 0; max-height: 400px; overflow-y: auto; }
+    .msg { margin-bottom: 15px; padding: 10px; border-radius: 8px; max-width: 85%; }
+    .msg-admin { background: #dbeafe; align-self: flex-start; border-left: 4px solid var(--brand); }
+    .msg-user { background: white; margin-left: auto; border: 1px solid var(--border); }
+    .msg-meta { font-size: 0.7rem; color: #64748b; margin-bottom: 4px; }
+
+    textarea { width: 100%; height: 80px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); resize: none; font-family: inherit; }
+    .btn { background: var(--brand); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px; width: 100%; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="tickets.html" style="text-decoration:none; color:var(--brand); font-size:0.9rem;">← Back to My Tickets</a>
+  
+  <div class="card" style="margin-top:15px;">
+    <div class="status-header">
+      <div>
+        <h1 id="summary" style="margin:0; font-size:1.4rem;">Loading...</h1>
+        <p id="meta" style="color:#64748b; font-size:0.85rem; margin:5px 0 0 0;"></p>
+      </div>
+      <span id="statusBadge" class="badge">---</span>
+    </div>
+
+    <div id="description" style="line-height:1.5; color:#334155;"></div>
+
+    <h3 style="margin-top:30px; font-size:1rem;">Conversation</h3>
+    <div id="chatBox" class="chat-box" style="display:flex; flex-direction:column;"></div>
+
+    <div id="replyArea">
+        <textarea id="replyInput" placeholder="Add a comment or update..."></textarea>
+        <button class="btn" id="sendBtn">Send Message</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { db, watchAuth } from "./firebase.js";
+  import { doc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  const params = new URLSearchParams(window.location.search);
+  const ticketId = params.get('id');
+
+  watchAuth({
+    onReady: (user) => {
+      if (!ticketId) return window.location.href = 'tickets.html';
+
+      // 1. Watch Ticket Details
+      onSnapshot(doc(db, "tickets", ticketId), (snap) => {
+        if (!snap.exists()) return;
+        const t = snap.data();
+        
+        // Security: Ensure user only sees their own ticket
+        if (t.requesterEmail !== user.email) {
+            document.body.innerHTML = "<h1>Unauthorized Access</h1>";
+            return;
+        }
+
+        document.getElementById("summary").textContent = t.summary;
+        document.getElementById("statusBadge").textContent = t.status || 'open';
+        document.getElementById("statusBadge").className = `badge status-${t.status || 'open'}`;
+        document.getElementById("meta").textContent = `Ref: ${ticketId.substring(0,8)} | Group: ${t.group}`;
+        document.getElementById("description").textContent = t.description;
+        
+        // Hide reply if closed
+        if(t.status === 'closed') document.getElementById("replyArea").style.display = 'none';
+      });
+
+      // 2. Watch Comments (Real-time)
+      const q = query(collection(db, "tickets", ticketId, "comments"), orderBy("createdAt", "asc"));
+      onSnapshot(q, (snap) => {
+        const chatBox = document.getElementById("chatBox");
+        chatBox.innerHTML = snap.docs.map(doc => {
+            const c = doc.data();
+            const isAdmin = c.authorEmail !== user.email;
+            return `
+                <div class="msg ${isAdmin ? 'msg-admin' : 'msg-user'}">
+                    <div class="msg-meta">${isAdmin ? 'Support Team' : 'You'} • ${c.createdAt?.toDate().toLocaleTimeString() || '...'}</div>
+                    <div>${c.message}</div>
+                </div>
+            `;
+        }).join('');
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+
+      // 3. Send Reply
+      document.getElementById("sendBtn").onclick = async () => {
+        const msg = document.getElementById("replyInput").value.trim();
+        if(!msg) return;
+
+        await addDoc(collection(db, "tickets", ticketId, "comments"), {
+            message: msg,
+            authorEmail: user.email,
+            createdAt: serverTimestamp()
+        });
+        document.getElementById("replyInput").value = "";
+      };
+    }
+  });
+</script>
+</body>
+</html>
