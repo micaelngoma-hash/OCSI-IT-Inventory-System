@@ -1,426 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OCSI Service Request – Tickets</title>
+  <meta charset="UTF-8">
+  <title>My Service Requests – OCSI</title>
   <style>
-    :root{
-      --red1:#c53030;
-      --red2:#f56565;
-      --brand:#1a73e8;
-      --border:#e5e7eb;
-    }
-    *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,sans-serif;
-      background:#f7fafc;
-      color:#1a202c;
-    }
+    :root { --brand: #1a73e8; --bg: #f8fafc; --border: #e2e8f0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    
+    /* Maintenance Banner */
+    #maintBanner { display: none; background: #fee2e2; color: #991b1b; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-weight: bold; border: 1px solid #f87171; }
 
-    .hero{
-      background:linear-gradient(90deg,var(--red1),var(--red2));
-      color:white;
-      padding:18px 26px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-    }
-    .hero-left{
-      display:flex;
-      align-items:center;
-      gap:22px;
-    }
-    .hero-title{
-      font-size:1.8rem;
-      font-weight:600;
-    }
-    .hero-menu a{
-      color:white;
-      text-decoration:none;
-      font-size:.92rem;
-      opacity:.9;
-      margin-right:14px;
-    }
-    .hero-right{
-      display:flex;
-      align-items:center;
-      gap:14px;
-    }
-    .hero-email{
-      font-size:.85rem;
-      opacity:.9;
-    }
-    .btn-primary{
-      border:none;
-      border-radius:999px;
-      padding:8px 16px;
-      font-size:.9rem;
-      font-weight:600;
-      background:#0b7285;
-      color:white;
-      cursor:pointer;
-    }
-
-    .wrap{
-      display:flex;
-      justify-content:center;
-      padding:34px 16px;
-    }
-    .card{
-      background:white;
-      border-radius:12px;
-      border:1px solid var(--border);
-      max-width:900px;
-      width:100%;
-      padding:18px 18px 14px;
-      box-shadow:0 10px 30px rgba(15,23,42,.06);
-    }
-
-    .toolbar{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:10px;
-    }
-    .select{
-      position:relative;
-    }
-    select{
-      border-radius:8px;
-      border:1px solid var(--border);
-      padding:7px 30px 7px 9px;
-      font-size:.88rem;
-      background:white;
-    }
-
-    .search-box{
-      flex:1;
-      min-width:180px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:white;
-      border-radius:999px;
-      border:1px solid var(--border);
-      padding:4px 10px;
-    }
-    .search-box input{
-      border:none;
-      outline:none;
-      width:100%;
-      font-size:.88rem;
-      background:transparent;
-    }
-
-    .small-text{
-      font-size:.8rem;
-      color:#718096;
-      margin:4px 0 8px;
-      text-align:center;
-    }
-
-    .table-wrap{
-      border-radius:10px;
-      border:1px solid var(--border);
-      overflow:auto;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:700px;
-      font-size:.86rem;
-    }
-    th,td{
-      padding:8px 10px;
-      border-bottom:1px solid #f1f5f9;
-      text-align:left;
-    }
-    th{
-      background:#f8fafc;
-      color:#4b5563;
-      font-weight:600;
-    }
-    tr:hover td{background:#f9fafb;}
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:.75rem;
-    }
-    .pill-open{background:#ebf8ff;color:#2b6cb0;}
-    .pill-progress{background:#fef3c7;color:#92400e;}
-    .pill-resolved{background:#dcfce7;color:#166534;}
-    .pill-closed{background:#e6fffa;color:#2c7a7b;}
-
-    .status-bar{
-      font-size:.8rem;
-      color:#718096;
-      margin-top:4px;
-      text-align:left;
-      min-height:18px;
-    }
+    .card { background: white; border-radius: 12px; border: 1px solid var(--border); padding: 20px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .ticket-row { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background 0.2s; }
+    .ticket-row:hover { background: #f9fafb; }
+    
+    .status-badge { padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .status-open { background: #dbeafe; color: #1e40af; }
+    .status-closed { background: #dcfce7; color: #166534; }
+    
+    .btn-new { background: var(--brand); color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; margin-bottom: 20px; }
+    .btn-disabled { background: #cbd5e1; cursor: not-allowed; }
   </style>
 </head>
 <body>
-  <header class="hero">
-    <div class="hero-left">
-      <div class="hero-title">OCSI Service Request</div>
-      <nav class="hero-menu">
-        <a href="tickets.html" style="font-weight:600;text-decoration:underline;">Home</a>
-      </nav>
-    </div>
-    <div class="hero-right">
-      <button id="submitBtn" class="btn-primary">+ Submit a ticket</button>
-      <div id="who" class="hero-email">Checking session…</div>
-    </div>
+
+<div class="container">
+  <div id="maintBanner">⚠️ System Maintenance: Ticket submissions are currently disabled.</div>
+  
+  <header style="display:flex; justify-content:space-between; align-items:center;">
+    <h1>Support Portal</h1>
+    <a href="submit-request.html" id="newTicketBtn" class="btn-new">+ New Request</a>
   </header>
 
-  <main class="wrap">
-    <section class="card">
-      <div class="toolbar">
-        <div class="select">
-          <select id="statusFilter">
-            <option value="open">Open Tickets</option>
-            <option value="closed">Closed Tickets</option>
-            <option value="">All Tickets</option>
-          </select>
-        </div>
+  <div class="card">
+    <h3>Your Recent Tickets</h3>
+    <div id="ticketList">Loading your requests...</div>
+  </div>
+</div>
 
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, description, group…" />
-        </div>
-      </div>
+<script type="module">
+  import { db, watchAuth } from "./firebase.js";
+  import { collection, query, where, onSnapshot, getDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-      <p class="small-text" id="viewHint">
-        Loading tickets…
-      </p>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:70px;">ID</th>
-              <th>Summary</th>
-              <th>Description</th>
-              <th>Group</th>
-              <th>Status</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6">Loading tickets…</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="status-bar" id="statusBar"></div>
-    </section>
-  </main>
-
-  <script type="module">
-    import { db, watchAuth } from "./firebase.js";
-    import {
-      collection, getDocs, query, where, orderBy
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-    const whoEl        = document.getElementById("who");
-    const submitBtn    = document.getElementById("submitBtn");
-    const statusFilter = document.getElementById("statusFilter");
-    const searchInput  = document.getElementById("search");
-    const tbody        = document.getElementById("tbody");
-    const statusBar    = document.getElementById("statusBar");
-    const viewHint     = document.getElementById("viewHint");
-
-    let currentUser = null;
-    let currentRole = "viewer";
-    let allTickets  = [];
-
-    const AGENT_ROLES = ["admin","it"]; // agents see all tickets
-
-    watchAuth({
-      allowedRoles:["admin","it","viewer","staff"],
-      whoEl,
-      onReady: async (user, role)=>{
-        currentUser = user;
-        currentRole = role;
-
-        if(!user){
-          alert("Please sign in to view your tickets.");
-          return;
-        }
-
-        submitBtn.addEventListener("click", ()=>{
-          window.location.href = "submit-request.html";
-        });
-
-        await loadTickets();
-        statusFilter.addEventListener("change", render);
-        searchInput.addEventListener("input", render);
-      }
-    });
-
-    function setStatus(msg){
-      statusBar.textContent = msg || "";
-    }
-
-    async function loadTickets(){
-      if(!currentUser) return;
-
-      setStatus("Loading tickets…");
-      viewHint.textContent = "Loading tickets…";
-
-      try{
-        let q;
-        if(AGENT_ROLES.includes(currentRole)){
-          // Agents see all tickets
-          q = query(
-            collection(db,"tickets"),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Agent view: showing all tickets in the system (filter by open/closed above).";
-        }else{
-          // Requesters see *only their own* tickets
-          q = query(
-            collection(db,"tickets"),
-            where("requesterUid","==",currentUser.uid),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Requester view: showing tickets you submitted. Use the button above to create a new ticket.";
-        }
-
-        const snap = await getDocs(q);
-        allTickets = [];
-        snap.forEach(ds=>{
-          allTickets.push({
-            id: ds.id,
-            ...ds.data()
-          });
-        });
-
-        if(!allTickets.length){
-          tbody.innerHTML =
-            `<tr><td colspan="6">You have no tickets at the moment. Press “Submit a ticket” to create one.</td></tr>`;
-          setStatus("");
-          return;
-        }
-
-        render();
-        setStatus(`Loaded ${allTickets.length} ticket(s).`);
-      }catch(err){
-        console.error(err);
-        tbody.innerHTML =
-          `<tr><td colspan="6">Failed to load tickets.</td></tr>`;
-        setStatus("Error loading tickets: " + err.message);
-      }
-    }
-
-    function render(){
-      if(!allTickets.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets found.</td></tr>`;
-        return;
+  watchAuth({
+    onReady: async (user) => {
+      // 1. Check System Settings (Maintenance Mode)
+      const configSnap = await getDoc(doc(db, "system_config", "settings"));
+      if (configSnap.exists() && configSnap.data().maintenanceMode) {
+          document.getElementById("maintBanner").style.display = "block";
+          const btn = document.getElementById("newTicketBtn");
+          btn.classList.add("btn-disabled");
+          btn.onclick = (e) => e.preventDefault();
       }
 
-      const statusVal = statusFilter.value; // "open" | "closed" | ""
-      const term = (searchInput.value || "").toLowerCase();
+      // 2. Live Stream User's Tickets
+      const q = query(
+          collection(db, "tickets"), 
+          where("requesterEmail", "==", user.email),
+          orderBy("updatedAt", "desc")
+      );
 
-      const rows = allTickets.filter(t=>{
-        const st = (t.status || "open").toLowerCase();
+      onSnapshot(q, (snap) => {
+        const listEl = document.getElementById("ticketList");
+        if (snap.empty) {
+            listEl.innerHTML = "<p style='color:#64748b;'>You haven't submitted any tickets yet.</p>";
+            return;
+        }
 
-        // status filter:
-        // "open"  -> anything that is NOT "closed"
-        // "closed"-> only closed
-        if(statusVal === "open" && st === "closed") return false;
-        if(statusVal === "closed" && st !== "closed") return false;
-
-        if(!term) return true;
-
-        const hay = [
-          t.summary,
-          t.description,
-          groupToLabel(t.group),
-          t.assigneeName,
-          t.requesterName,
-          t.requesterEmail
-        ].join(" ").toLowerCase();
-
-        return hay.includes(term);
+        listEl.innerHTML = snap.docs.map(doc => {
+            const t = doc.data();
+            return `
+                <div class="ticket-row" onclick="location.href='view-ticket.html?id=${doc.id}'">
+                    <div>
+                        <div style="font-weight:600;">${t.summary}</div>
+                        <div style="font-size:0.8rem; color:#64748b;">Submitted: ${t.createdAt?.toDate().toLocaleDateString()}</div>
+                    </div>
+                    <span class="status-badge status-${t.status || 'open'}">${t.status || 'open'}</span>
+                </div>
+            `;
+        }).join('');
       });
-
-      if(!rows.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets match your filters.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = rows.map((t)=>{
-        const st = (t.status || "open").toLowerCase();
-        let pillClass = "pill-open";
-        let statusLabel = "Open";
-        if(st === "in-progress"){ pillClass = "pill-progress"; statusLabel = "In progress"; }
-        else if(st === "resolved"){ pillClass = "pill-resolved"; statusLabel = "Resolved"; }
-        else if(st === "closed"){ pillClass = "pill-closed"; statusLabel = "Closed"; }
-
-        const createdOrUpdated = t.updatedAt || t.createdAt;
-        const ts = formatDate(createdOrUpdated);
-
-        const shortDesc = (t.description || "").length > 80
-          ? t.description.slice(0,77) + "…"
-          : (t.description || "");
-
-        return `
-          <tr>
-            <td>${escapeHtml(String(t.id).slice(-4))}</td>
-            <td>${escapeHtml(t.summary || "")}</td>
-            <td>${escapeHtml(shortDesc)}</td>
-            <td>${escapeHtml(groupToLabel(t.group))}</td>
-            <td><span class="pill ${pillClass}">${statusLabel}</span></td>
-            <td>${escapeHtml(ts)}</td>
-          </tr>
-        `;
-      }).join("");
     }
-
-    function toDate(val){
-      if(!val) return null;
-      try{
-        if(val.toDate) return val.toDate();
-        return new Date(val);
-      }catch{
-        return null;
-      }
-    }
-
-    function formatDate(val){
-      const d = toDate(val);
-      if(!d || isNaN(d.getTime())) return "";
-      return d.toLocaleString();
-    }
-
-    function groupToLabel(g){
-      switch((g || "").toLowerCase()){
-        case "it": return "IT";
-        case "maintenance": return "Maintenance";
-        case "front-office": return "Front Office";
-        case "nurse": return "Nurse";
-        default: return g || "";
-      }
-    }
-
-    function escapeHtml(s){
-      if(!s) return "";
-      return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c] || c
-      ));
-    }
-  </script>
+  });
+</script>
 </body>
 </html>
