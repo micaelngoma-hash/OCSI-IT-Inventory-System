@@ -6,8 +6,6 @@
   <title>OCSI Admin – Command Center</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
   <style>
     :root{
       --red1:#c53030; --red2:#f56565; --brand:#1a73e8;
@@ -15,244 +13,268 @@
     }
 
     *{ box-sizing:border-box; }
-    body{ margin:0; font-family: 'Inter', sans-serif; background: var(--bg); color:#1e293b; }
+    body{ margin:0; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color:#1e293b; overflow-x: hidden; }
 
     /* HEADER */
-    .hero{ position:sticky; top:0; z-index:2000; background:linear-gradient(135deg, var(--red1), var(--red2)); color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .hero-title{ font-size:1.2rem; font-weight:800; letter-spacing: -0.025em; }
+    .hero{ position:sticky; top:0; z-index:1000; background:linear-gradient(135deg, var(--red1), var(--red2)); color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    .hero-title{ font-size:1.1rem; font-weight:800; letter-spacing: -0.025em; }
 
     /* LAYOUT */
-    .main-container { display: grid; grid-template-columns: 1fr 320px; gap: 24px; padding: 24px; max-width: 1440px; margin: 0 auto; }
-    @media(max-width: 1100px) { .main-container { grid-template-columns: 1fr; } .analytics-sidebar { position: static; height: auto; } }
+    .main-container { display: grid; grid-template-columns: 1fr 340px; gap: 24px; padding: 24px; max-width: 1600px; margin: 0 auto; transition: margin-right 0.3s ease; }
+    @media(max-width: 1100px) { .main-container { grid-template-columns: 1fr; } }
 
-    /* CARDS */
+    /* TICKETS & ANALYTICS */
     .card-shell{ background:white; border-radius:16px; border:1px solid var(--border); padding:24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .analytics-sidebar { position: sticky; top: 80px; height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 16px; overflow-y: auto; padding-right: 4px; }
-    .mini-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); transition: all 0.3s ease; }
-
-    /* ALERTS & SYNC */
-    .alert-glow { border-color: var(--danger); box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
-    .sync-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .sync-indicator { display: flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; color: var(--success); text-transform: uppercase; }
-    .dot { width: 8px; height: 8px; background-color: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
-    @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); } }
-
-    /* UI ELEMENTS */
-    .sidebar-label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; display: block; }
-    .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .stat-box { padding: 12px; background: #f1f5f9; border-radius: 12px; text-align: center; }
-    .stat-box b { display: block; font-size: 1.25rem; color: #0f172a; margin-bottom: 2px; }
-    .stat-box span { font-size: 0.6rem; color: #64748b; font-weight: 600; }
-    
-    .toolbar{ display:flex; gap:12px; margin: 20px 0; flex-wrap:wrap; }
-    .search-box{ display:flex; align-items:center; gap:8px; border:1px solid var(--border); border-radius:10px; padding:8px 14px; flex: 2; min-width: 200px; }
-    .search-box input{ border:none; outline:none; width:100%; font-size: 0.9rem; }
-    .select-custom { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: white; font-size: 0.85rem; cursor: pointer; }
+    .analytics-sidebar { position: sticky; top: 80px; height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 16px; }
+    .mini-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
 
     /* TABLE */
-    .table-wrap{ border-radius:12px; border:1px solid var(--border); overflow:auto; max-height:400px; }
+    .table-wrap{ border-radius:12px; border:1px solid var(--border); overflow:auto; max-height:600px; background: white; }
     table{ width:100%; border-collapse:collapse; font-size:0.875rem; }
-    th{ background:#f8fafc; padding:12px 16px; text-align:left; font-weight:600; color:#64748b; position:sticky; top:0; z-index:1; }
+    th{ background:#f8fafc; padding:12px 16px; text-align:left; font-weight:600; color:#64748b; position:sticky; top:0; z-index:10; }
     td{ padding:14px 16px; border-top:1px solid #f1f5f9; }
     tr:hover td{ background:#f8fafc; cursor: pointer; }
 
+    /* EDIT DRAWER */
+    #editDrawer {
+      position: fixed; top: 0; right: -450px; width: 450px; height: 100%;
+      background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+      z-index: 2000; transition: right 0.3s ease; padding: 30px;
+      overflow-y: auto;
+    }
+    #editDrawer.open { right: 0; }
+    .drawer-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.3); z-index: 1500; display: none;
+    }
+    .drawer-overlay.active { display: block; }
+
+    /* FORM UI */
+    .field-group { margin-bottom: 20px; }
+    .sidebar-label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .input-ui { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; }
+    
     .pill{ padding:4px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; text-transform: uppercase; }
     .pill-open{ background:#dcfce7; color:#166534; }
     .pill-closed{ background:#f1f5f9; color:#475569; }
     .pill-in-progress{ background:#fef9c3; color:#854d0e; }
 
-    .btn{ border:none; cursor:pointer; padding:10px 20px; border-radius:10px; font-size:0.875rem; font-weight:600; transition: all 0.2s; }
-    .btn-primary{ background:var(--brand); color:white; }
-    .chart-box { height: 130px; }
-    .hidden { display: none; }
-    .alert-text { color: var(--danger) !important; animation: blink 1.5s infinite; }
-    @keyframes blink { 50% { opacity: 0.5; } }
+    .btn{ border:none; cursor:pointer; padding:10px 20px; border-radius:10px; font-size:0.875rem; font-weight:600; }
+    .btn-primary{ background:var(--brand); color:white; width: 100%; }
+    .chart-box { height: 100px; }
   </style>
 </head>
 <body>
 
 <header class="hero">
-  <div class="hero-title">OCSI ADMIN</div>
-  <div id="who" style="font-size: 0.75rem; font-weight: 500;">...</div>
+  <div class="hero-title">OCSI COMMAND CENTER</div>
+  <div id="who" style="font-size: 0.8rem;">Session checking...</div>
 </header>
 
-<main class="main-container">
+<div id="overlay" class="drawer-overlay"></div>
+
+<div id="editDrawer">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+    <h2 style="margin:0; font-size:1.2rem;">Ticket Details</h2>
+    <button onclick="closeDrawer()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+  </div>
   
+  <div class="field-group">
+    <span class="sidebar-label">Summary</span>
+    <p id="drawSummary" style="font-weight:600; margin:0;"></p>
+  </div>
+
+  <div class="field-group">
+    <span class="sidebar-label">Status</span>
+    <select id="drawStatus" class="input-ui">
+      <option value="open">Open</option>
+      <option value="in-progress">In Progress</option>
+      <option value="closed">Closed</option>
+    </select>
+  </div>
+
+  <div class="field-group">
+    <span class="sidebar-label">Priority</span>
+    <select id="drawPriority" class="input-ui">
+      <option value="low">Low</option>
+      <option value="medium">Medium</option>
+      <option value="high">High</option>
+    </select>
+  </div>
+
+  <div class="field-group">
+    <span class="sidebar-label">Assignee Name</span>
+    <input type="text" id="drawAssignee" class="input-ui" placeholder="Name or Email">
+  </div>
+
+  <div class="field-group">
+    <span class="sidebar-label">Description</span>
+    <p id="drawDesc" style="font-size:0.85rem; color:#475569; background:#f8fafc; padding:12px; border-radius:8px;"></p>
+  </div>
+
+  <button id="updateTicketBtn" class="btn btn-primary">Update Ticket</button>
+  <p id="drawStatusMsg" style="font-size:0.75rem; text-align:center; margin-top:10px;"></p>
+</div>
+
+<main class="main-container">
   <section class="card-shell">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-      <div>
-        <h1 style="font-size: 1.5rem; margin:0;">Service Requests</h1>
-        <p style="color:#64748b; font-size:0.875rem; margin:4px 0 0;">IT & Maintenance Command Center</p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h1 style="font-size: 1.4rem; margin:0;">Service Requests</h1>
+      <div style="display:flex; gap:10px;">
+        <button id="logoutBtn" class="btn" style="background:#f1f5f9; font-size:0.75rem;">Log out</button>
       </div>
-      <button id="downloadReportBtn" class="btn" style="background:#f1f5f9; color:#475569;">Export PDF</button>
     </div>
 
-    <div class="toolbar">
-      <div class="search-box"><span>🔍</span><input id="search" placeholder="Search..."/></div>
-      <select id="assigneeFilter" class="select-custom"><option value="">All Assignees</option></select>
-      <select id="groupFilter" class="select-custom">
+    <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+      <input id="search" placeholder="🔍 Search summary..." style="padding:10px; border-radius:10px; border:1px solid var(--border); flex:1; min-width:200px;">
+      <select id="groupFilter" style="padding:10px; border-radius:10px; border:1px solid var(--border);">
         <option value="">All Groups</option>
-        <option value="IT">IT Only</option>
-        <option value="Maintenance">Maintenance Only</option>
+        <option value="IT">IT</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Front Office">Front Office</option>
+        <option value="Nurse">Nurse</option>
       </select>
-      <button id="newTicketBtn" class="btn btn-primary">New Ticket</button>
     </div>
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Ticket</th><th>Group</th><th>Priority</th><th>Status</th><th>Assignee</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Ticket</th>
+            <th>Group</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>Assignee</th>
+          </tr>
+        </thead>
         <tbody id="ticketsBody"></tbody>
       </table>
-    </div>
-
-    <div id="detailsArea" style="margin-top:24px;">
-      <div id="detailsPlaceholder" style="background:#f8fafc; padding:30px; text-align:center; border-radius:16px; border: 2px dashed #e2e8f0; color:#94a3b8;">Select a ticket row to view details</div>
-      <div id="ticketEditBlock" class="hidden" style="background:#fff; border:1px solid var(--border); border-radius:16px; padding:20px;">
-        <h3 id="detailTitle" style="margin:0 0 15px 0;"></h3>
-        <div class="stat-row">
-            <div><label class="sidebar-label">Status</label><select id="statusInput" class="select-custom" style="width:100%"><option value="open">Open</option><option value="in-progress">In Progress</option><option value="closed">Closed</option></select></div>
-            <div><label class="sidebar-label">Assign To</label><input id="assigneeInput" type="text" class="select-custom" style="width:100%"></div>
-        </div>
-        <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:20px; width:100%;">Update Ticket</button>
-      </div>
     </div>
   </section>
 
   <aside class="analytics-sidebar">
     <div class="mini-card">
-      <div class="sync-header"><span class="sidebar-label">Live Analytics</span><div class="sync-indicator"><span class="dot"></span> Live</div></div>
-      <div class="stat-row">
-        <div class="stat-box"><b id="statTotal">0</b><span>Active</span></div>
-        <div class="stat-box"><b id="statMTTR">0d</b><span>Avg MTTR</span></div>
-      </div>
-      <div style="text-align: center; margin-top: 10px;"><span id="lastSyncTime" style="font-size: 0.6rem; color: #94a3b8;">Last synced: --:--</span></div>
+      <span class="sidebar-label">Team Speed (MTTR)</span>
+      <div class="chart-box"><canvas id="efficiencyChart"></canvas></div>
+      <div id="statMTTR" style="text-align:center; font-weight:800; font-size:1.2rem; margin-top:5px;">0d</div>
     </div>
-
-    <div class="mini-card">
-      <span class="sidebar-label" style="margin-bottom:8px">Efficiency Score</span>
-      <div class="chart-box" style="height: 100px;"><canvas id="efficiencyChart"></canvas></div>
-      <div style="text-align:center; font-size:0.7rem; font-weight:700; color:#475569;" id="efficiencyText">Target: < 2 Days</div>
-    </div>
-
-    <div class="mini-card"><span class="sidebar-label">Volume (7D)</span><div class="chart-box"><canvas id="trendChart"></canvas></div></div>
+    <div class="mini-card"><span class="sidebar-label">Priority Ratio</span><div class="chart-box"><canvas id="priorityChart"></canvas></div></div>
     <div class="mini-card"><span class="sidebar-label">Workload Split</span><div class="chart-box"><canvas id="groupChart"></canvas></div></div>
-    <div id="priorityCard" class="mini-card"><span id="priorityLabel" class="sidebar-label">Priority Ratio</span><div class="chart-box" style="height: 110px;"><canvas id="priorityChart"></canvas></div></div>
   </aside>
 </main>
 
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
-import { collection, doc, getDocs, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, getDocs, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 let allTickets = [];
-let groupChart, priorityChart, trendChart, efficiencyChart;
-
-const syncTimeEl = document.getElementById("lastSyncTime");
-const priorityCardEl = document.getElementById("priorityCard");
-const priorityLabelEl = document.getElementById("priorityLabel");
+let charts = {};
+let selectedId = null;
 
 watchAuth({
-  allowedRoles:["admin","it"],
-  onReady: async (user) => {
-    document.getElementById("who").textContent = user.email.toUpperCase();
+  allowedRoles: ["admin", "it"],
+  onReady: async (user, role) => {
+    document.getElementById("who").textContent = user.email;
     await loadTickets();
   }
 });
 
-async function loadTickets(){
+async function loadTickets() {
   const snap = await getDocs(collection(db, "tickets"));
-  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() })).filter(t => t.group === "IT" || t.group === "Maintenance");
-  allTickets.sort((a,b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-  
-  const now = new Date();
-  syncTimeEl.textContent = `Last synced: ${now.toLocaleTimeString()}`;
-
-  const assignees = [...new Set(allTickets.map(t => t.assigneeName).filter(Boolean))];
-  document.getElementById("assigneeFilter").innerHTML = '<option value="">All Assignees</option>' + assignees.map(a => `<option value="${a}">${a}</option>`).join("");
-  renderTickets();
+  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
+  allTickets.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+  render();
 }
 
-function renderTickets(){
+function render() {
   const term = document.getElementById("search").value.toLowerCase();
   const gfilt = document.getElementById("groupFilter").value;
-  const afilt = document.getElementById("assigneeFilter").value;
 
   const filtered = allTickets.filter(t => {
-    const matchGroup = !gfilt || t.group === gfilt;
-    const matchAssignee = !afilt || t.assigneeName === afilt;
-    const matchSearch = !term || (t.summary || "").toLowerCase().includes(term);
-    return matchGroup && matchAssignee && matchSearch;
+    return (!gfilt || t.group === gfilt) && (!term || (t.summary || "").toLowerCase().includes(term));
   });
 
-  let closed = 0, mttrSum = 0;
-  const gCounts = { IT: 0, Maintenance: 0 };
+  const gCounts = { IT: 0, Maintenance: 0, "Front Office": 0, Nurse: 0 };
   const pCounts = { High: 0, Medium: 0, Low: 0 };
-  const last7Days = [...Array(7)].map((_, i) => {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }).reverse();
-  const trendData = {}; last7Days.forEach(day => trendData[day] = 0);
+  let mttrSum = 0, closed = 0;
 
   filtered.forEach(t => {
-    if(t.status === "closed") {
-      closed++;
-      if(t.createdAt && t.updatedAt) mttrSum += (t.updatedAt.toDate() - t.createdAt.toDate()) / (1000*60*60*24);
-    }
     if(gCounts.hasOwnProperty(t.group)) gCounts[t.group]++;
-    const p = (t.priority || "Medium").charAt(0).toUpperCase() + (t.priority || "Medium").slice(1);
+    const p = (t.priority || "medium").charAt(0).toUpperCase() + (t.priority || "medium").slice(1);
     if(pCounts.hasOwnProperty(p)) pCounts[p]++;
-    if(t.createdAt) {
-      const dStr = t.createdAt.toDate().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-      if(trendData.hasOwnProperty(dStr)) trendData[dStr]++;
+    if(t.status === "closed" && t.createdAt && t.updatedAt) {
+      closed++; mttrSum += (t.updatedAt.toDate() - t.createdAt.toDate()) / (1000*60*60*24);
     }
   });
 
-  const avgMttr = closed ? (mttrSum / closed) : 0;
-  document.getElementById("statTotal").textContent = filtered.length;
-  document.getElementById("statMTTR").textContent = avgMttr.toFixed(1) + "d";
-
-  // ALERT LOGIC
-  if(pCounts.High >= 3) { priorityCardEl.classList.add("alert-glow"); priorityLabelEl.classList.add("alert-text"); priorityLabelEl.textContent = "⚠ CRITICAL ALERT"; }
-  else { priorityCardEl.classList.remove("alert-glow"); priorityLabelEl.classList.remove("alert-text"); priorityLabelEl.textContent = "Priority Ratio"; }
-
-  updateCharts(gCounts, pCounts, trendData, last7Days, avgMttr);
+  const avg = closed ? (mttrSum/closed) : 0;
+  document.getElementById("statMTTR").textContent = avg.toFixed(1) + "d";
 
   document.getElementById("ticketsBody").innerHTML = filtered.map(t => `
-    <tr onclick="window.selectTicket('${t.id}')">
-      <td><div style="font-weight:600;">${t.summary || 'Untitled'}</div><div style="font-size:0.7rem; color:#94a3b8;">#${t.id.slice(-5)}</div></td>
-      <td style="font-size:0.8rem;">${t.group}</td><td style="font-size:0.8rem;">${t.priority || 'Medium'}</td>
-      <td><span class="pill pill-${t.status || 'open'}">${t.status || 'open'}</span></td><td style="font-size:0.8rem; font-weight:500;">${t.assigneeName || '--'}</td>
+    <tr onclick="openDrawer('${t.id}')">
+      <td><div style="font-weight:600;">${t.summary || 'Untitled'}</div></td>
+      <td>${t.group}</td>
+      <td>${t.priority || 'medium'}</td>
+      <td><span class="pill pill-${t.status || 'open'}">${t.status || 'open'}</span></td>
+      <td>${t.assigneeName || '--'}</td>
     </tr>`).join("");
+
+  updateCharts(gCounts, pCounts, avg);
 }
 
-function updateCharts(groups, priorities, trend, days, avgMttr) {
-  const common = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-  [groupChart, priorityChart, trendChart, efficiencyChart].forEach(c => c?.destroy());
-
-  groupChart = new Chart(document.getElementById('groupChart'), { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ data: Object.values(groups), backgroundColor: ['#3b82f6', '#f59e0b'], borderRadius: 4 }] }, options: { ...common, scales: { y: { display: false }, x: { grid: { display: false } } } } });
-  priorityChart = new Chart(document.getElementById('priorityChart'), { type: 'doughnut', data: { labels: Object.keys(priorities), datasets: [{ data: Object.values(priorities), backgroundColor: ['#ef4444', '#f59e0b', '#10b981'], borderWidth: 0 }] }, options: { ...common, cutout: '75%' } });
-  trendChart = new Chart(document.getElementById('trendChart'), { type: 'line', data: { labels: days, datasets: [{ data: days.map(d => trend[d]), borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.05)', pointRadius: 0 }] }, options: { ...common, scales: { all: { display: false }, x: { grid: { display: false } }, y: { display: false } } } });
-
-  // EFFICIENCY GAUGE (Circular half-doughnut)
-  const score = Math.max(0, 100 - (avgMttr * 20)); // Higher score for lower days
-  efficiencyChart = new Chart(document.getElementById('efficiencyChart'), {
-    type: 'doughnut',
-    data: { datasets: [{ data: [score, 100 - score], backgroundColor: [avgMttr < 2 ? '#10b981' : '#f59e0b', '#f1f5f9'], circumference: 180, rotation: 270, borderWidth: 0 }] },
-    options: { ...common, cutout: '85%' }
-  });
-}
-
-window.selectTicket = (id) => {
+window.openDrawer = (id) => {
+  selectedId = id;
   const t = allTickets.find(x => x.id === id);
-  document.getElementById("detailsPlaceholder").classList.add("hidden");
-  document.getElementById("ticketEditBlock").classList.remove("hidden");
-  document.getElementById("detailTitle").textContent = t.summary;
-  document.getElementById("statusInput").value = t.status || "open";
-  document.getElementById("assigneeInput").value = t.assigneeName || "";
+  document.getElementById("drawSummary").textContent = t.summary;
+  document.getElementById("drawDesc").textContent = t.description || "No description provided.";
+  document.getElementById("drawStatus").value = t.status || "open";
+  document.getElementById("drawPriority").value = t.priority || "medium";
+  document.getElementById("drawAssignee").value = t.assigneeName || "";
+  document.getElementById("editDrawer").classList.add("open");
+  document.getElementById("overlay").classList.add("active");
 };
 
-document.querySelectorAll("#search, #groupFilter, #assigneeFilter").forEach(el => el.addEventListener("change", renderTickets));
-document.getElementById("search").addEventListener("input", renderTickets);
+window.closeDrawer = () => {
+  document.getElementById("editDrawer").classList.remove("open");
+  document.getElementById("overlay").classList.remove("active");
+  document.getElementById("drawStatusMsg").textContent = "";
+};
+
+document.getElementById("updateTicketBtn").onclick = async () => {
+  const btn = document.getElementById("updateTicketBtn");
+  btn.disabled = true;
+  document.getElementById("drawStatusMsg").textContent = "Updating...";
+
+  try {
+    await updateDoc(doc(db, "tickets", selectedId), {
+      status: document.getElementById("drawStatus").value,
+      priority: document.getElementById("drawPriority").value,
+      assigneeName: document.getElementById("drawAssignee").value,
+      updatedAt: serverTimestamp()
+    });
+    document.getElementById("drawStatusMsg").textContent = "✅ Updated successfully!";
+    await loadTickets();
+    setTimeout(closeDrawer, 1000);
+  } catch (e) {
+    document.getElementById("drawStatusMsg").textContent = "Error: " + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+function updateCharts(groups, priorities, mttr) {
+  Object.values(charts).forEach(c => c.destroy());
+  const opt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
+  charts.g = new Chart(document.getElementById('groupChart'), { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ data: Object.values(groups), backgroundColor: '#3b82f6' }] }, options: opt });
+  charts.p = new Chart(document.getElementById('priorityChart'), { type: 'doughnut', data: { labels: Object.keys(priorities), datasets: [{ data: Object.values(priorities), backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] }, options: { ...opt, cutout: '70%' } });
+  charts.e = new Chart(document.getElementById('efficiencyChart'), { type: 'doughnut', data: { datasets: [{ data: [100 - (mttr*10), mttr*10], backgroundColor: ['#10b981', '#f1f5f9'] }] }, options: { ...opt, circumference: 180, rotation: 270, cutout: '80%' } });
+}
+
+document.getElementById("search").oninput = render;
+document.getElementById("groupFilter").onchange = render;
+document.getElementById("overlay").onclick = closeDrawer;
+document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
 </script>
 </body>
 </html>
