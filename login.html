@@ -5,62 +5,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>OCSI IT Inventory – Login</title>
 <style>
-  :root{
-    --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb;
-  }
+  :root{ --bg:#0f172a;--bg2:#0b1020;--brand:#1a73e8;--border:#e5e7eb; }
   *{box-sizing:border-box;}
   body{
-    margin:0;
-    font-family:system-ui;
+    margin:0; font-family:system-ui;
     background:radial-gradient(circle at top,#1e293b,#020617);
-    color:white;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
+    color:white; min-height:100vh;
+    display:flex; justify-content:center; align-items:center; padding: 20px;
   }
-
   .card{
-    background:white;
-    color:#0f172a;
-    border-radius:18px;
-    padding:20px 24px;
-    width:100%;
-    max-width:380px;
+    background:white; color:#0f172a; border-radius:18px;
+    padding:24px; width:100%; max-width:380px;
     box-shadow:0 20px 40px rgba(15,23,42,.45);
   }
-
   h1{margin:0 0 4px;font-size:1.4rem;}
   .sub{margin:0 0 16px;font-size:.9rem;color:#64748b;}
-
   label{display:block;font-size:.85rem;color:#475569;margin-bottom:4px;}
-  input[type="email"],input[type="password"]{
-    width:100%;
-    padding:8px 10px;
-    border-radius:10px;
-    border:1px solid #cbd5e1;
-    font-size:.9rem;
-    margin-bottom:10px;
+  input{
+    width:100%; padding:10px; border-radius:10px;
+    border:1px solid #cbd5e1; font-size:.9rem; margin-bottom:12px;
   }
-
   .btn{
-    border:none;cursor:pointer;
-    padding:8px 14px;border-radius:999px;
-    font-size:.9rem;font-weight:600;
-    display:inline-flex;align-items:center;justify-content:center;
-    width:100%;
-    background:var(--brand);color:white;
+    border:none; cursor:pointer; padding:10px; border-radius:999px;
+    font-size:.9rem; font-weight:600; width:100%;
+    display:inline-flex; align-items:center; justify-content:center; gap: 8px;
   }
-
-  .status{
-    font-size:.8rem;margin-top:8px;min-height:18px;
-  }
+  .btn-primary{ background:var(--brand); color:white; }
+  .btn-google{ background:white; color:#444; border:1px solid #cbd5e1; margin-top: 12px; }
+  .status{ font-size:.8rem; margin-top:12px; min-height:18px; text-align: center; }
   .status.error{color:#b91c1c;}
   .status.ok{color:#166534;}
-
-  .top-logo{
-    font-weight:700;font-size:.95rem;margin-bottom:8px;color:#e5e7eb;text-align:center;
-  }
+  .top-logo{ font-weight:700; font-size:.95rem; margin-bottom:8px; color:#e5e7eb; text-align:center; }
+  hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
 </style>
 </head>
 <body>
@@ -68,49 +44,64 @@
 <div class="card">
   <div class="top-logo">OCSI IT Inventory</div>
   <h1>Sign in</h1>
-  <p class="sub">Use your registered school email to access the inventory dashboard.</p>
+  <p class="sub">Access the IT inventory dashboard.</p>
 
   <form id="loginForm">
-    <label for="email">Email</label>
+    <label>Email</label>
     <input id="email" type="email" autocomplete="username" required/>
-
-    <label for="password">Password</label>
+    <label>Password</label>
     <input id="password" type="password" autocomplete="current-password" required/>
-
-    <button class="btn" type="submit">Login</button>
+    <button class="btn btn-primary" type="submit">Login</button>
   </form>
+
+  <button id="googleBtn" class="btn btn-google">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+    Sign in with Google
+  </button>
 
   <div id="status" class="status"></div>
 </div>
 
 <script type="module">
-  import { auth } from "./firebase.js";
-  import { signInWithEmailAndPassword }
-    from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { auth, loginWithGoogle } from "./firebase.js";
+  import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-  const form   = document.getElementById("loginForm");
-  const email  = document.getElementById("email");
-  const pass   = document.getElementById("password");
+  const form = document.getElementById("loginForm");
+  const googleBtn = document.getElementById("googleBtn");
   const status = document.getElementById("status");
 
-  form.addEventListener("submit", async e=>{
-    e.preventDefault();
-    status.textContent = "Signing in…";
-    status.className = "status";
+  // Logic to handle redirection back to original page
+  const handleRedirect = () => {
+    const params = new URLSearchParams(window.location.search);
+    const destination = params.get('redirect');
+    window.location.href = destination ? decodeURIComponent(destination) : "index.html";
+  };
 
-    try{
-      const em = email.value.trim();
-      const pw = pass.value;
-      await signInWithEmailAndPassword(auth, em, pw);
-      status.textContent = "Login successful. Redirecting…";
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    status.textContent = "Signing in...";
+    status.className = "status";
+    try {
+      await signInWithEmailAndPassword(auth, document.getElementById("email").value.trim(), document.getElementById("password").value);
+      status.textContent = "Success! Redirecting...";
       status.className = "status ok";
-      window.location.href = "index.html";
-    }catch(err){
-      console.error(err);
-      status.textContent = err.message;
+      handleRedirect();
+    } catch(err) {
+      status.textContent = "Login failed: " + err.message;
       status.className = "status error";
     }
   });
+
+  googleBtn.onclick = async () => {
+    status.textContent = "Contacting Google...";
+    try {
+      await loginWithGoogle();
+      handleRedirect();
+    } catch(err) {
+      status.textContent = "Google Sign-in failed.";
+      status.className = "status error";
+    }
+  };
 </script>
 
 </body>
