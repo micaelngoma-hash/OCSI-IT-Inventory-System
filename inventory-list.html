@@ -14,7 +14,7 @@
     --success: #22c55e;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-family:system-ui;background:#f5f7fb; padding-bottom: 80px;} /* Space for bulk bar */
+  body{margin:0;font-family:system-ui;background:#f5f7fb; padding-bottom: 80px;}
   .topbar{
     position:sticky;top:0;z-index:20;
     background:var(--bg);color:white;
@@ -107,14 +107,13 @@
   .pill-gray{background:#e5e7eb;color:#374151;}
   .pill-red{background:#fee2e2;color:#b91c1c;}
 
-  /* Bulk Bar Styles */
   #bulkBar {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
     background: #1e293b; color: white; padding: 12px 24px;
     border-radius: 999px; display: none; align-items: center; gap: 15px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.3); z-index: 100;
   }
-  #bulkBar select { background: #334155; color: white; border: none; }
+  #bulkBar select { background: #334155; color: white; border: none; padding: 5px 10px; border-radius: 5px;}
 </style>
 </head>
 <body>
@@ -168,9 +167,7 @@
       <table>
         <thead>
           <tr>
-            <th style="width:40px;">
-              <input type="checkbox" id="selectAll"/>
-            </th>
+            <th style="width:40px;"><input type="checkbox" id="selectAll"/></th>
             <th>Asset ID</th>
             <th>Device Name</th>
             <th>Type</th>
@@ -201,61 +198,65 @@
     </select>
     <button id="btnBulkUpdate" class="btn" style="background:var(--success); color:white;">Apply</button>
     <button id="btnBulkDelete" class="btn" style="background:var(--danger); color:white;">🗑️ Delete</button>
-    <button onclick="clearSelection()" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.8rem;">Cancel</button>
+    <button id="btnCancelBulk" style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:0.8rem;">Cancel</button>
 </div>
 
 <script type="module">
-  import { db, watchAuth } from "./firebase.js";
-  import { collection, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  import { db, watchAuth, logAudit } from "./firebase.js";
+  import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  const whoEl        = document.getElementById("who");
-  const tbody        = document.getElementById("tbody");
-  const searchInput  = document.getElementById("search");
+  const whoEl = document.getElementById("who");
+  const tbody = document.getElementById("tbody");
+  const searchInput = document.getElementById("search");
   const statusFilter = document.getElementById("statusFilter");
-  const addBtn       = document.getElementById("addBtn");
-  const importBtn    = document.getElementById("importBtn");
-  const exportBtn    = document.getElementById("exportBtn");
-  const selectAll    = document.getElementById("selectAll");
-  const btnBulkQR    = document.getElementById("btnBulkQR");
+  const addBtn = document.getElementById("addBtn");
+  const importBtn = document.getElementById("importBtn");
+  const exportBtn = document.getElementById("exportBtn");
+  const selectAll = document.getElementById("selectAll");
+  const btnBulkQR = document.getElementById("btnBulkQR");
   
-  const bulkBar      = document.getElementById("bulkBar");
-  const bulkCount    = document.getElementById("bulkCount");
+  const bulkBar = document.getElementById("bulkBar");
+  const bulkCount = document.getElementById("bulkCount");
   const btnBulkUpdate = document.getElementById("btnBulkUpdate");
   const btnBulkDelete = document.getElementById("btnBulkDelete");
+  const btnCancelBulk = document.getElementById("btnCancelBulk");
 
   const EDIT_ROLES = ["admin","it"];
   let currentRole = "viewer";
   let allItems = [];
+  const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
 
   watchAuth({
     allowedRoles:["admin","it","viewer"],
     whoEl,
     onReady: async (_user, role)=>{
       currentRole = role;
-
       if(!EDIT_ROLES.includes(role)){
         addBtn.style.display = "none";
         importBtn.style.display = "none";
         exportBtn.style.display = "none";
-        bulkBar.remove(); // Viewers can't see bulk actions
+        if(bulkBar) bulkBar.remove();
       } else {
-        addBtn.onclick    = () => location.href="item-form.html";
-        importBtn.onclick = () => location.href="import-devices.html";
-        exportBtn.onclick = () => location.href="export-devices.html";
+        addBtn.onclick = () => location.href = `${basePath}item-form.html`;
+        importBtn.onclick = () => location.href = `${basePath}import-devices.html`;
+        exportBtn.onclick = () => location.href = `${basePath}export-devices.html`;
       }
-
       await loadItems();
     }
   });
 
   async function loadItems(){
-    const snap = await getDocs(collection(db,"items"));
-    allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    render();
+    try {
+      const snap = await getDocs(collection(db,"items"));
+      allItems = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      render();
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="9" style="color:red">Error loading data.</td></tr>`;
+    }
   }
 
   function render(){
-    const term   = (searchInput.value || "").toLowerCase();
+    const term = (searchInput.value || "").toLowerCase();
     const filter = statusFilter.value;
 
     const rows = allItems.filter(it=>{
@@ -268,20 +269,14 @@
       tbody.innerHTML = `<tr><td colspan="9">No devices found.</td></tr>`;
       return;
     }
-
     tbody.innerHTML = rows.map(makeRow).join("");
-    updateBulkUI(); // Reset UI on render
+    updateBulkUI();
   }
 
   function makeRow(it){
-    const pill =
-      it.status === "in-use"   ? "pill-green" :
-      it.status === "loaned"   ? "pill-blue"  :
-      (it.status === "retired" || it.status === "repair") ? "pill-red" :
-      "pill-gray";
-
-    const viewURL = `item.html?id=${it.id}`;
-    const editURL = `item-form.html?id=${it.id}`;
+    const pill = it.status === "in-use" ? "pill-green" : it.status === "loaned" ? "pill-blue" : (it.status === "retired" || it.status === "repair") ? "pill-red" : "pill-gray";
+    const viewURL = `${basePath}item.html?id=${it.id}`;
+    const editURL = `${basePath}item-form.html?id=${it.id}`;
 
     let actions = `<a class="btn btn-ghost" href="${viewURL}">View</a>`;
     if(EDIT_ROLES.includes(currentRole)){
@@ -302,8 +297,6 @@
       </tr>`;
   }
 
-  // --- BULK ACTION LOGIC ---
-  
   function updateBulkUI() {
     const checked = document.querySelectorAll(".rowChk:checked");
     if (checked.length > 0 && EDIT_ROLES.includes(currentRole)) {
@@ -314,20 +307,18 @@
     }
   }
 
-  window.clearSelection = () => {
+  btnCancelBulk.onclick = () => {
     selectAll.checked = false;
     document.querySelectorAll(".rowChk").forEach(c => c.checked = false);
     updateBulkUI();
-  }
+  };
 
   tbody.addEventListener("change", (e) => {
     if (e.target.classList.contains("rowChk")) updateBulkUI();
   });
 
   selectAll.onclick = () => {
-    document.querySelectorAll(".rowChk").forEach(chk =>
-      chk.checked = selectAll.checked
-    );
+    document.querySelectorAll(".rowChk").forEach(chk => chk.checked = selectAll.checked);
     updateBulkUI();
   };
 
@@ -338,10 +329,13 @@
     
     if (confirm(`Update status to "${newStatus}" for ${ids.length} items?`)) {
         btnBulkUpdate.disabled = true;
-        for (const id of ids) {
-            await updateDoc(doc(db, "items", id), { status: newStatus });
-        }
-        location.reload();
+        try {
+            for (const id of ids) {
+                await updateDoc(doc(db, "items", id), { status: newStatus });
+            }
+            await logAudit("edit", "Multiple", `Bulk updated status to ${newStatus} for ${ids.length} items.`);
+            location.reload();
+        } catch (err) { alert("Error during bulk update."); btnBulkUpdate.disabled = false; }
     }
   };
 
@@ -349,31 +343,27 @@
     const ids = [...document.querySelectorAll(".rowChk:checked")].map(c => c.value);
     if (confirm(`⚠️ PERMANENTLY DELETE ${ids.length} items? This cannot be undone.`)) {
         btnBulkDelete.disabled = true;
-        for (const id of ids) {
-            await deleteDoc(doc(db, "items", id));
-        }
-        location.reload();
+        try {
+            for (const id of ids) {
+                await deleteDoc(doc(db, "items", id));
+            }
+            await logAudit("delete", "Multiple", `Bulk deleted ${ids.length} items.`);
+            location.reload();
+        } catch (err) { alert("Error during bulk delete."); btnBulkDelete.disabled = false; }
     }
   };
-
-  // --- QR & UTILS ---
 
   btnBulkQR.onclick = () => {
     const selected = [...document.querySelectorAll(".rowChk:checked")].map(x => x.value);
-    if(selected.length === 0){
-      alert("Please select at least one device.");
-      return;
-    }
-    location.href = `print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
+    if(selected.length === 0) return alert("Please select devices first.");
+    location.href = `${basePath}print-labels.html?ids=${encodeURIComponent(selected.join(","))}`;
   };
 
   function escapeHtml(s){
-    return String(s).replace(/[&<>"']/g,c=>(
-      {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]
-    ));
+    return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"'"}[c]));
   }
 
-  searchInput.oninput   = render;
+  searchInput.oninput = render;
   statusFilter.onchange = render;
 </script>
 
