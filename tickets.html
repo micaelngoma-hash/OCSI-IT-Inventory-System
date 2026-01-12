@@ -14,152 +14,123 @@
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(15, 23, 42, 0.95); display: flex; align-items: center; justify-content: center; z-index: 10000;
     }
-    .login-card {
-      background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;
-    }
+    .login-card { background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
     .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin: 15px 0; }
     
-    .hero{ background:linear-gradient(90deg,var(--red1),var(--red2)); color:white; padding:18px 26px; display:flex; align-items:center; justify-content:space-between; }
-    .hero-left{ display:flex; align-items:center; gap:22px; }
-    .hero-title{ font-size:1.8rem; font-weight:600; }
+    .hero{ background:linear-gradient(90deg,var(--red1),var(--red2)); color:white; padding:12px 26px; display:flex; align-items:center; justify-content:space-between; }
+    .hero-title{ font-size:1.5rem; font-weight:600; }
     .hero-right{ display:flex; align-items:center; gap:14px; }
-    .hero-email{ font-size:.85rem; opacity:.9; }
-    .btn-primary{ border:none; border-radius:999px; padding:8px 16px; font-size:.9rem; font-weight:600; background:#0b7285; color:white; cursor:pointer; }
+    .btn-primary{ border:none; border-radius:8px; padding:8px 16px; font-size:.9rem; font-weight:600; background:#0b7285; color:white; cursor:pointer; display:flex; align-items:center; gap:5px; }
     
-    .wrap{ display:flex; justify-content:center; padding:34px 16px; }
-    .card{ background:white; border-radius:12px; border:1px solid var(--border); max-width:900px; width:100%; padding:18px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
-    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow:auto; margin-top: 15px; }
+    .wrap{ display:flex; justify-content:center; padding:20px 16px; }
+    .card{ background:white; border-radius:12px; border:1px solid var(--border); max-width:1100px; width:100%; padding:18px; box-shadow:0 1px 3px rgba(0,0,0,0.1); }
     
-    table{ width:100%; border-collapse:collapse; font-size:.86rem; }
-    th,td{ padding:10px; border-bottom:1px solid #f1f5f9; text-align:left; }
-    th{ background:#f8fafc; color:#4b5563; }
-    tbody tr { cursor: pointer; transition: background 0.2s; }
-    tbody tr:hover { background: #f1f5f9; }
+    table{ width:100%; border-collapse:collapse; font-size:.86rem; margin-bottom: 20px;}
+    th,td{ padding:12px; border-bottom:1px solid #f1f5f9; text-align:left; }
+    th{ background:#f8fafc; color:#4b5563; text-transform: uppercase; font-size: 0.75rem;}
+    tbody tr { cursor: pointer; }
+    tbody tr:hover { background: #f8fafc; }
 
-    .pill{ padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight: bold; }
+    .pill{ padding:2px 8px; border-radius:4px; font-size:.7rem; font-weight: bold; text-transform: uppercase; }
     .pill-open{background:#ebf8ff; color:#2b6cb0;}
     .pill-progress{background:#fffaf0; color:#dd6b20;}
-    .pill-closed{background:#f7fafc; color:#4a5568;}
 
-    /* Ticket Detail Modal */
-    #detailOverlay {
-      position: fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:900;
-    }
-    .detail-card { 
-      background:white; padding:25px; border-radius:12px; width:90%; max-width:500px; 
-      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-    }
-    .detail-field { margin-bottom: 15px; }
-    .detail-field label { display:block; font-size: 0.75rem; color:#718096; text-transform: uppercase; font-weight: bold; }
-    .detail-field p { margin: 5px 0; font-size: 0.95rem; }
+    /* Detail / Edit View */
+    .edit-section { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px; }
+    .row { display: flex; gap: 20px; margin-bottom: 15px; }
+    .col { flex: 1; }
+    label { display: block; font-size: 0.85rem; font-weight: bold; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; }
+    
+    /* Conversation Styles */
+    .conversation-box { background: #f8fafc; border: 1px solid var(--border); border-radius: 6px; padding: 10px; max-height: 200px; overflow-y: auto; margin-bottom: 10px; }
+    .comment { padding: 8px; border-bottom: 1px solid #edf2f7; font-size: 0.9rem; }
+    .comment:last-child { border: none; }
+    .comment b { display: block; font-size: 0.75rem; color: #4a5568; }
     
     .hidden { display: none !important; }
+    .btn-save { background: #1a73e8; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;}
+    .btn-reply { background: white; border: 1px solid var(--border); padding: 8px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;}
   </style>
 </head>
 <body>
 
   <div id="loginOverlay" class="hidden">
     <div class="login-card">
-      <h2 style="margin-top:0">OCSI Login</h2>
-      <p id="loginMsg" style="font-size:0.9rem; color:#4a5568;">Enter your school email to receive a secure login link.</p>
+      <h2>OCSI Login</h2>
       <input type="email" id="loginEmail" class="login-input" placeholder="email@ocsi.org">
-      <button id="sendLinkBtn" class="btn-primary" style="width:100%">Send Magic Link</button>
-    </div>
-  </div>
-
-  <div id="detailOverlay" class="hidden">
-    <div class="detail-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h3 id="detId" style="margin:0; color:var(--brand);">Ticket Details</h3>
-        <button onclick="document.getElementById('detailOverlay').classList.add('hidden')" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
-      
-      <div class="detail-field">
-        <label>Summary</label>
-        <p id="detSummary" style="font-weight:600;"></p>
-      </div>
-      
-      <div class="detail-field">
-        <label>Description</label>
-        <p id="detDesc"></p>
-      </div>
-
-      <div class="detail-field">
-        <label>Status</label>
-        <select id="detStatus" style="width:100%; padding:8px; border-radius:6px; border:1px solid var(--border);">
-          <option value="open">Open</option>
-          <option value="in progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
-        </select>
-      </div>
-
-      <button id="updateTicketBtn" class="btn-primary" style="width:100%; margin-top:10px;">Update Ticket</button>
+      <button id="sendLinkBtn" class="btn-primary" style="width:100%; justify-content: center;">Send Magic Link</button>
     </div>
   </div>
 
   <header class="hero">
-    <div class="hero-left">
-      <div class="hero-title">OCSI Service Request</div>
-    </div>
+    <div class="hero-title">OCSI Service Request</div>
     <div class="hero-right">
-      <button id="submitBtn" class="btn-primary">+ Submit a ticket</button>
-      <div id="who" class="hero-email">Checking session…</div>
+      <button id="submitBtn" class="btn-primary"><span>+</span> Submit a ticket</button>
+      <div id="who" class="hero-email">...</div>
     </div>
   </header>
 
   <main class="wrap">
     <section class="card">
-      <div id="viewHint" style="font-size:0.85rem; margin-bottom:10px; color:#718096;">Loading your tickets...</div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>ID</th><th>Summary</th><th>Group</th><th>Status</th><th>Updated</th></tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Summary</th><th>Group</th><th>Status</th><th>Created</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div id="editView" class="edit-section hidden">
+        <div class="row">
+          <div class="col">
+            <label>Status</label>
+            <select id="detStatus">
+              <option value="Open">Open</option>
+              <option value="In progress">In progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Closed">Closed</option>
+            </select>
+          </div>
+          <div class="col">
+            <label>Priority</label>
+            <select id="detPriority">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+              <option value="Urgent">Urgent</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="detail-field" style="margin-bottom:15px;">
+          <label>Subject</label>
+          <input type="text" id="detSummary">
+        </div>
+
+        <label>Conversation</label>
+        <div id="conversation" class="conversation-box"></div>
+
+        <textarea id="replyText" placeholder="Add reply..." rows="3" style="margin-bottom:10px;"></textarea>
+
+        <div style="display:flex; gap:10px;">
+          <button id="updateTicketBtn" class="btn-save">💾 Save Status</button>
+          <button id="replyBtn" class="btn-reply">💬 Post Reply</button>
+        </div>
       </div>
     </section>
   </main>
 
   <script type="module">
     import { auth, db, watchAuth } from "./firebase.js";
-    import { 
-      isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail 
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import { 
-      collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, updateDoc, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    const overlay = document.getElementById("loginOverlay");
-    const detailOverlay = document.getElementById("detailOverlay");
     const tbody = document.getElementById("tbody");
-    const whoEl = document.getElementById("who");
-
+    const editView = document.getElementById("editView");
     let currentUser = null;
-    let currentRole = "staff";
     let selectedTicketId = null;
 
-    // --- MAGIC LINK HANDLER ---
-    async function handleAuthTransition() {
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        let email = window.localStorage.getItem('emailForSignIn');
-        if (!email) email = window.prompt('Please confirm your email for sign-in:');
-        try {
-          const result = await signInWithEmailLink(auth, email, window.location.href);
-          window.localStorage.removeItem('emailForSignIn');
-          const userRef = doc(db, "users", result.user.uid);
-          const userSnap = await getDoc(userRef);
-          if (!userSnap.exists()) {
-            await setDoc(userRef, { email: result.user.email, role: "staff", activatedAt: serverTimestamp() });
-            alert("✅ Account Activated!");
-          }
-        } catch (err) { alert("Error: " + err.message); }
-      }
-    }
-
-    // --- LOAD TICKETS ---
+    // Load tickets and add IDs for the table (1, 2, 3...)
     async function loadTickets(user, role) {
       const q = (role === 'admin' || role === 'it') 
         ? query(collection(db, "tickets"), orderBy("createdAt", "desc"))
@@ -167,76 +138,83 @@
 
       const snap = await getDocs(q);
       tbody.innerHTML = "";
-      
-      snap.docs.forEach(d => {
+      snap.docs.forEach((d, index) => {
         const t = d.data();
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td>${d.id.slice(-4)}</td>
+          <td>${snap.docs.length - index}</td>
           <td>${t.summary}</td>
           <td>${t.group || 'IT'}</td>
-          <td><span class="pill ${t.status === 'closed' ? 'pill-closed' : 'pill-open'}">${t.status || 'open'}</span></td>
+          <td><span class="pill ${t.status === 'In progress' ? 'pill-progress' : 'pill-open'}">${t.status || 'OPEN'}</span></td>
           <td>${t.createdAt ? new Date(t.createdAt.seconds*1000).toLocaleDateString() : ''}</td>
         `;
-        tr.onclick = () => openTicketDetail(d.id, t);
+        tr.onclick = () => openEditView(d.id, t);
         tbody.appendChild(tr);
       });
-      document.getElementById("viewHint").innerText = role === 'admin' ? "Admin View: All Tickets" : "Personal View: My Tickets";
     }
 
-    // --- OPEN DETAIL ---
-    function openTicketDetail(id, data) {
+    function openEditView(id, data) {
       selectedTicketId = id;
-      document.getElementById("detId").innerText = "Ticket #" + id.slice(-4);
-      document.getElementById("detSummary").innerText = data.summary;
-      document.getElementById("detDesc").innerText = data.description || "No description provided.";
-      document.getElementById("detStatus").value = data.status || "open";
+      editView.classList.remove("hidden");
+      document.getElementById("detSummary").value = data.summary;
+      document.getElementById("detStatus").value = data.status || "Open";
+      document.getElementById("detPriority").value = data.priority || "Medium";
       
-      // Only Admin/IT can change status
-      document.getElementById("detStatus").disabled = !(currentRole === 'admin' || currentRole === 'it');
-      document.getElementById("updateTicketBtn").style.display = (currentRole === 'admin' || currentRole === 'it') ? "block" : "none";
-      
-      detailOverlay.classList.remove("hidden");
+      const conv = document.getElementById("conversation");
+      conv.innerHTML = (data.comments || []).map(c => `
+        <div class="comment">
+          <b>${c.user}</b>
+          ${c.text}
+        </div>
+      `).join('');
+      conv.scrollTop = conv.scrollHeight;
     }
 
-    // --- UPDATE TICKET ---
+    // Save Status & Priority
     document.getElementById("updateTicketBtn").onclick = async () => {
-      const newStatus = document.getElementById("detStatus").value;
       try {
         await updateDoc(doc(db, "tickets", selectedTicketId), {
-          status: newStatus,
+          status: document.getElementById("detStatus").value,
+          priority: document.getElementById("detPriority").value,
+          summary: document.getElementById("detSummary").value,
           updatedAt: serverTimestamp()
         });
-        detailOverlay.classList.add("hidden");
-        loadTickets(currentUser, currentRole);
-        alert("Ticket Updated!");
-      } catch (err) { alert("Error updating: " + err.message); }
+        alert("Changes saved!");
+        loadTickets(currentUser, currentUser.role);
+      } catch (err) { alert(err.message); }
     };
 
-    // --- INIT ---
-    handleAuthTransition();
+    // Post a Reply
+    document.getElementById("replyBtn").onclick = async () => {
+      const text = document.getElementById("replyText").value.trim();
+      if(!text) return;
+      try {
+        await updateDoc(doc(db, "tickets", selectedTicketId), {
+          comments: arrayUnion({
+            user: currentUser.email,
+            text: text,
+            date: new Date().toISOString()
+          })
+        });
+        document.getElementById("replyText").value = "";
+        const snap = await getDoc(doc(db, "tickets", selectedTicketId));
+        openEditView(selectedTicketId, snap.data());
+      } catch (err) { alert(err.message); }
+    };
+
+    // --- Standard Init Logic ---
     watchAuth({
-      allowedRoles: ["admin", "it", "viewer", "staff"],
-      whoEl,
+      allowedRoles: ["admin", "it", "staff"],
+      whoEl: document.getElementById("who"),
       onReady: async (user, role) => {
-        if (!user) { overlay.classList.remove("hidden"); return; }
-        overlay.classList.add("hidden");
+        if (!user) { document.getElementById("loginOverlay").classList.remove("hidden"); return; }
         currentUser = user;
-        currentRole = role;
-        await loadTickets(user, role);
+        currentUser.role = role;
+        loadTickets(user, role);
       }
     });
 
     document.getElementById("submitBtn").onclick = () => window.location.href = "submit-request.html";
-    document.getElementById("sendLinkBtn").onclick = async () => {
-      const email = document.getElementById("loginEmail").value.trim();
-      if(!email) return alert("Email required");
-      try {
-        await sendSignInLinkToEmail(auth, email, { url: window.location.href, handleCodeInApp: true });
-        window.localStorage.setItem('emailForSignIn', email);
-        document.getElementById("loginMsg").innerHTML = "<b>Check your email!</b> A link has been sent.";
-      } catch (err) { alert(err.message); }
-    };
   </script>
 </body>
 </html>
