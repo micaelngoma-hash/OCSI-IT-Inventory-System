@@ -3,839 +3,308 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>OCSI Service Request – Admin Tickets</title>
+  <title>OCSI Admin – Command Center</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
     :root{
-      --red1:#c53030;
-      --red2:#f56565;
-      --brand:#1a73e8;
-      --border:#e5e7eb;
-
-      --btn-bg:#ffffff;
-      --btn-text:#2d3748;
-      --btn-border:#cbd5e1;
-      --btn-hover:#f1f5f9;
-
-      --chip-bg:#edf2f7;
-      --chip-text:#2d3748;
+      --red-brand:#c53030; --red-light:#f56565; --blue-brand:#1a73e8; 
+      --border:#e5e7eb; --bg:#f7fafc; --stale-bg:#fff5f5; --stale-border:#f56565;
     }
 
     *{ box-sizing:border-box; }
+    body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:#1a202c; }
 
-    /* ======================================
-       FIXED BANNER - STICKY HEADER
-       ====================================== */
-    body{
-      margin:0;
-      padding-top:0;
-      font-family:system-ui,-apple-system,Segoe UI,sans-serif;
-      background:#f7fafc;
-      color:#1a202c;
-    }
-
+    /* HEADER */
     .hero{
-      position:sticky;
-      top:0;
-      z-index:2000;
-
-      background:linear-gradient(90deg,var(--red1),var(--red2));
-      color:white;
-      padding:18px 26px;
-
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-
-      box-shadow:0 2px 6px rgba(0,0,0,0.25);
+      position:sticky; top:0; z-index:2000;
+      background:linear-gradient(90deg, var(--red-brand), var(--red-light));
+      color:white; padding:15px 25px; display:flex; align-items:center; justify-content:space-between;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    .hero-left{
-      display:flex;
-      flex-direction:row;
-      align-items:center;
-      gap:28px;
+    /* LAYOUT GRID */
+    .main-grid {
+      display: grid; grid-template-columns: 1fr 340px; gap: 24px;
+      max-width: 1500px; margin: 0 auto; padding: 24px;
     }
 
-    .hero-title{
-      font-size:1.8rem;
-      font-weight:600;
-    }
+    @media(max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
 
-    .hero-menu a{
-      color:white;
-      text-decoration:none;
-      font-size:1rem;
-      opacity:.95;
-    }
+    .card{ background:white; border-radius:12px; border:1px solid var(--border); padding:20px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); }
 
-    .hero-right{
-      display:flex;
-      flex-direction:row;
-      align-items:center;
-      gap:20px;
-    }
+    /* SIDEBAR ANALYTICS */
+    .sidebar-sticky { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 20px; }
+    .chart-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; min-height: 220px; }
+    .sidebar-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; display: block; }
 
-    .hero-user-inline{
-      display:flex;
-      flex-direction:row;
-      align-items:center;
-      gap:6px;
-      font-size:.9rem;
-      opacity:.95;
-      white-space:nowrap;
+    /* TOOLBAR & SEARCH */
+    .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
+    .search-wrap{
+      display:flex; align-items:center; gap:10px; background:white; border:1px solid var(--border); 
+      border-radius:999px; padding:8px 18px; flex-grow: 1; max-width: 500px;
     }
+    .search-wrap input{ border:none; outline:none; font-size:.9rem; width:100%; }
 
-    .btn-hero-small{
-      border:none;
-      border-radius:999px;
-      padding:6px 14px;
-      font-size:.82rem;
-      font-weight:500;
-      background:rgba(255,255,255,.16);
-      color:white;
-      cursor:pointer;
-    }
+    /* TABLE STYLING */
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow:auto; max-height:500px; background:white; }
+    table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+    th, td{ padding:14px; border-bottom:1px solid #edf2f7; text-align:left; }
+    th{ background:#f8fafc; color:#64748b; font-weight: 600; position:sticky; top:0; z-index: 5; }
+    tr:hover td{ background:#f9fafb; cursor: pointer; }
 
-    /* MAIN CONTENT */
-    .wrap{
-      display:flex;
-      justify-content:center;
-      padding:34px 16px;
-    }
-
-    .card-shell{
-      background:white;
-      border-radius:12px;
-      border:1px solid var(--border);
-      max-width:1100px;
-      width:100%;
-      padding:18px;
-      box-shadow:0 10px 30px rgba(15,23,42,.06);
-    }
-
-    h1{ margin:0 0 4px; font-size:1.3rem; }
-    .subtitle{ margin:0 0 14px; font-size:.9rem; color:#4a5568; }
-
-    /* ==============================
-       ANALYTICS SECTION
-       ============================== */
-    .analytics-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-    .chart-container {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      height: 180px;
-      position: relative;
-    }
-    .chart-label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      display: block;
-    }
-    @media(max-width: 800px) {
-      .analytics-row { grid-template-columns: 1fr; }
-    }
-
-    /* ==============================
-       TOOLBAR
-       ============================== */
-    .toolbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:10px;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .search-box{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:white;
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:4px 10px;
-      max-width:320px;
-      width:100%;
-    }
-    .search-box input{
-      border:none;
-      outline:none;
-      font-size:.88rem;
-      width:100%;
-      background:transparent;
-    }
-
-    select{
-      padding:6px 8px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      font-size:.85rem;
-      background:white;
-      cursor:pointer;
-    }
-
-    .btn{
-      border:none;
-      cursor:pointer;
-      padding:6px 12px;
-      border-radius:999px;
-      font-size:.85rem;
-      font-weight:500;
-      display:inline-flex;
-      align-items:center;
-      gap:5px;
-    }
-    .btn-primary{ background:var(--brand); color:white; }
-
-    /* ======================================
-       TICKET LIST PANEL
-       ====================================== */
-    .table-wrap{
-      border-radius:10px;
-      border:1px solid var(--border);
-      overflow-y:auto;
-      max-height:430px;
-      position:relative;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:750px;
-      font-size:.85rem;
-    }
-
-    th,td{
-      padding:8px 10px;
-      border-bottom:1px solid #f1f5f9;
-      text-align:left;
-    }
-
-    th{
-      background:#f8fafc;
-      color:#4b5563;
-      font-weight:600;
-      position:sticky;
-      top:0;
-      z-index:10;
-    }
-
-    tr:hover td{ background:#f9fafb; }
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:.75rem;
-    }
+    /* STATUS PILLS */
+    .pill{ padding:4px 10px; border-radius:12px; font-size:.7rem; font-weight:700; text-transform:uppercase; }
     .pill-open{ background:#ebf8ff; color:#2b6cb0; }
-    .pill-closed{ background:#e6fffa; color:#2c7a7b; }
-    .pill-progress{ background:#fff3cd; color:#b7791f; }
+    .pill-closed{ background:#f0fff4; color:#2f855a; }
+    .pill-stale{ background:var(--red-brand); color:white; }
 
+    /* BUTTONS */
+    .btn{ border:none; cursor:pointer; padding:10px 18px; border-radius:8px; font-size:.85rem; font-weight:600; transition:0.2s; }
+    .btn-primary{ background:var(--blue-brand); color:white; }
+    .btn-export{ background:#10b981; color:white; }
+    
     .hidden{ display:none; }
-
-    /* EDIT BLOCK */
-    .ticket-edit{
-      border-radius:8px;
-      border:1px solid #e5e7eb;
-      padding:10px;
-      background:#fdfefe;
-      margin-bottom:10px;
-    }
-
-    .ticket-top-grid{
-      display:grid;
-      grid-template-columns:repeat(4,minmax(0,1fr));
-      gap:10px;
-      margin-bottom:10px;
-    }
-    @media(max-width:900px){
-      .ticket-top-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
-    }
-
-    .field-label{ font-size:.8rem; font-weight:600; margin-bottom:3px; }
-    .field-input, .field-select, .field-textarea{
-      width:100%;
-      padding:7px 9px;
-      border-radius:8px;
-      border:1px solid #cbd5e1;
-      font-size:.9rem;
-    }
-    .field-textarea{
-      min-height:80px;
-      resize:vertical;
-    }
-
-    .comment-list{
-      max-height:220px;
-      overflow:auto;
-      border:1px solid #e5e7eb;
-      border-radius:8px;
-      padding:8px 10px;
-      font-size:.82rem;
-      background:#f9fafb;
-      margin-top:2px;
-    }
-
-    .chip{
-      display:inline-flex;
-      align-items:center;
-      background:var(--chip-bg);
-      color:var(--chip-text);
-      padding:4px 10px;
-      border-radius:999px;
-      font-size:.82rem;
-      margin:4px;
-    }
-    .chip button{
-      margin-left:6px;
-      border:none;
-      background:transparent;
-      cursor:pointer;
-      font-size:.85rem;
-      color:#c53030;
-    }
+    .field-group{ margin-bottom: 15px; }
+    .label{ display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:5px; }
+    input, select, textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; }
   </style>
 </head>
-
 <body>
 
 <header class="hero">
-  <div class="hero-left">
-    <div class="hero-title">OCSI Service Request</div>
-    <nav class="hero-menu">
-      <a href="tickets.html">Requester view</a>
-    </nav>
-  </div>
-
-  <div class="hero-right">
-    <div id="who" class="hero-user-inline">Checking session…</div>
-    <button id="logoutBtn" class="btn-hero-small" type="button">Log out</button>
+  <div style="font-size:1.3rem; font-weight:800; letter-spacing:-0.5px;">OCSI SERVICE DESK</div>
+  <div style="display:flex; align-items:center; gap:15px;">
+    <span id="adminEmail" style="font-size:0.85rem; opacity:0.9;"></span>
+    <button id="logoutBtn" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 14px; border-radius:20px; cursor:pointer;">Sign Out</button>
   </div>
 </header>
 
-<main class="wrap">
-  <section class="card-shell">
-
-    <h1>Tickets (Admin view)</h1>
-    <p class="subtitle">View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.</p>
-
-    <div class="analytics-row">
-      <div class="chart-container">
-        <span class="chart-label">Tickets by Group</span>
-        <canvas id="groupChart"></canvas>
+<main class="main-grid">
+  <section>
+    <div class="card">
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input id="searchBar" placeholder="Search names, subjects, rooms, or status..."/>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <select id="groupFilter" style="width:auto; padding:5px 15px; border-radius:20px;">
+            <option value="">All Departments</option>
+            <option value="IT">IT</option>
+            <option value="Front Office">Front Office</option>
+          </select>
+          <button id="exportBtn" class="btn btn-export">Export CSV</button>
+        </div>
       </div>
-      <div class="chart-container">
-        <span class="chart-label">Priority Split</span>
-        <canvas id="priorityChart"></canvas>
-      </div>
-      <div class="chart-container">
-        <span class="chart-label">Workload Status</span>
-        <canvas id="statusChart"></canvas>
-      </div>
-    </div>
-
-    <div class="toolbar">
-      <div class="search-box">
-        <span>🔍</span>
-        <input id="search" placeholder="Search summary, requester, location…"/>
-      </div>
-
-      <div class="filters">
-        <select id="groupFilter">
-          <option value="">All groups</option>
-          <option value="IT">IT</option>
-          <option value="Maintenance">Maintenance</option>
-        </select>
-
-        <select id="statusFilter">
-          <option value="">All statuses</option>
-          <option value="open">Open</option>
-          <option value="in-progress">In progress</option>
-          <option value="closed">Closed</option>
-        </select>
-
-        <button id="newTicketBtn" class="btn btn-primary" type="button">➕ New ticket</button>
-      </div>
-    </div>
-
-    <p id="listStatus" class="small-text">Loading tickets…</p>
-
-    <section class="panel">
-      <h2>Ticket list</h2>
 
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th style="width:55px;">#</th>
-              <th>Summary</th>
-              <th>Group</th>
-              <th>Priority</th>
-              <th>Status</th>
-              <th>Assignee</th>
-              <th>Requester</th>
-              <th>Created</th>
-            </tr>
+            <tr><th>Ticket</th><th>Summary</th><th>Dept</th><th>Status</th><th>Assignee</th><th>Created</th></tr>
           </thead>
-
-          <tbody id="ticketsBody">
-            <tr><td colspan="8">Loading…</td></tr>
-          </tbody>
+          <tbody id="ticketsBody"></tbody>
         </table>
       </div>
-    </section>
 
-    <p class="small-text">Click a ticket in the list above to see details, update status, and reply.</p>
-
-    <section class="panel">
-      <h2>Ticket details &amp; replies</h2>
-
-      <p class="muted" id="detailsHint">No ticket selected yet.</p>
-
-      <div id="detailsPlaceholder" class="comment-muted" style="margin-bottom:8px;">Select a ticket above to view its details.</div>
-
-      <div id="ticketEditBlock" class="ticket-edit hidden">
-
-        <div class="ticket-top-grid">
-          <div>
-            <div class="field-label">Group</div>
-            <select id="groupInput" class="field-select">
-              <option value="IT">IT</option>
-              <option value="Maintenance">Maintenance</option>
-              <option value="Front Office">Front Office</option>
-              <option value="Nurse">Nurse</option>
-            </select>
-          </div>
-
-          <div>
-            <div class="field-label">Status</div>
-            <select id="statusInput" class="field-select">
-              <option value="open">Open</option>
-              <option value="in-progress">In progress</option>
-              <option value="closed">Closed</option>
-            </select>
-          </div>
-
-          <div>
-            <div class="field-label">Priority</div>
-            <select id="priorityInput" class="field-select">
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="low">Low</option>
-            </select>
-          </div>
-
-          <div>
-            <div class="field-label">Assignee</div>
-            <div style="display:flex;gap:6px;align-items:center;">
-              <input id="assigneeInput" class="field-input" placeholder="Unassigned"/>
-              <button id="assignMeBtn" class="action-btn success" type="button">✔ Me</button>
-              <button id="unassignBtn" class="action-btn danger" type="button">✖ Unassign</button>
+      <div id="editor" style="margin-top:30px;">
+        <div id="placeholder" style="text-align:center; padding:40px; border:2px dashed var(--border); border-radius:12px; color:#94a3b8;">
+          Select a ticket to update status or reply to user
+        </div>
+        
+        <div id="editForm" class="hidden" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border);">
+          <h3 id="editTicketID" style="margin-top:0; color:var(--blue-brand);">Ticket Update</h3>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+            <div class="field-group">
+              <span class="label">Status</span>
+              <select id="statusInp">
+                <option value="open">Open</option>
+                <option value="in-progress">In Progress</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <span class="label">Assign To</span>
+              <input id="assigneeInp" placeholder="Staff Name"/>
             </div>
           </div>
+          <div class="field-group">
+            <span class="label">Official Reply</span>
+            <textarea id="replyInp" style="height:100px;" placeholder="Message to requester..."></textarea>
+          </div>
+          <button id="saveBtn" class="btn btn-primary" style="width:100%;">Update Ticket & Notify User</button>
         </div>
-
-        <div class="field-label">Summary</div>
-        <input id="summaryInput" class="field-input" readonly/>
-
-        <div class="field-label">Description</div>
-        <textarea id="descriptionInput" class="field-textarea" readonly></textarea>
-
-        <div class="field-label">Location</div>
-        <input id="locationInput" class="field-input" readonly/>
-
-        <div class="field-label">Requested completion date</div>
-        <input id="dueDateInput" type="date" class="field-input" disabled/>
-
-        <div class="field-label">Urgency (1 = low, 5 = very urgent)</div>
-        <select id="urgencyInput" class="field-select" disabled>
-          <option value="1">1 – Low</option>
-          <option value="2">2</option>
-          <option value="3">3 – Normal</option>
-          <option value="4">4</option>
-          <option value="5">5 – Very urgent</option>
-        </select>
-
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
-          <button id="saveTicketBtn" class="btn btn-primary" type="button">💾 Save ticket</button>
-        </div>
-
-        <div id="formStatus" class="status-bar"></div>
       </div>
-
-      <div>
-        <div class="field-label">Conversation</div>
-        <div id="commentsList" class="comment-list">
-          <div class="comment-muted">No ticket selected yet.</div>
-        </div>
-
-        <div class="field-label" style="margin-top:8px;">Add reply</div>
-        <textarea id="replyInput" class="field-textarea" placeholder="Reply to the requester or add an internal note."></textarea>
-        <button id="addReplyBtn" class="btn btn-ghost" type="button" style="margin-top:6px;">💬 Add reply</button>
-      </div>
-
-    </section>
-
-    <section class="panel">
-      <h2>Group notification members</h2>
-      <p class="muted">Select a group, add/remove email addresses, and save the distribution list.</p>
-      <div style="margin-bottom:10px;">
-        <label class="field-label">Select group</label>
-        <select id="groupSelect" class="field-select" style="max-width:250px;">
-          <option value="IT">IT</option>
-          <option value="Maintenance">Maintenance</option>
-          <option value="Front Office">Front Office</option>
-          <option value="Nurse">Nurse</option>
-        </select>
-      </div>
-      <div>
-        <div class="field-label">Group members</div>
-        <div id="emailChipContainer" style="min-height:40px;"></div>
-      </div>
-      <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
-        <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
-        <button id="addEmailBtn" class="action-btn primary" type="button">➕ Add</button>
-      </div>
-      <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">💾 Save group list</button>
-      <div id="groupStatus" class="status-bar"></div>
-    </section>
-
+    </div>
   </section>
+
+  <aside>
+    <div class="sidebar-sticky">
+      <div class="chart-box">
+        <span class="sidebar-label">Department Workload</span>
+        <canvas id="deptChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <span class="sidebar-label">Resolution Rate</span>
+        <canvas id="resChart"></canvas>
+      </div>
+      <div class="chart-box" style="text-align:center;">
+        <span class="sidebar-label">Active Tickets</span>
+        <h1 id="countDisplay" style="font-size:3.5rem; margin:10px 0; color:var(--blue-brand);">0</h1>
+        <div id="syncBadge" style="font-size:0.7rem; color:#10b981; font-weight:700;">● LIVE SYNC ACTIVE</div>
+      </div>
+    </div>
+  </aside>
 </main>
 
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
-import {
-  collection, doc, addDoc, getDocs, updateDoc, setDoc,
-  serverTimestamp, query, orderBy, limit
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, doc, updateDoc, addDoc, serverTimestamp, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* STATE */
-let currentUser = null;
-let currentRole = "viewer";
-let allTickets = [];
-let selectedTicketId = null;
-let groupEmailList = [];
-let charts = {}; // Store chart instances
+let allTickets = [], selectedId = null, charts = {};
+let isInitial = true;
 
-const AGENT_ROLES = ["admin","it"];
-const VALID_STATUSES=["open","in-progress","closed"];
-
-/* DOM ELEMENTS */
-const whoEl = document.getElementById("who");
-const logoutBtn = document.getElementById("logoutBtn");
-const ticketsBody = document.getElementById("ticketsBody");
-const listStatus = document.getElementById("listStatus");
-const detailsHint = document.getElementById("detailsHint");
-const detailsPlaceholder = document.getElementById("detailsPlaceholder");
-const searchEl = document.getElementById("search");
-const groupFilterEl = document.getElementById("groupFilter");
-const statusFilterEl = document.getElementById("statusFilter");
-const newTicketBtn = document.getElementById("newTicketBtn");
-const ticketEditBlock = document.getElementById("ticketEditBlock");
-const groupInput = document.getElementById("groupInput");
-const statusInput = document.getElementById("statusInput");
-const priorityInput = document.getElementById("priorityInput");
-const assigneeInput = document.getElementById("assigneeInput");
-const assignMeBtn = document.getElementById("assignMeBtn");
-const unassignBtn = document.getElementById("unassignBtn");
-const summaryInput = document.getElementById("summaryInput");
-const descriptionInput = document.getElementById("descriptionInput");
-const locationInput = document.getElementById("locationInput");
-const dueDateInput = document.getElementById("dueDateInput");
-const urgencyInput = document.getElementById("urgencyInput");
-const saveTicketBtn = document.getElementById("saveTicketBtn");
-const formStatus = document.getElementById("formStatus");
-const commentsList = document.getElementById("commentsList");
-const replyInput = document.getElementById("replyInput");
-const addReplyBtn = document.getElementById("addReplyBtn");
-const groupSelect = document.getElementById("groupSelect");
-const emailChipContainer = document.getElementById("emailChipContainer");
-const newEmailInput = document.getElementById("newEmailInput");
-const addEmailBtn = document.getElementById("addEmailBtn");
-const saveGroupBtn = document.getElementById("saveGroupBtn");
-const groupStatus = document.getElementById("groupStatus");
-
-/* LOGOUT */
-logoutBtn.addEventListener("click",()=>{ window.location.href="login.html"; });
-
-/* AUTH WATCHER */
+// 1. Initialize & Auth
 watchAuth({
-  allowedRoles:["admin","it","viewer"],
-  whoEl,
-  onReady: async (user,role)=>{
-    currentUser=user; currentRole=role;
-    if(!user || !AGENT_ROLES.includes(role)){
-      alert("This page is for IT/Admin only.");
-      window.location.href="tickets.html";
-      return;
-    }
-    whoEl.textContent = `${user.email} ${role}`;
-    newTicketBtn.addEventListener("click",()=>window.location.href="submit-request.html");
-    searchEl.addEventListener("input",renderTickets);
-    groupFilterEl.addEventListener("change",renderTickets);
-    statusFilterEl.addEventListener("change",renderTickets);
-    ticketsBody.addEventListener("click",onRowClick);
-    saveTicketBtn.addEventListener("click",saveTicket);
-    addReplyBtn.addEventListener("click",addReply);
-    assignMeBtn.addEventListener("click",()=>{ assigneeInput.value=currentUser.displayName||currentUser.email; });
-    unassignBtn.addEventListener("click",()=>{ assigneeInput.value="Unassigned"; });
-    groupSelect.addEventListener("change",loadSelectedGroup);
-    addEmailBtn.addEventListener("click",addEmailToList);
-    saveGroupBtn.addEventListener("click",saveGroupEmails);
-    ticketEditBlock.classList.add("hidden");
-    await loadTickets();
-    await loadSelectedGroup();
+  allowedRoles: ["admin", "it"],
+  onReady: (user) => {
+    document.getElementById("adminEmail").textContent = user.email;
+    startRealtimeSync();
   }
 });
 
-/* ANALYTICS LOGIC */
-function updateAnalytics(data) {
-  const counts = {
-    group: { IT:0, Maintenance:0, "Front Office":0, Nurse:0 },
-    priority: { high:0, medium:0, low:0 },
-    status: { open:0, "in-progress":0, closed:0 }
-  };
+// 2. Real-Time Data Fetching (Instant updates)
+function startRealtimeSync() {
+  const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snap) => {
+    const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    // FILTER: Strictly IT and Front Office only
+    allTickets = raw.filter(t => t.group === "IT" || t.group === "Front Office");
 
-  data.forEach(t => {
-    if(counts.group[t.group] !== undefined) counts.group[t.group]++;
-    const p = (t.priority || "medium").toLowerCase();
-    if(counts.priority[p] !== undefined) counts.priority[p]++;
-    const s = (t.status || "open").toLowerCase();
-    if(counts.status[s] !== undefined) counts.status[s]++;
-  });
-
-  // Destroy existing charts to avoid overlay issues
-  Object.values(charts).forEach(c => c.destroy());
-
-  const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
-
-  charts.group = new Chart(document.getElementById('groupChart'), {
-    type: 'bar',
-    data: { labels: Object.keys(counts.group), datasets: [{ data: Object.values(counts.group), backgroundColor: '#3b82f6' }] },
-    options: chartOptions
-  });
-
-  charts.priority = new Chart(document.getElementById('priorityChart'), {
-    type: 'doughnut',
-    data: { labels: ['High','Med','Low'], datasets: [{ data: [counts.priority.high, counts.priority.medium, counts.priority.low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] },
-    options: { ...chartOptions, cutout: '70%' }
-  });
-
-  charts.status = new Chart(document.getElementById('statusChart'), {
-    type: 'bar',
-    data: { labels: ['Open','Active','Done'], datasets: [{ data: [counts.status.open, counts.status["in-progress"], counts.status.closed], backgroundColor: '#6366f1' }] },
-    options: { ...chartOptions, indexAxis: 'y' }
-  });
-}
-
-/* LOAD TICKETS */
-async function loadTickets(){
-  listStatus.textContent="Loading tickets…";
-  try{
-    const snap=await getDocs(collection(db,"tickets"));
-    allTickets=snap.docs.map(ds=>({id:ds.id,...ds.data()}));
-    allTickets.sort((a,b)=>{
-      const ta=a.createdAt?.toMillis?.()??0;
-      const tb=b.createdAt?.toMillis?.()??0;
-      return tb-ta;
-    });
-    renderTickets();
-    listStatus.textContent=`Showing ${allTickets.length} ticket(s)`;
-  }catch(err){ listStatus.textContent=err.message; }
-}
-
-/* RENDER TICKET LIST */
-function renderTickets(){
-  const term=searchEl.value.toLowerCase();
-  const gfilt=groupFilterEl.value;
-  const sfilt=statusFilterEl.value;
-
-  const rows=allTickets.filter(t=>{
-    const group=t.group||"";
-    const status=(t.status||"open").toLowerCase();
-    if(gfilt && group!==gfilt) return false;
-    if(sfilt && status!==sfilt) return false;
-    if(term){
-      const hay=[t.summary,t.description,t.requesterName,t.requesterEmail,t.location].join(" ").toLowerCase();
-      if(!hay.includes(term)) return false;
+    if (!isInitial && snap.docChanges().some(c => c.type === "added")) {
+      playAlert();
     }
-    return true;
+    
+    render();
+    isInitial = false;
+  });
+}
+
+// 3. Render Table with Universal Search & SLA Highlighting
+function render() {
+  const term = document.getElementById("searchBar").value.toLowerCase();
+  const deptFilter = document.getElementById("groupFilter").value;
+  const now = new Date();
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  const filtered = allTickets.filter(t => {
+    const searchArea = Object.values(t).join(" ").toLowerCase();
+    const matchesSearch = !term || searchArea.includes(term);
+    const matchesDept = !deptFilter || t.group === deptFilter;
+    return matchesSearch && matchesDept;
   });
 
-  updateAnalytics(rows); // Trigger Chart Update
+  document.getElementById("ticketsBody").innerHTML = filtered.map((t, i) => {
+    const created = t.createdAt?.toDate();
+    const isStale = (t.status === 'open' && created && (now - created) > MS_PER_DAY);
+    
+    const rowStyle = isStale ? `background: var(--stale-bg); border-left: 4px solid var(--stale-border);` : '';
+    const alertTag = isStale ? `<span class="pill pill-stale">⚠️ OVER 24H</span>` : '';
 
-  if(!rows.length){
-    ticketsBody.innerHTML=`<tr><td colspan="8">No match.</td></tr>`;
-    return;
-  }
-  ticketsBody.innerHTML=rows.map((t,i)=>`
-    <tr data-id="${t.id}">
-      <td>${i+1}</td>
-      <td>${escapeHtml(t.summary)}</td>
-      <td>${t.group}</td>
-      <td>${capitalize(t.priority||"medium")}</td>
-      <td>${statusPill(t.status)}</td>
-      <td>${t.assigneeName||t.assigneeEmail||"Unassigned"}</td>
-      <td>${t.requesterName||t.requesterEmail}</td>
-      <td>${formatDate(t.createdAt)}</td>
-    </tr>
-  `).join("");
+    return `
+      <tr onclick="window.selectTicket('${t.id}')" style="${rowStyle}">
+        <td>#${t.id.slice(-4)}</td>
+        <td><b>${t.summary || 'No Title'}</b> ${alertTag}</td>
+        <td>${t.group}</td>
+        <td><span class="pill pill-${(t.status || 'open')}">${t.status || 'open'}</span></td>
+        <td>${t.assigneeName || 'Unassigned'}</td>
+        <td>${created ? created.toLocaleDateString() : 'Pending'}</td>
+      </tr>
+    `;
+  }).join("");
+
+  updateCharts(filtered);
 }
 
-/* CLICK TICKET */
-function onRowClick(e){
-  const tr=e.target.closest("tr[data-id]");
-  if(!tr) return;
-  const id=tr.getAttribute("data-id");
-  if(id===selectedTicketId && !ticketEditBlock.classList.contains("hidden")){ hideDetails(); return; }
-  const ticket=allTickets.find(x=>x.id===id);
-  if(ticket) selectTicket(ticket);
+// 4. Update Sidebar Charts
+function updateCharts(data) {
+  const depts = { IT: 0, "Front Office": 0 }, stats = { open: 0, closed: 0 };
+  data.forEach(t => {
+    if(depts.hasOwnProperty(t.group)) depts[t.group]++;
+    if(t.status === 'closed') stats.closed++; else stats.open++;
+  });
+
+  document.getElementById("countDisplay").textContent = stats.open;
+
+  if(charts.d) charts.d.destroy();
+  if(charts.r) charts.r.destroy();
+
+  const config = { responsive: true, maintainAspectRatio: false, plugins: { legend: false } };
+
+  charts.d = new Chart(document.getElementById('deptChart'), {
+    type: 'bar',
+    data: { labels: ['IT', 'Front Office'], datasets: [{ data:[depts.IT, depts["Front Office"]], backgroundColor:['#1a73e8','#818cf8'] }] },
+    options: config
+  });
+
+  charts.r = new Chart(document.getElementById('resChart'), {
+    type: 'doughnut',
+    data: { labels: ['Pending', 'Closed'], datasets: [{ data:[stats.open, stats.closed], backgroundColor:['#f56565','#10b981'] }] },
+    options: { ...config, cutout: '75%' }
+  });
 }
 
-function hideDetails(){
-  selectedTicketId=null;
-  ticketEditBlock.classList.add("hidden");
-  commentsList.innerHTML=`<div class="comment-muted">No ticket selected.</div>`;
-  detailsHint.textContent="No ticket selected.";
-  detailsPlaceholder.textContent="Select a ticket above to view details.";
+// 5. Global Actions (Select, Export, Alert)
+window.selectTicket = (id) => {
+  selectedId = id;
+  const t = allTickets.find(x => x.id === id);
+  document.getElementById("placeholder").classList.add("hidden");
+  document.getElementById("editForm").classList.remove("hidden");
+  document.getElementById("editTicketID").textContent = `Managing Ticket: #${id.slice(-6)}`;
+  document.getElementById("statusInp").value = t.status || "open";
+  document.getElementById("assigneeInp").value = t.assigneeName || "";
+};
+
+document.getElementById("exportBtn").onclick = () => {
+  const headers = "ID,Summary,Dept,Status,Assignee,Date\n";
+  const rows = allTickets.map(t => 
+    `${t.id},"${t.summary}",${t.group},${t.status},${t.assigneeName || 'N/A'},${t.createdAt?.toDate().toLocaleDateString()}`
+  ).join("\n");
+  const blob = new Blob([headers + rows], { type: 'text/csv' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `OCSI_Export_${new Date().toLocaleDateString()}.csv`;
+  a.click();
+};
+
+function playAlert() {
+  new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{});
+  if (Notification.permission === "granted") new Notification("New Ticket Received!");
+  else Notification.requestPermission();
 }
 
-/* SELECT TICKET */
-function selectTicket(t){
-  selectedTicketId=t.id;
-  detailsHint.textContent=`Ticket ${t.id.slice(0,8)} – ${t.requesterName||t.requesterEmail}`;
-  detailsPlaceholder.textContent="";
-  ticketEditBlock.classList.remove("hidden");
-  groupInput.value=t.group||"IT";
-  priorityInput.value=t.priority||"medium";
-  statusInput.value=VALID_STATUSES.includes(t.status)?t.status:"open";
-  assigneeInput.value=t.assigneeName||t.assigneeEmail||"Unassigned";
-  summaryInput.value=t.summary||"";
-  descriptionInput.value=t.description||"";
-  locationInput.value=t.location||"";
-  dueDateInput.value=t.requestedDate||t.requestedCompletionDate||"";
-  urgencyInput.value=t.urgency??3;
-  formStatus.textContent="";
-  replyInput.value="";
-  loadComments(t.id);
-}
-
-/* SAVE TICKET */
-async function saveTicket(){
-  if(!selectedTicketId){ formStatus.textContent="Select a ticket first."; return; }
-  formStatus.textContent="Saving…";
-  const payload={
-    group:groupInput.value, priority:priorityInput.value, status:statusInput.value,
-    urgency:Number(urgencyInput.value||3), updatedAt:serverTimestamp()
-  };
-  const raw=assigneeInput.value.trim();
-  if(raw && raw.toLowerCase()!=="unassigned"){ payload.assigneeName=raw; } 
-  else { payload.assigneeName=""; payload.assigneeEmail=""; payload.assigneeUid=""; }
-  try{
-    await updateDoc(doc(db,"tickets",selectedTicketId),payload);
-    formStatus.textContent="Saved.";
-    await loadTickets();
-    const t=allTickets.find(x=>x.id===selectedTicketId);
-    if(t) selectTicket(t);
-  }catch(err){ formStatus.textContent=err.message; }
-}
-
-/* COMMENTS */
-async function loadComments(ticketId){
-  commentsList.innerHTML="<div class='comment-muted'>Loading…</div>";
-  try{
-    const q=query(collection(db,"tickets",ticketId,"comments"), orderBy("createdAt","asc"), limit(200));
-    const snap=await getDocs(q);
-    const arr=snap.docs.map(ds=>({id:ds.id,...ds.data()}));
-    if(!arr.length){ commentsList.innerHTML=`<div class="comment-muted">No replies yet.</div>`; return; }
-    commentsList.innerHTML=arr.map(c=>`
-      <div class="comment">
-        <div class="comment-meta">${escapeHtml(c.authorName||c.authorEmail||"Unknown")} • ${formatDate(c.createdAt)}</div>
-        <div>${escapeHtml(c.message)}</div>
-      </div>`).join("");
-  }catch(err){ commentsList.innerHTML=`<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`; }
-}
-
-async function addReply(){
-  if(!selectedTicketId){ alert("Select a ticket first."); return; }
-  const msg=replyInput.value.trim();
-  if(!msg) return;
-  addReplyBtn.disabled=true;
-  try{
-    await addDoc(collection(db,"tickets",selectedTicketId,"comments"), {
-      message:msg, authorEmail:currentUser.email, authorName:currentUser.displayName, createdAt:serverTimestamp()
+document.getElementById("saveBtn").onclick = async () => {
+  if(!selectedId) return;
+  const reply = document.getElementById("replyInp").value;
+  await updateDoc(doc(db, "tickets", selectedId), {
+    status: document.getElementById("statusInp").value,
+    assigneeName: document.getElementById("assigneeInp").value,
+    updatedAt: serverTimestamp()
+  });
+  if(reply) {
+    await addDoc(collection(db, "tickets", selectedId, "comments"), {
+      message: reply, author: "Admin", createdAt: serverTimestamp()
     });
-    await updateDoc(doc(db,"tickets",selectedTicketId),{ updatedAt:serverTimestamp() });
-    replyInput.value="";
-    await loadComments(selectedTicketId);
-  }catch(err){ alert(err.message); } finally{ addReplyBtn.disabled=false; }
-}
+  }
+  alert("Update Successful");
+  document.getElementById("replyInp").value = "";
+};
 
-/* GROUP EMAIL LIST */
-async function loadSelectedGroup(){
-  const group=groupSelect.value;
-  groupEmailList=[];
-  emailChipContainer.innerHTML="Loading...";
-  try{
-    const snap=await getDocs(collection(db,"ticket_groups"));
-    const map={}; snap.forEach(ds=>map[ds.id]=ds.data());
-    if(map[group] && Array.isArray(map[group].emails)){ groupEmailList=[...map[group].emails]; }
-  }catch(err){ groupStatus.textContent="Error loading: "+err.message; }
-  renderEmailChips();
-}
-
-function renderEmailChips(){
-  if(!groupEmailList.length){ emailChipContainer.innerHTML=`<div class="comment-muted">No emails added yet.</div>`; return; }
-  emailChipContainer.innerHTML=groupEmailList.map(email=>`
-    <span class="chip">${email}<button onclick="removeEmail('${email}')">×</button></span>`).join("");
-}
-
-function addEmailToList(){
-  const email=newEmailInput.value.trim();
-  if(!email || !email.includes("@")){ alert("Invalid email format."); return; }
-  if(groupEmailList.includes(email)){ alert("Already added."); return; }
-  groupEmailList.push(email); newEmailInput.value=""; renderEmailChips();
-}
-
-window.removeEmail=function(email){ groupEmailList=groupEmailList.filter(e=>e!==email); renderEmailChips(); };
-
-async function saveGroupEmails(){
-  const group=groupSelect.value;
-  try{
-    await setDoc(doc(db,"ticket_groups",group),{ emails:groupEmailList, updatedAt:serverTimestamp() });
-    groupStatus.textContent=`Saved members for ${group}.`;
-  }catch(err){ groupStatus.textContent="Error saving: "+err.message; }
-}
-
-/* HELPERS */
-function statusPill(s){
-  const st=(s||"open").toLowerCase();
-  if(st==="closed") return `<span class="pill pill-closed">Closed</span>`;
-  if(st==="in-progress") return `<span class="pill pill-progress">In progress</span>`;
-  return `<span class="pill pill-open">Open</span>`;
-}
-function formatDate(v){ if(!v) return ""; let d=v.toDate?.()??v; return d.toLocaleString(); }
-function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ""; }
-function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]); }
+document.getElementById("searchBar").oninput = render;
+document.getElementById("groupFilter").onchange = render;
+document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
 </script>
 
 </body>
