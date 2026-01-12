@@ -98,7 +98,7 @@
         if (!itemId) { assetEl.textContent = "ID Missing"; return; }
 
         try {
-            // FIX 1: Use "items" collection to match your database
+            // Pointing to "items" collection as seen in your Firestore
             const snap = await getDoc(doc(db, "items", itemId));
             
             if (!snap.exists()) { 
@@ -110,7 +110,7 @@
             const assetId = d.assetId || "No Asset ID";
             assetEl.innerHTML = `<strong>Asset ID: ${assetId}</strong>`;
 
-            // FIX 2: Dynamic URL that works on GitHub Pages subfolders
+            // FIXED URL LOGIC: Detected from current URL to handle GitHub subfolders correctly
             const baseUrl = window.location.href.split('generate-qr.html')[0];
             const url = `${baseUrl}item.html?id=${itemId}`;
             
