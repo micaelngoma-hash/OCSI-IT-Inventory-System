@@ -93,32 +93,36 @@ watchAuth({
             return;
         }
 
-        // Use current URL structure to avoid 404s on GitHub Pages
-        qrLink.href = `generate-qr.html?id=${encodeURIComponent(itemId)}`;
+        // Get the directory path for the current repository
+        const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+        
+        // Dynamic Links that work with GitHub Pages Subfolders
+        qrLink.href = `${basePath}generate-qr.html?id=${encodeURIComponent(itemId)}`;
         
         // UI Permissions based on role
         if (role === "viewer") { 
             editLink.style.display = "none"; 
             btnDelete.style.display = "none";
         } else { 
-            editLink.href = `item-form.html?id=${encodeURIComponent(itemId)}`; 
+            editLink.href = `${basePath}item-form.html?id=${encodeURIComponent(itemId)}`; 
             btnDelete.style.display = "inline-flex";
         }
 
         try {
             // Updated to "items" collection
             const snap = await getDoc(doc(db, "items", itemId));
+            
             if (snap.exists()) {
                 const d = snap.data();
                 
-                // Map fields exactly as seen in Firestore
+                // Map fields from Firestore
                 document.getElementById("title").textContent = d.deviceName || d.assetId || "Unnamed Device";
                 document.getElementById("subtitle").textContent = d.assetType || "Hardware Item";
                 document.getElementById("f_assetId").textContent = d.assetId || "–";
                 document.getElementById("f_deviceName").textContent = d.deviceName || "–";
                 document.getElementById("f_assetType").textContent = d.assetType || "–";
                 document.getElementById("f_manufacturer").textContent = d.manufacturer || "–";
-                document.getElementById("f_serialNumber").textContent = d.macAddress || "–"; // Assuming Mac is serial or needs mapping
+                document.getElementById("f_serialNumber").textContent = d.serial || "–"; 
                 document.getElementById("f_status").textContent = d.status || "–";
                 document.getElementById("f_assignedTo").textContent = d.assignedTo || "–";
                 document.getElementById("f_department").textContent = d.department || "–";
@@ -132,21 +136,26 @@ watchAuth({
                 await logAudit("view", d.assetId || itemId, `Viewed device details.`);
 
                 btnDelete.onclick = async () => {
-                    if (confirm(`Delete ${d.assetId || 'this device'}?`)) {
+                    if (confirm(`Are you sure you want to permanently delete ${d.assetId || 'this device'}?`)) {
                         try {
                             await deleteDoc(doc(db, "items", itemId));
                             await logAudit("delete", d.assetId || itemId, `Deleted device.`);
-                            alert("Deleted.");
+                            alert("Device successfully deleted.");
                             location.href = "inventory-list.html";
-                        } catch (err) { alert("Error deleting."); }
+                        } catch (err) { 
+                            console.error("Delete Error:", err);
+                            alert("Error deleting device. Check console for details."); 
+                        }
                     }
                 };
             } else {
-                document.getElementById("subtitle").innerHTML = "<b style='color:red;'>Device not found in 'items' collection.</b>";
+                document.getElementById("subtitle").innerHTML = "<b style='color:red;'>Device not found in database.</b>";
+                qrLink.style.display = "none";
+                editLink.style.display = "none";
             }
         } catch (err) {
             console.error(err);
-            document.getElementById("subtitle").textContent = "Error loading data.";
+            document.getElementById("subtitle").textContent = "Error connecting to database.";
         }
     }
 });
