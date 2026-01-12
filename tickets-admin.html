@@ -9,131 +9,175 @@
 
   <style>
     :root{
-      --red-brand:#c53030; --red-light:#f56565; --blue-brand:#1a73e8; 
-      --border:#e5e7eb; --bg:#f7fafc; --stale-bg:#fff5f5; --stale-border:#f56565;
+      --red1:#c53030; --red2:#f56565; --brand:#1a73e8; --border:#e5e7eb;
+      --btn-bg:#ffffff; --btn-text:#2d3748; --btn-border:#cbd5e1;
+      --chip-bg:#edf2f7; --chip-text:#2d3748;
     }
 
     *{ box-sizing:border-box; }
-    body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:#1a202c; }
+    body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:#f7fafc; color:#1a202c; }
 
-    /* HEADER */
+    /* STICKY HEADER */
     .hero{
       position:sticky; top:0; z-index:2000;
-      background:linear-gradient(90deg, var(--red-brand), var(--red-light));
-      color:white; padding:15px 25px; display:flex; align-items:center; justify-content:space-between;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background:linear-gradient(90deg,var(--red1),var(--red2));
+      color:white; padding:15px 26px;
+      display:flex; align-items:center; justify-content:space-between;
+      box-shadow:0 2px 6px rgba(0,0,0,0.25);
     }
+    .hero-title{ font-size:1.5rem; font-weight:600; }
+    .hero-right{ display:flex; align-items:center; gap:20px; }
 
-    /* LAYOUT GRID */
+    /* TWO-COLUMN LAYOUT */
     .main-grid {
-      display: grid; grid-template-columns: 1fr 340px; gap: 24px;
-      max-width: 1500px; margin: 0 auto; padding: 24px;
+      display: grid;
+      grid-template-columns: 1fr 320px; 
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 16px;
     }
 
-    @media(max-width: 1100px) { .main-grid { grid-template-columns: 1fr; } }
-
-    .card{ background:white; border-radius:12px; border:1px solid var(--border); padding:20px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); }
-
-    /* SIDEBAR ANALYTICS */
-    .sidebar-sticky { position: sticky; top: 100px; display: flex; flex-direction: column; gap: 20px; }
-    .chart-box { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 15px; min-height: 220px; }
-    .sidebar-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; display: block; }
-
-    /* TOOLBAR & SEARCH */
-    .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px; flex-wrap:wrap; }
-    .search-wrap{
-      display:flex; align-items:center; gap:10px; background:white; border:1px solid var(--border); 
-      border-radius:999px; padding:8px 18px; flex-grow: 1; max-width: 500px;
+    @media(max-width: 1100px) {
+      .main-grid { grid-template-columns: 1fr; }
     }
-    .search-wrap input{ border:none; outline:none; font-size:.9rem; width:100%; }
 
-    /* TABLE STYLING */
-    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow:auto; max-height:500px; background:white; }
+    .card-shell{
+      background:white; border-radius:12px; border:1px solid var(--border);
+      padding:18px; box-shadow:0 10px 30px rgba(15,23,42,.06);
+    }
+
+    /* ANALYTICS SIDEBAR */
+    .sidebar-sticky {
+      position: sticky;
+      top: 90px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .chart-box {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 15px;
+      min-height: 200px;
+    }
+    .sidebar-label {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    /* UNIVERSAL SEARCH & TOOLBAR */
+    .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:10px; flex-wrap:wrap; }
+    .search-box{
+      display:flex; align-items:center; gap:8px; background:white;
+      border:1px solid var(--border); border-radius:999px; padding:6px 14px; width:100%; max-width:400px;
+    }
+    .search-box input{ border:none; outline:none; font-size:.9rem; width:100%; }
+
+    /* TABLE */
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow-y:auto; max-height:500px; }
     table{ width:100%; border-collapse:collapse; font-size:.85rem; }
-    th, td{ padding:14px; border-bottom:1px solid #edf2f7; text-align:left; }
-    th{ background:#f8fafc; color:#64748b; font-weight: 600; position:sticky; top:0; z-index: 5; }
+    th,td{ padding:12px 10px; border-bottom:1px solid #f1f5f9; text-align:left; }
+    th{ background:#f8fafc; color:#4b5563; position:sticky; top:0; z-index:10; }
     tr:hover td{ background:#f9fafb; cursor: pointer; }
 
-    /* STATUS PILLS */
-    .pill{ padding:4px 10px; border-radius:12px; font-size:.7rem; font-weight:700; text-transform:uppercase; }
+    /* PILLS */
+    .pill{ padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight: 600; text-transform: capitalize;}
     .pill-open{ background:#ebf8ff; color:#2b6cb0; }
-    .pill-closed{ background:#f0fff4; color:#2f855a; }
-    .pill-stale{ background:var(--red-brand); color:white; }
-
-    /* BUTTONS */
-    .btn{ border:none; cursor:pointer; padding:10px 18px; border-radius:8px; font-size:.85rem; font-weight:600; transition:0.2s; }
-    .btn-primary{ background:var(--blue-brand); color:white; }
-    .btn-export{ background:#10b981; color:white; }
+    .pill-closed{ background:#e6fffa; color:#2c7a7b; }
+    .pill-progress{ background:#fff3cd; color:#b7791f; }
     
+    .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-size:.85rem; font-weight:600; transition: 0.2s;}
+    .btn-primary{ background:var(--brand); color:white; }
+    .btn-primary:hover{ filter: brightness(1.1); }
+
+    .ticket-edit{ border-radius:8px; border:1px solid #e5e7eb; padding:15px; background:#fdfefe; margin-bottom:15px; }
+    .field-label{ font-size:.8rem; font-weight:600; margin-bottom:4px; margin-top:10px; }
+    .field-input, .field-select, .field-textarea{ width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:.9rem; }
     .hidden{ display:none; }
-    .field-group{ margin-bottom: 15px; }
-    .label{ display:block; font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:5px; }
-    input, select, textarea { width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; }
+    
+    #refreshTimer { font-size: 0.7rem; color: #94a3b8; margin-top: 5px; text-align: right; }
   </style>
 </head>
+
 <body>
 
 <header class="hero">
-  <div style="font-size:1.3rem; font-weight:800; letter-spacing:-0.5px;">OCSI SERVICE DESK</div>
-  <div style="display:flex; align-items:center; gap:15px;">
-    <span id="adminEmail" style="font-size:0.85rem; opacity:0.9;"></span>
-    <button id="logoutBtn" style="background:rgba(255,255,255,0.2); border:none; color:white; padding:6px 14px; border-radius:20px; cursor:pointer;">Sign Out</button>
+  <div class="hero-title">OCSI Service Request</div>
+  <div class="hero-right">
+    <div id="who" style="font-size:0.9rem;">...</div>
+    <button id="logoutBtn" style="background:rgba(255,255,255,0.2); color:white; border:none; border-radius:20px; padding:5px 15px; cursor:pointer; margin-left:15px;">Log out</button>
   </div>
 </header>
 
 <main class="main-grid">
   <section>
-    <div class="card">
+    <div class="card-shell">
+      <h1>Admin Dashboard</h1>
+      <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;">Managing IT and Front Office service requests.</p>
+
       <div class="toolbar">
-        <div class="search-wrap">
+        <div class="search-box">
           <span>🔍</span>
-          <input id="searchBar" placeholder="Search names, subjects, rooms, or status..."/>
+          <input id="search" placeholder="Universal Search (Subject, Room, Staff, Status)..."/>
         </div>
         <div style="display:flex; gap:10px;">
-          <select id="groupFilter" style="width:auto; padding:5px 15px; border-radius:20px;">
-            <option value="">All Departments</option>
+          <select id="groupFilter" class="field-select" style="width: auto; border-radius: 20px;">
+            <option value="">All Groups</option>
             <option value="IT">IT</option>
             <option value="Front Office">Front Office</option>
           </select>
-          <button id="exportBtn" class="btn btn-export">Export CSV</button>
+          <button id="newTicketBtn" class="btn btn-primary">➕ New ticket</button>
         </div>
       </div>
 
       <div class="table-wrap">
         <table>
           <thead>
-            <tr><th>Ticket</th><th>Summary</th><th>Dept</th><th>Status</th><th>Assignee</th><th>Created</th></tr>
+            <tr><th>#</th><th>Summary</th><th>Group</th><th>Status</th><th>Assignee</th><th>Created</th></tr>
           </thead>
           <tbody id="ticketsBody"></tbody>
         </table>
       </div>
 
-      <div id="editor" style="margin-top:30px;">
-        <div id="placeholder" style="text-align:center; padding:40px; border:2px dashed var(--border); border-radius:12px; color:#94a3b8;">
-          Select a ticket to update status or reply to user
+      <div style="margin-top:30px;">
+        <h2>Ticket Details & Reply</h2>
+        <div id="detailsPlaceholder" style="padding:30px; border:2px dashed #e2e8f0; border-radius:10px; text-align:center; color:#94a3b8;">
+          Select a ticket from the list above to modify details or reply
         </div>
         
-        <div id="editForm" class="hidden" style="background:#f8fafc; padding:20px; border-radius:12px; border:1px solid var(--border);">
-          <h3 id="editTicketID" style="margin-top:0; color:var(--blue-brand);">Ticket Update</h3>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
-            <div class="field-group">
-              <span class="label">Status</span>
-              <select id="statusInp">
+        <div id="ticketEditBlock" class="ticket-edit hidden">
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+            <div>
+              <div class="field-label">Update Status</div>
+              <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
-                <option value="in-progress">In Progress</option>
+                <option value="in-progress">In progress</option>
                 <option value="closed">Closed</option>
               </select>
             </div>
-            <div class="field-group">
-              <span class="label">Assign To</span>
-              <input id="assigneeInp" placeholder="Staff Name"/>
+            <div>
+              <div class="field-label">Set Priority</div>
+              <select id="priorityInput" class="field-select">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
             </div>
           </div>
-          <div class="field-group">
-            <span class="label">Official Reply</span>
-            <textarea id="replyInp" style="height:100px;" placeholder="Message to requester..."></textarea>
-          </div>
-          <button id="saveBtn" class="btn btn-primary" style="width:100%;">Update Ticket & Notify User</button>
+
+          <div class="field-label">Assignee Name</div>
+          <input id="assigneeInput" class="field-input" placeholder="Staff member handling this..."/>
+
+          <div class="field-label">Add Reply / Internal Note</div>
+          <textarea id="replyInput" class="field-textarea" style="height: 100px;" placeholder="Type your reply here..."></textarea>
+          
+          <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:20px; width:100%; padding:12px;">💾 Save Changes & Post Reply</button>
         </div>
       </div>
     </div>
@@ -142,169 +186,160 @@
   <aside>
     <div class="sidebar-sticky">
       <div class="chart-box">
-        <span class="sidebar-label">Department Workload</span>
-        <canvas id="deptChart"></canvas>
+        <span class="sidebar-label">Volume: IT vs Front Office</span>
+        <canvas id="groupChart"></canvas>
       </div>
       <div class="chart-box">
-        <span class="sidebar-label">Resolution Rate</span>
-        <canvas id="resChart"></canvas>
+        <span class="sidebar-label">Priority Distribution</span>
+        <canvas id="priorityChart"></canvas>
       </div>
-      <div class="chart-box" style="text-align:center;">
-        <span class="sidebar-label">Active Tickets</span>
-        <h1 id="countDisplay" style="font-size:3.5rem; margin:10px 0; color:var(--blue-brand);">0</h1>
-        <div id="syncBadge" style="font-size:0.7rem; color:#10b981; font-weight:700;">● LIVE SYNC ACTIVE</div>
+      <div class="chart-box" style="text-align: center;">
+        <span class="sidebar-label">Total Active Tickets</span>
+        <h1 id="activeCount" style="font-size: 3.5rem; margin: 15px 0; color: var(--brand);">0</h1>
+        <p style="font-size: 0.8rem; color: #94a3b8;">Excluding Closed</p>
       </div>
+      <div id="refreshTimer">Auto-refreshing in 60s...</div>
     </div>
   </aside>
 </main>
 
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
-import { collection, doc, updateDoc, addDoc, serverTimestamp, query, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, doc, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-let allTickets = [], selectedId = null, charts = {};
-let isInitial = true;
+let allTickets = [], selectedId = null, charts = {}, timeLeft = 60;
 
-// 1. Initialize & Auth
+// Initialize
 watchAuth({
   allowedRoles: ["admin", "it"],
-  onReady: (user) => {
-    document.getElementById("adminEmail").textContent = user.email;
-    startRealtimeSync();
+  onReady: async (user) => {
+    document.getElementById("who").textContent = user.email;
+    await loadTickets();
+    startRefreshTimer();
   }
 });
 
-// 2. Real-Time Data Fetching (Instant updates)
-function startRealtimeSync() {
-  const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
-  onSnapshot(q, (snap) => {
-    const raw = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    
-    // FILTER: Strictly IT and Front Office only
-    allTickets = raw.filter(t => t.group === "IT" || t.group === "Front Office");
-
-    if (!isInitial && snap.docChanges().some(c => c.type === "added")) {
-      playAlert();
-    }
-    
-    render();
-    isInitial = false;
-  });
+async function loadTickets() {
+  const snap = await getDocs(collection(db, "tickets"));
+  // Filter out Maintenance and Nurse immediately
+  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }))
+                   .filter(t => t.group === "IT" || t.group === "Front Office");
+  renderTickets();
+  timeLeft = 60; // Reset timer on successful load
 }
 
-// 3. Render Table with Universal Search & SLA Highlighting
-function render() {
-  const term = document.getElementById("searchBar").value.toLowerCase();
-  const deptFilter = document.getElementById("groupFilter").value;
-  const now = new Date();
-  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+function renderTickets() {
+  const term = document.getElementById("search").value.toLowerCase();
+  const groupFilter = document.getElementById("groupFilter").value;
 
   const filtered = allTickets.filter(t => {
-    const searchArea = Object.values(t).join(" ").toLowerCase();
-    const matchesSearch = !term || searchArea.includes(term);
-    const matchesDept = !deptFilter || t.group === deptFilter;
-    return matchesSearch && matchesDept;
+    // Universal Search: Check all values in the ticket object
+    const searchString = Object.values(t).map(v => String(v)).join(" ").toLowerCase();
+    const matchSearch = !term || searchString.includes(term);
+    const matchGroup = !groupFilter || t.group === groupFilter;
+    return matchSearch && matchGroup;
   });
 
-  document.getElementById("ticketsBody").innerHTML = filtered.map((t, i) => {
-    const created = t.createdAt?.toDate();
-    const isStale = (t.status === 'open' && created && (now - created) > MS_PER_DAY);
-    
-    const rowStyle = isStale ? `background: var(--stale-bg); border-left: 4px solid var(--stale-border);` : '';
-    const alertTag = isStale ? `<span class="pill pill-stale">⚠️ OVER 24H</span>` : '';
-
-    return `
-      <tr onclick="window.selectTicket('${t.id}')" style="${rowStyle}">
-        <td>#${t.id.slice(-4)}</td>
-        <td><b>${t.summary || 'No Title'}</b> ${alertTag}</td>
+  const tbody = document.getElementById("ticketsBody");
+  if(filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No tickets found matching your search.</td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map((t, i) => `
+      <tr onclick="window.selectTicket('${t.id}')" style="${selectedId === t.id ? 'background:#f1f5f9;' : ''}">
+        <td>${i+1}</td>
+        <td><b>${t.summary || 'No Summary'}</b></td>
         <td>${t.group}</td>
-        <td><span class="pill pill-${(t.status || 'open')}">${t.status || 'open'}</span></td>
-        <td>${t.assigneeName || 'Unassigned'}</td>
-        <td>${created ? created.toLocaleDateString() : 'Pending'}</td>
+        <td><span class="pill pill-${(t.status || 'open').toLowerCase()}">${t.status || 'open'}</span></td>
+        <td>${t.assigneeName || '--'}</td>
+        <td>${t.createdAt?.toDate().toLocaleDateString() || ''}</td>
       </tr>
-    `;
-  }).join("");
+    `).join("");
+  }
 
   updateCharts(filtered);
 }
 
-// 4. Update Sidebar Charts
-function updateCharts(data) {
-  const depts = { IT: 0, "Front Office": 0 }, stats = { open: 0, closed: 0 };
-  data.forEach(t => {
-    if(depts.hasOwnProperty(t.group)) depts[t.group]++;
-    if(t.status === 'closed') stats.closed++; else stats.open++;
-  });
-
-  document.getElementById("countDisplay").textContent = stats.open;
-
-  if(charts.d) charts.d.destroy();
-  if(charts.r) charts.r.destroy();
-
-  const config = { responsive: true, maintainAspectRatio: false, plugins: { legend: false } };
-
-  charts.d = new Chart(document.getElementById('deptChart'), {
-    type: 'bar',
-    data: { labels: ['IT', 'Front Office'], datasets: [{ data:[depts.IT, depts["Front Office"]], backgroundColor:['#1a73e8','#818cf8'] }] },
-    options: config
-  });
-
-  charts.r = new Chart(document.getElementById('resChart'), {
-    type: 'doughnut',
-    data: { labels: ['Pending', 'Closed'], datasets: [{ data:[stats.open, stats.closed], backgroundColor:['#f56565','#10b981'] }] },
-    options: { ...config, cutout: '75%' }
-  });
-}
-
-// 5. Global Actions (Select, Export, Alert)
 window.selectTicket = (id) => {
   selectedId = id;
   const t = allTickets.find(x => x.id === id);
-  document.getElementById("placeholder").classList.add("hidden");
-  document.getElementById("editForm").classList.remove("hidden");
-  document.getElementById("editTicketID").textContent = `Managing Ticket: #${id.slice(-6)}`;
-  document.getElementById("statusInp").value = t.status || "open";
-  document.getElementById("assigneeInp").value = t.assigneeName || "";
+  document.getElementById("detailsPlaceholder").classList.add("hidden");
+  document.getElementById("ticketEditBlock").classList.remove("hidden");
+  document.getElementById("statusInput").value = t.status || "open";
+  document.getElementById("priorityInput").value = t.priority || "medium";
+  document.getElementById("assigneeInput").value = t.assigneeName || "";
+  renderTickets(); // Refresh highlights
 };
 
-document.getElementById("exportBtn").onclick = () => {
-  const headers = "ID,Summary,Dept,Status,Assignee,Date\n";
-  const rows = allTickets.map(t => 
-    `${t.id},"${t.summary}",${t.group},${t.status},${t.assigneeName || 'N/A'},${t.createdAt?.toDate().toLocaleDateString()}`
-  ).join("\n");
-  const blob = new Blob([headers + rows], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `OCSI_Export_${new Date().toLocaleDateString()}.csv`;
-  a.click();
-};
+function updateCharts(data) {
+  const g = { IT: 0, "Front Office": 0 }, p = { high: 0, medium: 0, low: 0 };
+  let active = 0;
 
-function playAlert() {
-  new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3').play().catch(()=>{});
-  if (Notification.permission === "granted") new Notification("New Ticket Received!");
-  else Notification.requestPermission();
+  data.forEach(t => {
+    if(g.hasOwnProperty(t.group)) g[t.group]++;
+    if(p.hasOwnProperty(t.priority)) p[t.priority]++;
+    if(t.status !== 'closed') active++;
+  });
+
+  document.getElementById("activeCount").textContent = active;
+  
+  // Refresh Chart.js instances
+  if(charts.g) charts.g.destroy();
+  if(charts.p) charts.p.destroy();
+
+  const opt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+  
+  charts.g = new Chart(document.getElementById('groupChart'), {
+    type: 'bar',
+    data: { labels: ['IT', 'Front Office'], datasets: [{ data: [g.IT, g["Front Office"]], backgroundColor: ['#3b82f6', '#818cf8'] }] },
+    options: opt
+  });
+
+  charts.p = new Chart(document.getElementById('priorityChart'), {
+    type: 'doughnut',
+    data: { labels: ['High', 'Med', 'Low'], datasets: [{ data: [p.high, p.medium, p.low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] },
+    options: { ...opt, cutout: '75%' }
+  });
 }
 
-document.getElementById("saveBtn").onclick = async () => {
+function startRefreshTimer() {
+  setInterval(() => {
+    timeLeft--;
+    document.getElementById("refreshTimer").textContent = `Auto-refreshing in ${timeLeft}s...`;
+    if(timeLeft <= 0) loadTickets();
+  }, 1000);
+}
+
+document.getElementById("saveTicketBtn").onclick = async () => {
   if(!selectedId) return;
-  const reply = document.getElementById("replyInp").value;
-  await updateDoc(doc(db, "tickets", selectedId), {
-    status: document.getElementById("statusInp").value,
-    assigneeName: document.getElementById("assigneeInp").value,
-    updatedAt: serverTimestamp()
-  });
-  if(reply) {
-    await addDoc(collection(db, "tickets", selectedId, "comments"), {
-      message: reply, author: "Admin", createdAt: serverTimestamp()
+  const reply = document.getElementById("replyInput").value.trim();
+  
+  try {
+    await updateDoc(doc(db, "tickets", selectedId), {
+      status: document.getElementById("statusInput").value,
+      priority: document.getElementById("priorityInput").value,
+      assigneeName: document.getElementById("assigneeInput").value,
+      updatedAt: serverTimestamp()
     });
-  }
-  alert("Update Successful");
-  document.getElementById("replyInp").value = "";
+
+    if(reply) {
+      await addDoc(collection(db, "tickets", selectedId, "comments"), {
+        message: reply,
+        authorName: "Admin",
+        createdAt: serverTimestamp()
+      });
+      document.getElementById("replyInput").value = "";
+    }
+
+    alert("Changes saved successfully.");
+    loadTickets();
+  } catch (e) { alert("Error saving: " + e.message); }
 };
 
-document.getElementById("searchBar").oninput = render;
-document.getElementById("groupFilter").onchange = render;
+// Event Listeners
+document.getElementById("search").addEventListener("input", renderTickets);
+document.getElementById("groupFilter").addEventListener("change", renderTickets);
 document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
+document.getElementById("newTicketBtn").onclick = () => window.location.href="submit-request.html";
 </script>
 
 </body>
