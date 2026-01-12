@@ -34,12 +34,9 @@
             border-radius: 8px;
         }
 
-        /* The Label Design with 2mm Cutting Border */
         .label {
             background: white; 
-            /* Light border for easy cutting */
             border: 1px solid #cbd5e1; 
-            /* 2mm padding creates the safety gap between content and the cut line */
             padding: 2mm; 
             text-align: center; 
             border-radius: 4px; 
@@ -56,7 +53,6 @@
             font-weight: 800;
             color: #000;
             margin-bottom: 4px;
-            /* Ensures format matches "Asset ID: OCSI-XXXX" */
             white-space: nowrap; 
         }
 
@@ -70,7 +66,6 @@
             display: block;
             width: 100% !important;
             height: auto !important;
-            /* Sized for high visibility on standard labels */
             max-width: 130px; 
         }
         
@@ -78,7 +73,6 @@
             body { background: white; padding: 0; margin: 0; }
             .top-controls, h1 { display: none !important; }
             #labelsArea { padding: 10mm; gap: 10px; }
-            /* Keep the border visible for cutting on physical paper */
             .label { border: 1px solid #cccccc !important; } 
         }
     </style>
@@ -168,27 +162,27 @@
 
         labelsArea.innerHTML = "";
 
+        // GitHub Pages Subfolder Path
+        const repoPath = "/OCSI-IT-Inventory-System";
+
         for (const item of items) {
             const div = document.createElement("div");
             div.className = "label";
 
-            const qrURL = `${window.location.origin}/item.html?id=${item.id}`;
-            // Format Asset ID string exactly as requested
+            // Corrected QR URL to point to item.html in the repo subfolder
+            const qrURL = `${window.location.origin}${repoPath}/item.html?id=${item.id}`;
             const assetIdStr = `Asset ID: ${item.assetId || "No ID"}`;
 
-            // 1. Asset ID Text on Top
             const idDiv = document.createElement("div");
             idDiv.className = "label-id";
             idDiv.textContent = assetIdStr;
             div.appendChild(idDiv);
 
-            // 2. QR Container
             const qrContainer = document.createElement("div");
             qrContainer.className = "qr-container";
             div.appendChild(qrContainer);
 
             try {
-                // Generate Canvas QR for sharpest print quality
                 await QRCode.toCanvas(qrURL, {
                     width: 400,
                     margin: 1,
@@ -205,10 +199,8 @@
         }
     }
 
-    // PDF Generation Logic
     btnPDF.onclick = async () => {
         const { jsPDF } = window.jspdf;
-        // High-scale capture for crystal-clear labels
         const canvas = await html2canvas(labelsArea, { scale: 3, useCORS: true });
         const imgData = canvas.toDataURL("image/png");
         
