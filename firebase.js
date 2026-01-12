@@ -25,6 +25,16 @@ export const auth = getAuth(app);
 export const SUPER_ADMIN_EMAIL = "micaelngoma@ocsi.org";
 export const IT_EMAILS = ["micael@ocsi.school","support@ocsi.school"];
 
+/**
+ * HELPER: Get Base Path
+ * This ensures redirects work on GitHub Pages subfolders.
+ */
+const getBaseURL = () => {
+    // Returns the current folder path (e.g., "/inventory-system/")
+    const path = window.location.pathname;
+    return path.substring(0, path.lastIndexOf('/') + 1);
+};
+
 export async function logAudit(action, targetId, details) {
   try {
     const user = auth.currentUser;
@@ -44,12 +54,14 @@ export async function logAudit(action, targetId, details) {
 export function watchAuth({allowedRoles=["admin","it","viewer","staff"], whoEl, onReady} = {}){
   return onAuthStateChanged(auth, async user => {
     const isTicketsPage = window.location.pathname.includes("tickets.html");
+    const baseUrl = getBaseURL();
 
     if(!user){
       if(!isTicketsPage) {
-        // CAPTURE CURRENT URL TO REDIRECT BACK AFTER LOGIN
+        // Capture full URL for redirection
         const returnUrl = encodeURIComponent(window.location.href);
-        location.href = `login.html?redirect=${returnUrl}`;
+        // Redirect to login.html within the correct subfolder
+        location.href = `${baseUrl}login.html?redirect=${returnUrl}`;
       } else {
         if(onReady) onReady(null, null);
       }
@@ -79,7 +91,7 @@ export function watchAuth({allowedRoles=["admin","it","viewer","staff"], whoEl, 
 
     if(!allowedRoles.includes(role)){
       alert("Access denied.");
-      location.href = "login.html";
+      location.href = `${baseUrl}login.html`;
       return;
     }
 
@@ -104,7 +116,10 @@ export async function loginWithGoogle(){
 
 export async function doLogout(){
   const email = auth.currentUser?.email;
+  const baseUrl = getBaseURL();
   if(email) await logAudit("logout", email, "User logged out");
   await signOut(auth);
-  location.href = window.location.pathname.includes("tickets.html") ? "tickets.html" : "login.html";
+  
+  const target = window.location.pathname.includes("tickets.html") ? "tickets.html" : "login.html";
+  location.href = `${baseUrl}${target}`;
 }
