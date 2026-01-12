@@ -6,275 +6,283 @@
   <title>OCSI Admin – Command Center</title>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root{
-      --red1:#c53030; --red2:#f56565; --brand:#1a73e8;
-      --border:#e2e8f0; --bg:#f8fafc; --success: #10b981; --danger: #ef4444;
+      --red1:#c53030; --red2:#f56565; --brand:#1a73e8; --border:#e5e7eb;
+      --chip-bg:#edf2f7; --chip-text:#2d3748; --success: #10b981;
     }
 
     *{ box-sizing:border-box; }
-    body{ margin:0; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color:#1e293b; overflow-x: hidden; }
+    body{ margin:0; font-family:system-ui,-apple-system,sans-serif; background:#f7fafc; color:#1a202c; overflow-x: hidden; }
 
     /* HEADER */
-    .hero{ position:sticky; top:0; z-index:1000; background:linear-gradient(135deg, var(--red1), var(--red2)); color:white; padding:12px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    .hero-title{ font-size:1.1rem; font-weight:800; letter-spacing: -0.025em; }
+    .hero{ position:sticky; top:0; z-index:2000; background:linear-gradient(90deg,var(--red1),var(--red2)); color:white; padding:15px 26px; display:flex; align-items:center; justify-content:space-between; box-shadow:0 2px 6px rgba(0,0,0,0.25); }
+    .hero-title{ font-size:1.5rem; font-weight:600; }
+    .hero-right{ display:flex; align-items:center; gap:12px; }
+
+    /* TABS */
+    .tab-nav { display: flex; gap: 20px; border-bottom: 2px solid #edf2f7; margin-bottom: 20px; }
+    .tab-btn { background: none; border: none; padding: 10px 5px; cursor: pointer; font-weight: 600; color: #94a3b8; border-bottom: 3px solid transparent; transition: all 0.2s; }
+    .active-tab { color: var(--brand); border-bottom-color: var(--brand); }
 
     /* LAYOUT */
-    .main-container { display: grid; grid-template-columns: 1fr 340px; gap: 24px; padding: 24px; max-width: 1600px; margin: 0 auto; transition: margin-right 0.3s ease; }
-    @media(max-width: 1100px) { .main-container { grid-template-columns: 1fr; } }
+    .main-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; max-width: 1600px; margin: 0 auto; padding: 20px; }
+    @media(max-width: 1200px) { .main-grid { grid-template-columns: 1fr; } }
 
-    /* TICKETS & ANALYTICS */
-    .card-shell{ background:white; border-radius:16px; border:1px solid var(--border); padding:24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .analytics-sidebar { position: sticky; top: 80px; height: calc(100vh - 100px); display: flex; flex-direction: column; gap: 16px; }
-    .mini-card { background: white; padding: 16px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-
-    /* TABLE */
-    .table-wrap{ border-radius:12px; border:1px solid var(--border); overflow:auto; max-height:600px; background: white; }
-    table{ width:100%; border-collapse:collapse; font-size:0.875rem; }
-    th{ background:#f8fafc; padding:12px 16px; text-align:left; font-weight:600; color:#64748b; position:sticky; top:0; z-index:10; }
-    td{ padding:14px 16px; border-top:1px solid #f1f5f9; }
-    tr:hover td{ background:#f8fafc; cursor: pointer; }
-
-    /* EDIT DRAWER */
-    #editDrawer {
-      position: fixed; top: 0; right: -450px; width: 450px; height: 100%;
-      background: white; box-shadow: -5px 0 15px rgba(0,0,0,0.1);
-      z-index: 2000; transition: right 0.3s ease; padding: 30px;
-      overflow-y: auto;
-    }
-    #editDrawer.open { right: 0; }
-    .drawer-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.3); z-index: 1500; display: none;
-    }
-    .drawer-overlay.active { display: block; }
-
-    /* FORM UI */
-    .field-group { margin-bottom: 20px; }
-    .sidebar-label { font-size: 0.65rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block; }
-    .input-ui { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem; }
+    /* CARDS */
+    .card-shell{ background:white; border-radius:12px; border:1px solid var(--border); padding:20px; box-shadow:0 4px 6px rgba(0,0,0,0.05); }
+    .panel { border-top: 1px solid #edf2f7; margin-top: 20px; padding-top: 20px; }
     
-    .pill{ padding:4px 10px; border-radius:8px; font-size:0.7rem; font-weight:700; text-transform: uppercase; }
-    .pill-open{ background:#dcfce7; color:#166534; }
-    .pill-closed{ background:#f1f5f9; color:#475569; }
-    .pill-in-progress{ background:#fef9c3; color:#854d0e; }
+    /* TABLE & ALERTS */
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow:auto; max-height:450px; background:white; }
+    table{ width:100%; border-collapse:collapse; font-size:.85rem; }
+    th{ background:#f8fafc; padding:12px 10px; text-align:left; position:sticky; top:0; z-index:10; border-bottom:1px solid #f1f5f9; }
+    td{ padding:12px 10px; border-bottom:1px solid #f1f5f9; }
+    tr:hover td{ background:#f9fafb; cursor: pointer; }
 
-    .btn{ border:none; cursor:pointer; padding:10px 20px; border-radius:10px; font-size:0.875rem; font-weight:600; }
-    .btn-primary{ background:var(--brand); color:white; width: 100%; }
-    .chart-box { height: 100px; }
+    .stale-high-priority { background-color: #fff5f5 !important; border-left: 4px solid var(--red1) !important; animation: pulse-red 2s infinite; }
+    @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+    .urgent-badge { background: var(--red1); color: white; font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; font-weight: 800; margin-right: 5px; }
+
+    /* ANALYTICS */
+    .analytics-sidebar { position: sticky; top: 85px; display: flex; flex-direction: column; gap: 16px; }
+    .mini-card { background: white; padding: 16px; border-radius: 12px; border: 1px solid var(--border); }
+    .sidebar-label { font-size: 0.7rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; display: block; }
+    .chart-box { height: 120px; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .large-chart-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--border); height: 350px; }
+
+    /* BUTTONS & PILLS */
+    .btn{ border:none; cursor:pointer; padding:6px 14px; border-radius:999px; font-size:.85rem; font-weight:600; transition: 0.2s; }
+    .btn-primary{ background:var(--brand); color:white; }
+    .pill{ padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight: 600; }
+    .pill-open{ background:#ebf8ff; color:#2b6cb0; }
+    .pill-closed{ background:#e6fffa; color:#2c7a7b; }
+    
+    .hidden{ display:none; }
   </style>
 </head>
 <body>
 
 <header class="hero">
-  <div class="hero-title">OCSI COMMAND CENTER</div>
-  <div id="who" style="font-size: 0.8rem;">Session checking...</div>
+  <div class="hero-title">OCSI Service Request</div>
+  <div class="hero-right">
+    <div id="who" style="font-size:0.85rem; opacity:0.9;">...</div>
+    <button id="requesterBtn" class="btn" style="background:rgba(255,255,255,0.2); color:white;">Requester View</button>
+    <button id="logoutBtn" class="btn" style="background:rgba(255,255,255,0.2); color:white;">Log out</button>
+  </div>
 </header>
 
-<div id="overlay" class="drawer-overlay"></div>
-
-<div id="editDrawer">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-    <h2 style="margin:0; font-size:1.2rem;">Ticket Details</h2>
-    <button onclick="closeDrawer()" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-  </div>
-  
-  <div class="field-group">
-    <span class="sidebar-label">Summary</span>
-    <p id="drawSummary" style="font-weight:600; margin:0;"></p>
-  </div>
-
-  <div class="field-group">
-    <span class="sidebar-label">Status</span>
-    <select id="drawStatus" class="input-ui">
-      <option value="open">Open</option>
-      <option value="in-progress">In Progress</option>
-      <option value="closed">Closed</option>
-    </select>
-  </div>
-
-  <div class="field-group">
-    <span class="sidebar-label">Priority</span>
-    <select id="drawPriority" class="input-ui">
-      <option value="low">Low</option>
-      <option value="medium">Medium</option>
-      <option value="high">High</option>
-    </select>
-  </div>
-
-  <div class="field-group">
-    <span class="sidebar-label">Assignee Name</span>
-    <input type="text" id="drawAssignee" class="input-ui" placeholder="Name or Email">
-  </div>
-
-  <div class="field-group">
-    <span class="sidebar-label">Description</span>
-    <p id="drawDesc" style="font-size:0.85rem; color:#475569; background:#f8fafc; padding:12px; border-radius:8px;"></p>
-  </div>
-
-  <button id="updateTicketBtn" class="btn btn-primary">Update Ticket</button>
-  <p id="drawStatusMsg" style="font-size:0.75rem; text-align:center; margin-top:10px;"></p>
-</div>
-
-<main class="main-container">
-  <section class="card-shell">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <h1 style="font-size: 1.4rem; margin:0;">Service Requests</h1>
-      <div style="display:flex; gap:10px;">
-        <button id="logoutBtn" class="btn" style="background:#f1f5f9; font-size:0.75rem;">Log out</button>
+<main class="main-grid">
+  <section>
+    <div class="card-shell">
+      <div class="tab-nav">
+        <button id="tabCommand" class="tab-btn active-tab">Command Center</button>
+        <button id="tabSummary" class="tab-btn">Executive Summary</button>
       </div>
-    </div>
 
-    <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-      <input id="search" placeholder="🔍 Search summary..." style="padding:10px; border-radius:10px; border:1px solid var(--border); flex:1; min-width:200px;">
-      <select id="groupFilter" style="padding:10px; border-radius:10px; border:1px solid var(--border);">
-        <option value="">All Groups</option>
-        <option value="IT">IT</option>
-        <option value="Maintenance">Maintenance</option>
-        <option value="Front Office">Front Office</option>
-        <option value="Nurse">Nurse</option>
-      </select>
-    </div>
+      <div id="viewCommand">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="border:1px solid var(--border); padding:5px 12px; border-radius:999px; background:white; display:flex; align-items:center; gap:8px;">
+              <span>🔍</span><input id="search" placeholder="Search..." style="border:none; outline:none; font-size:0.85rem;"/>
+            </div>
+            <div style="font-size:0.7rem; color:#94a3b8;">
+              <span id="lastRefreshed">Syncing...</span>
+              <button id="manualSync" title="Sync Now" style="background:none; border:none; cursor:pointer;">🔄</button>
+              <button id="downloadCSV" title="Export CSV" style="background:none; border:none; cursor:pointer;">📥</button>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <select id="groupFilter" class="btn" style="border:1px solid var(--border);"><option value="">All Groups</option><option value="IT">IT</option><option value="Maintenance">Maintenance</option></select>
+            <select id="statusFilter" class="btn" style="border:1px solid var(--border);"><option value="">All Statuses</option><option value="open">Open</option><option value="in-progress">In Progress</option><option value="closed">Closed</option></select>
+          </div>
+        </div>
 
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Ticket</th>
-            <th>Group</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Assignee</th>
-          </tr>
-        </thead>
-        <tbody id="ticketsBody"></tbody>
-      </table>
+        <div class="panel">
+          <h2>Ticket List</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Summary</th><th>Group</th><th>Priority</th><th>Status</th><th>Assignee</th><th>Created</th></tr></thead>
+              <tbody id="ticketsBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>Details & Conversation</h2>
+          <div id="detailsPlaceholder" style="text-align:center; padding:40px; color:#94a3b8;">Select a ticket to manage</div>
+          <div id="ticketEditBlock" class="hidden">
+            <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:15px;">
+              <div><label class="sidebar-label">Status</label><select id="statusInput" class="btn dirty-track" style="width:100%; border:1px solid #cbd5e1;"><option value="open">Open</option><option value="in-progress">In Progress</option><option value="closed">Closed</option></select></div>
+              <div><label class="sidebar-label">Priority</label><select id="priorityInput" class="btn dirty-track" style="width:100%; border:1px solid #cbd5e1;"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select></div>
+              <div><label class="sidebar-label">Assignee</label><div style="display:flex; gap:4px;"><input id="assigneeInput" class="btn dirty-track" style="width:100%; border:1px solid #cbd5e1;"/><button id="claimBtn" class="btn" style="background:#e2e8f0; font-size:0.7rem;">Me</button></div></div>
+            </div>
+            <button id="saveTicketBtn" class="btn btn-primary" style="width:100%; margin-bottom:15px;">💾 Save Updates</button>
+            <div id="commentsList" style="max-height:150px; overflow:auto; background:#f8fafc; padding:10px; border-radius:8px; font-size:0.85rem; margin-bottom:10px;"></div>
+            <textarea id="replyInput" class="dirty-track" placeholder="Type a reply..." style="width:100%; border-radius:8px; border:1px solid var(--border); padding:10px; height:60px;"></textarea>
+            <button id="addReplyBtn" class="btn btn-primary" style="margin-top:8px;">💬 Send Reply</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="viewSummary" class="hidden">
+        <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-bottom:15px;">
+          <button id="period30" class="btn" style="background:white; border:1px solid var(--border);">Last 30 Days</button>
+          <button id="periodAll" class="btn" style="background:white; border:1px solid var(--border);">All Time</button>
+        </div>
+        <div class="summary-grid">
+          <div class="large-chart-card"><h3>Volume by Group</h3><canvas id="bigGroupChart"></canvas></div>
+          <div class="large-chart-card"><h3>Priority Spread</h3><canvas id="bigPriorityChart"></canvas></div>
+          <div class="large-chart-card"><h3>Avg Resolution Time</h3><h1 id="bigStatMTTR" style="font-size:4rem; color:var(--brand);">0d</h1></div>
+          <div class="large-chart-card"><h3>Open Workload</h3><h1 id="bigStatTotal" style="font-size:4rem; color:var(--red1);">0</h1></div>
+        </div>
+      </div>
     </div>
   </section>
 
   <aside class="analytics-sidebar">
-    <div class="mini-card">
-      <span class="sidebar-label">Team Speed (MTTR)</span>
-      <div class="chart-box"><canvas id="efficiencyChart"></canvas></div>
-      <div id="statMTTR" style="text-align:center; font-weight:800; font-size:1.2rem; margin-top:5px;">0d</div>
-    </div>
-    <div class="mini-card"><span class="sidebar-label">Priority Ratio</span><div class="chart-box"><canvas id="priorityChart"></canvas></div></div>
-    <div class="mini-card"><span class="sidebar-label">Workload Split</span><div class="chart-box"><canvas id="groupChart"></canvas></div></div>
+    <div class="mini-card"><span class="sidebar-label">Open Tickets</span><h2 id="sideStatTotal">0</h2></div>
+    <div class="mini-card"><span class="sidebar-label">Group Split</span><div class="chart-box"><canvas id="sideGroupChart"></canvas></div></div>
+    <div class="mini-card"><span class="sidebar-label">Efficiency</span><div class="chart-box"><canvas id="sideEfficiencyChart"></canvas></div></div>
   </aside>
 </main>
 
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
-import { collection, getDocs, doc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, doc, getDocs, updateDoc, addDoc, setDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-let allTickets = [];
-let charts = {};
-let selectedId = null;
+let allTickets = [], selectedId = null, currentUserEmail = "", charts = {}, isDirty = false, currentPeriod = '30';
 
 watchAuth({
   allowedRoles: ["admin", "it"],
-  onReady: async (user, role) => {
+  onReady: async (user) => {
+    currentUserEmail = user.email;
     document.getElementById("who").textContent = user.email;
     await loadTickets();
+    setInterval(() => { if(!isDirty) loadTickets(); }, 300000); // 5 min refresh
   }
 });
 
 async function loadTickets() {
   const snap = await getDocs(collection(db, "tickets"));
-  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
-  allTickets.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
-  render();
+  allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }))
+                   .filter(t => t.group === "IT" || t.group === "Maintenance");
+  renderTickets();
+  document.getElementById("lastRefreshed").textContent = `Sync: ${new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}`;
 }
 
-function render() {
+function renderTickets() {
   const term = document.getElementById("search").value.toLowerCase();
-  const gfilt = document.getElementById("groupFilter").value;
+  const now = new Date();
+  const thirtyDaysAgo = new Date().setDate(now.getDate() - 30);
 
-  const filtered = allTickets.filter(t => {
-    return (!gfilt || t.group === gfilt) && (!term || (t.summary || "").toLowerCase().includes(term));
-  });
+  const filtered = allTickets.filter(t => 
+    (!term || (t.summary || "").toLowerCase().includes(term)) &&
+    (!document.getElementById("groupFilter").value || t.group === document.getElementById("groupFilter").value) &&
+    (!document.getElementById("statusFilter").value || t.status === document.getElementById("statusFilter").value)
+  );
 
-  const gCounts = { IT: 0, Maintenance: 0, "Front Office": 0, Nurse: 0 };
-  const pCounts = { High: 0, Medium: 0, Low: 0 };
-  let mttrSum = 0, closed = 0;
+  document.getElementById("ticketsBody").innerHTML = filtered.map((t, i) => {
+    const isStale = t.priority === 'high' && t.status !== 'closed' && (now - t.createdAt?.toDate() > 86400000);
+    return `<tr class="${isStale ? 'stale-high-priority' : ''}" onclick="window.selectTicket('${t.id}')">
+      <td>${isStale ? '<span class="urgent-badge">STALE</span>' : i+1}</td>
+      <td><b>${t.summary || 'Untitled'}</b></td><td>${t.group}</td>
+      <td>${t.priority || 'medium'}</td><td><span class="pill pill-${t.status || 'open'}">${t.status || 'open'}</span></td>
+      <td>${t.assigneeName || '--'}</td><td>${t.createdAt?.toDate().toLocaleDateString() || ''}</td>
+    </tr>`;
+  }).join("");
 
-  filtered.forEach(t => {
-    if(gCounts.hasOwnProperty(t.group)) gCounts[t.group]++;
-    const p = (t.priority || "medium").charAt(0).toUpperCase() + (t.priority || "medium").slice(1);
-    if(pCounts.hasOwnProperty(p)) pCounts[p]++;
-    if(t.status === "closed" && t.createdAt && t.updatedAt) {
-      closed++; mttrSum += (t.updatedAt.toDate() - t.createdAt.toDate()) / (1000*60*60*24);
+  updateAnalytics(filtered, thirtyDaysAgo);
+}
+
+window.selectTicket = (id) => {
+  if(isDirty && !confirm("Discard unsaved changes?")) return;
+  selectedId = id;
+  const t = allTickets.find(x => x.id === id);
+  document.getElementById("detailsPlaceholder").classList.add("hidden");
+  document.getElementById("ticketEditBlock").classList.remove("hidden");
+  document.getElementById("statusInput").value = t.status || "open";
+  document.getElementById("priorityInput").value = t.priority || "medium";
+  document.getElementById("assigneeInput").value = t.assigneeName || "";
+  loadComments(id);
+  resetDirty();
+};
+
+async function loadComments(id) {
+  const q = query(collection(db, "tickets", id, "comments"), orderBy("createdAt", "asc"));
+  const snap = await getDocs(q);
+  document.getElementById("commentsList").innerHTML = snap.docs.map(d => `<div><b>${d.data().authorName}:</b> ${d.data().message}</div>`).join("") || "No messages.";
+}
+
+function updateAnalytics(data, cutoff) {
+  const summaryData = currentPeriod === '30' ? data.filter(t => t.createdAt?.toDate() > cutoff) : data;
+  let open = 0, closed = 0, mttr = 0;
+  const g = { IT: 0, Maintenance: 0 }, p = { High: 0, Medium: 0, Low: 0 };
+
+  summaryData.forEach(t => {
+    if(t.status !== 'closed') open++;
+    if(g.hasOwnProperty(t.group)) g[t.group]++;
+    const prio = (t.priority || 'medium').charAt(0).toUpperCase() + (t.priority || 'medium').slice(1);
+    if(p.hasOwnProperty(prio)) p[prio]++;
+    if(t.status === 'closed' && t.createdAt && t.updatedAt) {
+      closed++; mttr += (t.updatedAt.toDate() - t.createdAt.toDate()) / 86400000;
     }
   });
 
-  const avg = closed ? (mttrSum/closed) : 0;
-  document.getElementById("statMTTR").textContent = avg.toFixed(1) + "d";
+  const avg = closed ? mttr/closed : 0;
+  document.getElementById("sideStatTotal").textContent = open;
+  document.getElementById("bigStatTotal").textContent = open;
+  document.getElementById("bigStatMTTR").textContent = avg.toFixed(1) + "d";
 
-  document.getElementById("ticketsBody").innerHTML = filtered.map(t => `
-    <tr onclick="openDrawer('${t.id}')">
-      <td><div style="font-weight:600;">${t.summary || 'Untitled'}</div></td>
-      <td>${t.group}</td>
-      <td>${t.priority || 'medium'}</td>
-      <td><span class="pill pill-${t.status || 'open'}">${t.status || 'open'}</span></td>
-      <td>${t.assigneeName || '--'}</td>
-    </tr>`).join("");
-
-  updateCharts(gCounts, pCounts, avg);
-}
-
-window.openDrawer = (id) => {
-  selectedId = id;
-  const t = allTickets.find(x => x.id === id);
-  document.getElementById("drawSummary").textContent = t.summary;
-  document.getElementById("drawDesc").textContent = t.description || "No description provided.";
-  document.getElementById("drawStatus").value = t.status || "open";
-  document.getElementById("drawPriority").value = t.priority || "medium";
-  document.getElementById("drawAssignee").value = t.assigneeName || "";
-  document.getElementById("editDrawer").classList.add("open");
-  document.getElementById("overlay").classList.add("active");
-};
-
-window.closeDrawer = () => {
-  document.getElementById("editDrawer").classList.remove("open");
-  document.getElementById("overlay").classList.remove("active");
-  document.getElementById("drawStatusMsg").textContent = "";
-};
-
-document.getElementById("updateTicketBtn").onclick = async () => {
-  const btn = document.getElementById("updateTicketBtn");
-  btn.disabled = true;
-  document.getElementById("drawStatusMsg").textContent = "Updating...";
-
-  try {
-    await updateDoc(doc(db, "tickets", selectedId), {
-      status: document.getElementById("drawStatus").value,
-      priority: document.getElementById("drawPriority").value,
-      assigneeName: document.getElementById("drawAssignee").value,
-      updatedAt: serverTimestamp()
-    });
-    document.getElementById("drawStatusMsg").textContent = "✅ Updated successfully!";
-    await loadTickets();
-    setTimeout(closeDrawer, 1000);
-  } catch (e) {
-    document.getElementById("drawStatusMsg").textContent = "Error: " + e.message;
-  } finally {
-    btn.disabled = false;
-  }
-};
-
-function updateCharts(groups, priorities, mttr) {
   Object.values(charts).forEach(c => c.destroy());
   const opt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
 
-  charts.g = new Chart(document.getElementById('groupChart'), { type: 'bar', data: { labels: Object.keys(groups), datasets: [{ data: Object.values(groups), backgroundColor: '#3b82f6' }] }, options: opt });
-  charts.p = new Chart(document.getElementById('priorityChart'), { type: 'doughnut', data: { labels: Object.keys(priorities), datasets: [{ data: Object.values(priorities), backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] }, options: { ...opt, cutout: '70%' } });
-  charts.e = new Chart(document.getElementById('efficiencyChart'), { type: 'doughnut', data: { datasets: [{ data: [100 - (mttr*10), mttr*10], backgroundColor: ['#10b981', '#f1f5f9'] }] }, options: { ...opt, circumference: 180, rotation: 270, cutout: '80%' } });
+  charts.s1 = new Chart(document.getElementById('sideGroupChart'), { type:'bar', data: { labels: ['IT','Maint'], datasets:[{data:[g.IT, g.Maintenance], backgroundColor:'#3b82f6'}] }, options: opt });
+  charts.s2 = new Chart(document.getElementById('sideEfficiencyChart'), { type:'doughnut', data: { datasets:[{data:[100-(avg*10), avg*10], backgroundColor:['#10b981','#f1f5f9']}] }, options: {...opt, circumference:180, rotation:270, cutout:'80%'} });
+  
+  charts.b1 = new Chart(document.getElementById('bigGroupChart'), { type:'bar', data: { labels:['IT','Maintenance'], datasets:[{label:'Tickets', data:[g.IT, g.Maintenance], backgroundColor:'#3b82f6'}] }, options: {...opt, plugins:{legend:{display:true}}} });
+  charts.b2 = new Chart(document.getElementById('bigPriorityChart'), { type:'doughnut', data: { labels:['High','Medium','Low'], datasets:[{data:[p.High, p.Medium, p.Low], backgroundColor:['#ef4444','#f59e0b','#10b981']}] }, options: {...opt, plugins:{legend:{display:true, position:'bottom'}}} });
 }
 
-document.getElementById("search").oninput = render;
-document.getElementById("groupFilter").onchange = render;
-document.getElementById("overlay").onclick = closeDrawer;
-document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
+// EVENTS
+document.getElementById("tabCommand").onclick = () => { document.getElementById("viewCommand").classList.remove("hidden"); document.getElementById("viewSummary").classList.add("hidden"); document.getElementById("tabCommand").classList.add("active-tab"); document.getElementById("tabSummary").classList.remove("active-tab"); };
+document.getElementById("tabSummary").onclick = () => { document.getElementById("viewSummary").classList.remove("hidden"); document.getElementById("viewCommand").classList.add("hidden"); document.getElementById("tabSummary").classList.add("active-tab"); document.getElementById("tabCommand").classList.remove("active-tab"); renderTickets(); };
+document.getElementById("period30").onclick = () => { currentPeriod = '30'; renderTickets(); };
+document.getElementById("periodAll").onclick = () => { currentPeriod = 'all'; renderTickets(); };
+
+document.getElementById("saveTicketBtn").onclick = async () => {
+  await updateDoc(doc(db, "tickets", selectedId), { status: document.getElementById("statusInput").value, priority: document.getElementById("priorityInput").value, assigneeName: document.getElementById("assigneeInput").value, updatedAt: serverTimestamp() });
+  alert("Saved."); resetDirty(); loadTickets();
+};
+
+document.getElementById("addReplyBtn").onclick = async () => {
+  const msg = document.getElementById("replyInput").value;
+  if(!msg) return;
+  await addDoc(collection(db, "tickets", selectedId, "comments"), { message: msg, authorName: "Admin", createdAt: serverTimestamp() });
+  document.getElementById("replyInput").value = ""; loadComments(selectedId);
+};
+
+document.getElementById("downloadCSV").onclick = () => {
+  const headers = ["Summary", "Group", "Priority", "Status", "Assignee"];
+  const rows = allTickets.map(t => [t.summary, t.group, t.priority, t.status, t.assigneeName]);
+  const csv = [headers, ...rows].map(e => e.join(",")).join("\n");
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "report.csv"; a.click();
+};
+
+const markDirty = () => { isDirty = true; document.getElementById("saveTicketBtn").style.borderColor = "#f59e0b"; };
+const resetDirty = () => { isDirty = false; document.getElementById("saveTicketBtn").style.borderColor = "transparent"; };
+document.querySelectorAll(".dirty-track").forEach(el => el.oninput = markDirty);
+document.getElementById("claimBtn").onclick = () => { document.getElementById("assigneeInput").value = currentUserEmail; markDirty(); };
+document.getElementById("manualSync").onclick = loadTickets;
+document.getElementById("search").oninput = renderTickets;
+document.getElementById("groupFilter").onchange = renderTickets;
+document.getElementById("statusFilter").onchange = renderTickets;
+document.getElementById("requesterBtn").onclick = () => { if(!isDirty || confirm("Leave?")) window.location.href="index.html"; };
+document.getElementById("logoutBtn").onclick = () => { if(!isDirty || confirm("Logout?")) window.location.href="login.html"; };
 </script>
 </body>
 </html>
