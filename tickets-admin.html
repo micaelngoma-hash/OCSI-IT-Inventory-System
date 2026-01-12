@@ -31,7 +31,7 @@
     /* TWO-COLUMN LAYOUT */
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 320px; 
+      grid-template-columns: 1fr 320px; /* Left: Main, Right: Analytics */
       gap: 24px;
       max-width: 1400px;
       margin: 0 auto;
@@ -60,7 +60,7 @@
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 15px;
-      min-height: 200px;
+      height: 220px;
     }
     .sidebar-label {
       font-size: 0.75rem;
@@ -71,7 +71,7 @@
       display: block;
     }
 
-    /* UNIVERSAL SEARCH & TOOLBAR */
+    /* TOOLBAR & SEARCH */
     .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:10px; flex-wrap:wrap; }
     .search-box{
       display:flex; align-items:center; gap:8px; background:white;
@@ -80,28 +80,24 @@
     .search-box input{ border:none; outline:none; font-size:.9rem; width:100%; }
 
     /* TABLE */
-    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow-y:auto; max-height:500px; }
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow-y:auto; max-height:430px; }
     table{ width:100%; border-collapse:collapse; font-size:.85rem; }
-    th,td{ padding:12px 10px; border-bottom:1px solid #f1f5f9; text-align:left; }
+    th,td{ padding:10px; border-bottom:1px solid #f1f5f9; text-align:left; }
     th{ background:#f8fafc; color:#4b5563; position:sticky; top:0; z-index:10; }
     tr:hover td{ background:#f9fafb; cursor: pointer; }
 
-    /* PILLS */
-    .pill{ padding:3px 10px; border-radius:999px; font-size:.75rem; font-weight: 600; text-transform: capitalize;}
+    /* PILLS & BUTTONS */
+    .pill{ padding:2px 8px; border-radius:999px; font-size:.75rem; font-weight: 600; }
     .pill-open{ background:#ebf8ff; color:#2b6cb0; }
     .pill-closed{ background:#e6fffa; color:#2c7a7b; }
     .pill-progress{ background:#fff3cd; color:#b7791f; }
-    
-    .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-size:.85rem; font-weight:600; transition: 0.2s;}
+    .btn{ border:none; cursor:pointer; padding:8px 16px; border-radius:999px; font-size:.85rem; font-weight:600; }
     .btn-primary{ background:var(--brand); color:white; }
-    .btn-primary:hover{ filter: brightness(1.1); }
 
     .ticket-edit{ border-radius:8px; border:1px solid #e5e7eb; padding:15px; background:#fdfefe; margin-bottom:15px; }
     .field-label{ font-size:.8rem; font-weight:600; margin-bottom:4px; margin-top:10px; }
     .field-input, .field-select, .field-textarea{ width:100%; padding:8px; border-radius:8px; border:1px solid #cbd5e1; font-size:.9rem; }
     .hidden{ display:none; }
-    
-    #refreshTimer { font-size: 0.7rem; color: #94a3b8; margin-top: 5px; text-align: right; }
   </style>
 </head>
 
@@ -111,7 +107,7 @@
   <div class="hero-title">OCSI Service Request</div>
   <div class="hero-right">
     <div id="who" style="font-size:0.9rem;">...</div>
-    <button id="logoutBtn" style="background:rgba(255,255,255,0.2); color:white; border:none; border-radius:20px; padding:5px 15px; cursor:pointer; margin-left:15px;">Log out</button>
+    <button id="logoutBtn" class="btn-hero-small" style="background:rgba(255,255,255,0.2); color:white; border:none; border-radius:20px; padding:5px 15px; cursor:pointer;">Log out</button>
   </div>
 </header>
 
@@ -119,15 +115,15 @@
   <section>
     <div class="card-shell">
       <h1>Admin Dashboard</h1>
-      <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;">Managing IT and Front Office service requests.</p>
+      <p style="color:#64748b; font-size:0.9rem; margin-bottom:20px;">Universal search and ticket management for IT and Front Office.</p>
 
       <div class="toolbar">
         <div class="search-box">
           <span>🔍</span>
-          <input id="search" placeholder="Universal Search (Subject, Room, Staff, Status)..."/>
+          <input id="search" placeholder="Search anything (ID, name, problem, status)..."/>
         </div>
         <div style="display:flex; gap:10px;">
-          <select id="groupFilter" class="field-select" style="width: auto; border-radius: 20px;">
+          <select id="groupFilter">
             <option value="">All Groups</option>
             <option value="IT">IT</option>
             <option value="Front Office">Front Office</option>
@@ -145,16 +141,14 @@
         </table>
       </div>
 
-      <div style="margin-top:30px;">
-        <h2>Ticket Details & Reply</h2>
-        <div id="detailsPlaceholder" style="padding:30px; border:2px dashed #e2e8f0; border-radius:10px; text-align:center; color:#94a3b8;">
-          Select a ticket from the list above to modify details or reply
-        </div>
+      <div style="margin-top:25px;">
+        <h2>Ticket Details</h2>
+        <div id="detailsPlaceholder" style="padding:20px; background:#f8fafc; border-radius:10px; text-align:center; color:#94a3b8;">Select a ticket to view or edit details</div>
         
         <div id="ticketEditBlock" class="ticket-edit hidden">
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
             <div>
-              <div class="field-label">Update Status</div>
+              <div class="field-label">Status</div>
               <select id="statusInput" class="field-select">
                 <option value="open">Open</option>
                 <option value="in-progress">In progress</option>
@@ -162,7 +156,7 @@
               </select>
             </div>
             <div>
-              <div class="field-label">Set Priority</div>
+              <div class="field-label">Priority</div>
               <select id="priorityInput" class="field-select">
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -171,13 +165,13 @@
             </div>
           </div>
 
-          <div class="field-label">Assignee Name</div>
-          <input id="assigneeInput" class="field-input" placeholder="Staff member handling this..."/>
+          <div class="field-label">Assignee</div>
+          <input id="assigneeInput" class="field-input" placeholder="Name of staff member"/>
 
-          <div class="field-label">Add Reply / Internal Note</div>
-          <textarea id="replyInput" class="field-textarea" style="height: 100px;" placeholder="Type your reply here..."></textarea>
+          <div class="field-label">Admin Reply</div>
+          <textarea id="replyInput" class="field-textarea" placeholder="Add a comment..."></textarea>
           
-          <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:20px; width:100%; padding:12px;">💾 Save Changes & Post Reply</button>
+          <button id="saveTicketBtn" class="btn btn-primary" style="margin-top:15px; width:100%;">💾 Update Ticket & Send Reply</button>
         </div>
       </div>
     </div>
@@ -186,75 +180,65 @@
   <aside>
     <div class="sidebar-sticky">
       <div class="chart-box">
-        <span class="sidebar-label">Volume: IT vs Front Office</span>
+        <span class="sidebar-label">Volume by Group</span>
         <canvas id="groupChart"></canvas>
       </div>
       <div class="chart-box">
-        <span class="sidebar-label">Priority Distribution</span>
+        <span class="sidebar-label">Priority Spread</span>
         <canvas id="priorityChart"></canvas>
       </div>
-      <div class="chart-box" style="text-align: center;">
-        <span class="sidebar-label">Total Active Tickets</span>
-        <h1 id="activeCount" style="font-size: 3.5rem; margin: 15px 0; color: var(--brand);">0</h1>
-        <p style="font-size: 0.8rem; color: #94a3b8;">Excluding Closed</p>
+      <div class="chart-box" style="height: 150px; text-align: center;">
+        <span class="sidebar-label">Active Tickets</span>
+        <h1 id="activeCount" style="font-size: 3rem; margin: 10px 0; color: var(--brand);">0</h1>
       </div>
-      <div id="refreshTimer">Auto-refreshing in 60s...</div>
     </div>
   </aside>
 </main>
 
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
-import { collection, doc, getDocs, updateDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { collection, doc, getDocs, updateDoc, addDoc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-let allTickets = [], selectedId = null, charts = {}, timeLeft = 60;
+let allTickets = [], selectedId = null, charts = {};
 
-// Initialize
 watchAuth({
   allowedRoles: ["admin", "it"],
   onReady: async (user) => {
     document.getElementById("who").textContent = user.email;
     await loadTickets();
-    startRefreshTimer();
   }
 });
 
 async function loadTickets() {
   const snap = await getDocs(collection(db, "tickets"));
-  // Filter out Maintenance and Nurse immediately
+  // REMOVE Maintenance and Nurse from the data source
   allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }))
                    .filter(t => t.group === "IT" || t.group === "Front Office");
   renderTickets();
-  timeLeft = 60; // Reset timer on successful load
 }
 
 function renderTickets() {
   const term = document.getElementById("search").value.toLowerCase();
   const groupFilter = document.getElementById("groupFilter").value;
 
+  // UNIVERSAL SEARCH logic: searches across all properties
   const filtered = allTickets.filter(t => {
-    // Universal Search: Check all values in the ticket object
-    const searchString = Object.values(t).map(v => String(v)).join(" ").toLowerCase();
+    const searchString = Object.values(t).join(" ").toLowerCase();
     const matchSearch = !term || searchString.includes(term);
     const matchGroup = !groupFilter || t.group === groupFilter;
     return matchSearch && matchGroup;
   });
 
-  const tbody = document.getElementById("ticketsBody");
-  if(filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px;">No tickets found matching your search.</td></tr>`;
-  } else {
-    tbody.innerHTML = filtered.map((t, i) => `
-      <tr onclick="window.selectTicket('${t.id}')" style="${selectedId === t.id ? 'background:#f1f5f9;' : ''}">
-        <td>${i+1}</td>
-        <td><b>${t.summary || 'No Summary'}</b></td>
-        <td>${t.group}</td>
-        <td><span class="pill pill-${(t.status || 'open').toLowerCase()}">${t.status || 'open'}</span></td>
-        <td>${t.assigneeName || '--'}</td>
-        <td>${t.createdAt?.toDate().toLocaleDateString() || ''}</td>
-      </tr>
-    `).join("");
-  }
+  document.getElementById("ticketsBody").innerHTML = filtered.map((t, i) => `
+    <tr onclick="window.selectTicket('${t.id}')">
+      <td>${i+1}</td>
+      <td><b>${t.summary || 'No Summary'}</b></td>
+      <td>${t.group}</td>
+      <td><span class="pill pill-${t.status || 'open'}">${t.status || 'open'}</span></td>
+      <td>${t.assigneeName || '--'}</td>
+      <td>${t.createdAt?.toDate().toLocaleDateString() || ''}</td>
+    </tr>
+  `).join("");
 
   updateCharts(filtered);
 }
@@ -267,7 +251,6 @@ window.selectTicket = (id) => {
   document.getElementById("statusInput").value = t.status || "open";
   document.getElementById("priorityInput").value = t.priority || "medium";
   document.getElementById("assigneeInput").value = t.assigneeName || "";
-  renderTickets(); // Refresh highlights
 };
 
 function updateCharts(data) {
@@ -281,63 +264,48 @@ function updateCharts(data) {
   });
 
   document.getElementById("activeCount").textContent = active;
-  
-  // Refresh Chart.js instances
-  if(charts.g) charts.g.destroy();
-  if(charts.p) charts.p.destroy();
+  Object.values(charts).forEach(c => c.destroy());
 
   const opt = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
   
   charts.g = new Chart(document.getElementById('groupChart'), {
     type: 'bar',
-    data: { labels: ['IT', 'Front Office'], datasets: [{ data: [g.IT, g["Front Office"]], backgroundColor: ['#3b82f6', '#818cf8'] }] },
+    data: { labels: ['IT', 'Front Office'], datasets: [{ data: [g.IT, g["Front Office"]], backgroundColor: '#3b82f6' }] },
     options: opt
   });
 
   charts.p = new Chart(document.getElementById('priorityChart'), {
     type: 'doughnut',
     data: { labels: ['High', 'Med', 'Low'], datasets: [{ data: [p.high, p.medium, p.low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] },
-    options: { ...opt, cutout: '75%' }
+    options: { ...opt, cutout: '70%' }
   });
-}
-
-function startRefreshTimer() {
-  setInterval(() => {
-    timeLeft--;
-    document.getElementById("refreshTimer").textContent = `Auto-refreshing in ${timeLeft}s...`;
-    if(timeLeft <= 0) loadTickets();
-  }, 1000);
 }
 
 document.getElementById("saveTicketBtn").onclick = async () => {
   if(!selectedId) return;
-  const reply = document.getElementById("replyInput").value.trim();
+  const reply = document.getElementById("replyInput").value;
   
-  try {
-    await updateDoc(doc(db, "tickets", selectedId), {
-      status: document.getElementById("statusInput").value,
-      priority: document.getElementById("priorityInput").value,
-      assigneeName: document.getElementById("assigneeInput").value,
-      updatedAt: serverTimestamp()
+  await updateDoc(doc(db, "tickets", selectedId), {
+    status: document.getElementById("statusInput").value,
+    priority: document.getElementById("priorityInput").value,
+    assigneeName: document.getElementById("assigneeInput").value,
+    updatedAt: serverTimestamp()
+  });
+
+  if(reply) {
+    await addDoc(collection(db, "tickets", selectedId, "comments"), {
+      message: reply,
+      authorName: "Admin",
+      createdAt: serverTimestamp()
     });
+  }
 
-    if(reply) {
-      await addDoc(collection(db, "tickets", selectedId, "comments"), {
-        message: reply,
-        authorName: "Admin",
-        createdAt: serverTimestamp()
-      });
-      document.getElementById("replyInput").value = "";
-    }
-
-    alert("Changes saved successfully.");
-    loadTickets();
-  } catch (e) { alert("Error saving: " + e.message); }
+  alert("Ticket Updated");
+  loadTickets();
 };
 
-// Event Listeners
-document.getElementById("search").addEventListener("input", renderTickets);
-document.getElementById("groupFilter").addEventListener("change", renderTickets);
+document.getElementById("search").oninput = renderTickets;
+document.getElementById("groupFilter").onchange = renderTickets;
 document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
 document.getElementById("newTicketBtn").onclick = () => window.location.href="submit-request.html";
 </script>
