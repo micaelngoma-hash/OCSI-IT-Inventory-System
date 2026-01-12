@@ -5,174 +5,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCSI Service Request – Tickets</title>
   <style>
-    :root{
-      --red1:#c53030;
-      --red2:#f56565;
-      --brand:#1a73e8;
-      --border:#e5e7eb;
-    }
+    :root{ --red1:#c53030; --red2:#f56565; --brand:#1a73e8; --border:#e5e7eb; }
     *{box-sizing:border-box;}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,Segoe UI,sans-serif;
-      background:#f7fafc;
-      color:#1a202c;
-    }
+    body{ margin:0; font-family:system-ui; background:#f7fafc; color:#1a202c; }
 
-    .hero{
-      background:linear-gradient(90deg,var(--red1),var(--red2));
-      color:white;
-      padding:18px 26px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
+    /* Login Modal Styles */
+    #loginOverlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.95); display: flex; align-items: center; justify-content: center; z-index: 10000;
     }
-    .hero-left{
-      display:flex;
-      align-items:center;
-      gap:22px;
+    .login-card {
+      background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;
     }
-    .hero-title{
-      font-size:1.8rem;
-      font-weight:600;
-    }
-    .hero-menu a{
-      color:white;
-      text-decoration:none;
-      font-size:.92rem;
-      opacity:.9;
-      margin-right:14px;
-    }
-    .hero-right{
-      display:flex;
-      align-items:center;
-      gap:14px;
-    }
-    .hero-email{
-      font-size:.85rem;
-      opacity:.9;
-    }
-    .btn-primary{
-      border:none;
-      border-radius:999px;
-      padding:8px 16px;
-      font-size:.9rem;
-      font-weight:600;
-      background:#0b7285;
-      color:white;
-      cursor:pointer;
-    }
-
-    .wrap{
-      display:flex;
-      justify-content:center;
-      padding:34px 16px;
-    }
-    .card{
-      background:white;
-      border-radius:12px;
-      border:1px solid var(--border);
-      max-width:900px;
-      width:100%;
-      padding:18px 18px 14px;
-      box-shadow:0 10px 30px rgba(15,23,42,.06);
-    }
-
-    .toolbar{
-      display:flex;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:10px;
-    }
-    .select{
-      position:relative;
-    }
-    select{
-      border-radius:8px;
-      border:1px solid var(--border);
-      padding:7px 30px 7px 9px;
-      font-size:.88rem;
-      background:white;
-    }
-
-    .search-box{
-      flex:1;
-      min-width:180px;
-      display:flex;
-      align-items:center;
-      gap:6px;
-      background:white;
-      border-radius:999px;
-      border:1px solid var(--border);
-      padding:4px 10px;
-    }
-    .search-box input{
-      border:none;
-      outline:none;
-      width:100%;
-      font-size:.88rem;
-      background:transparent;
-    }
-
-    .small-text{
-      font-size:.8rem;
-      color:#718096;
-      margin:4px 0 8px;
-      text-align:center;
-    }
-
-    .table-wrap{
-      border-radius:10px;
-      border:1px solid var(--border);
-      overflow:auto;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:700px;
-      font-size:.86rem;
-    }
-    th,td{
-      padding:8px 10px;
-      border-bottom:1px solid #f1f5f9;
-      text-align:left;
-    }
-    th{
-      background:#f8fafc;
-      color:#4b5563;
-      font-weight:600;
-    }
-    tr:hover td{background:#f9fafb;}
-
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:.75rem;
-    }
+    .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; margin: 15px 0; }
+    
+    .hero{ background:linear-gradient(90deg,var(--red1),var(--red2)); color:white; padding:18px 26px; display:flex; align-items:center; justify-content:space-between; }
+    .hero-left{ display:flex; align-items:center; gap:22px; }
+    .hero-title{ font-size:1.8rem; font-weight:600; }
+    .hero-right{ display:flex; align-items:center; gap:14px; }
+    .hero-email{ font-size:.85rem; opacity:.9; }
+    .btn-primary{ border:none; border-radius:999px; padding:8px 16px; font-size:.9rem; font-weight:600; background:#0b7285; color:white; cursor:pointer; }
+    .wrap{ display:flex; justify-content:center; padding:34px 16px; }
+    .card{ background:white; border-radius:12px; border:1px solid var(--border); max-width:900px; width:100%; padding:18px; box-shadow:0 10px 30px rgba(15,23,42,.06); }
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow:auto; margin-top: 15px; }
+    table{ width:100%; border-collapse:collapse; font-size:.86rem; }
+    th,td{ padding:10px; border-bottom:1px solid #f1f5f9; text-align:left; }
+    th{ background:#f8fafc; color:#4b5563; }
+    .pill{ padding:2px 8px; border-radius:999px; font-size:.75rem; }
     .pill-open{background:#ebf8ff;color:#2b6cb0;}
-    .pill-progress{background:#fef3c7;color:#92400e;}
-    .pill-resolved{background:#dcfce7;color:#166534;}
-    .pill-closed{background:#e6fffa;color:#2c7a7b;}
-
-    .status-bar{
-      font-size:.8rem;
-      color:#718096;
-      margin-top:4px;
-      text-align:left;
-      min-height:18px;
-    }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
+  <div id="loginOverlay" class="hidden">
+    <div class="login-card">
+      <h2 style="margin-top:0">OCSI Login</h2>
+      <p id="loginMsg" style="font-size:0.9rem; color:#4a5568;">Enter your school email to receive a secure login link.</p>
+      <input type="email" id="loginEmail" class="login-input" placeholder="email@ocsi.org">
+      <button id="sendLinkBtn" class="btn-primary" style="width:100%">Send Magic Link</button>
+    </div>
+  </div>
+
   <header class="hero">
     <div class="hero-left">
       <div class="hero-title">OCSI Service Request</div>
-      <nav class="hero-menu">
-        <a href="tickets.html" style="font-weight:600;text-decoration:underline;">Home</a>
-      </nav>
     </div>
     <div class="hero-right">
       <button id="submitBtn" class="btn-primary">+ Submit a ticket</button>
@@ -182,245 +59,104 @@
 
   <main class="wrap">
     <section class="card">
-      <div class="toolbar">
-        <div class="select">
-          <select id="statusFilter">
-            <option value="open">Open Tickets</option>
-            <option value="closed">Closed Tickets</option>
-            <option value="">All Tickets</option>
-          </select>
-        </div>
-
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, description, group…" />
-        </div>
-      </div>
-
-      <p class="small-text" id="viewHint">
-        Loading tickets…
-      </p>
-
+      <div id="viewHint" style="font-size:0.85rem; margin-bottom:10px; color:#718096;">Loading your tickets...</div>
       <div class="table-wrap">
         <table>
           <thead>
-            <tr>
-              <th style="width:70px;">ID</th>
-              <th>Summary</th>
-              <th>Description</th>
-              <th>Group</th>
-              <th>Status</th>
-              <th>Updated</th>
-            </tr>
+            <tr><th>ID</th><th>Summary</th><th>Group</th><th>Status</th><th>Updated</th></tr>
           </thead>
-          <tbody id="tbody">
-            <tr><td colspan="6">Loading tickets…</td></tr>
-          </tbody>
+          <tbody id="tbody"></tbody>
         </table>
       </div>
-
-      <div class="status-bar" id="statusBar"></div>
     </section>
   </main>
 
   <script type="module">
-    import { db, watchAuth } from "./firebase.js";
-    import {
-      collection, getDocs, query, where, orderBy
+    import { auth, db, watchAuth } from "./firebase.js";
+    import { 
+      isSignInWithEmailLink, signInWithEmailLink, sendSignInLinkToEmail 
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import { 
+      collection, getDocs, query, where, orderBy, doc, getDoc, setDoc, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    const whoEl        = document.getElementById("who");
-    const submitBtn    = document.getElementById("submitBtn");
-    const statusFilter = document.getElementById("statusFilter");
-    const searchInput  = document.getElementById("search");
-    const tbody        = document.getElementById("tbody");
-    const statusBar    = document.getElementById("statusBar");
-    const viewHint     = document.getElementById("viewHint");
+    const overlay = document.getElementById("loginOverlay");
+    const loginEmail = document.getElementById("loginEmail");
+    const sendLinkBtn = document.getElementById("sendLinkBtn");
+    const loginMsg = document.getElementById("loginMsg");
+    const tbody = document.getElementById("tbody");
+    const whoEl = document.getElementById("who");
 
     let currentUser = null;
-    let currentRole = "viewer";
-    let allTickets  = [];
+    let currentRole = "staff";
 
-    const AGENT_ROLES = ["admin","it"]; // agents see all tickets
+    // --- MAGIC LINK HANDLER ---
+    async function handleAuthTransition() {
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) email = window.prompt('Please confirm your email for sign-in:');
+        
+        try {
+          const result = await signInWithEmailLink(auth, email, window.location.href);
+          window.localStorage.removeItem('emailForSignIn');
+          
+          // ACTIVATION NOTIFICATION
+          const userRef = doc(db, "users", result.user.uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, { email: result.user.email, role: "staff", activatedAt: serverTimestamp() });
+            alert("✅ Account Activated! You can now access your tickets.");
+          }
+        } catch (err) { alert("Error: " + err.message); }
+      }
+    }
 
+    // --- SEND EMAIL LINK ---
+    sendLinkBtn.onclick = async () => {
+      const email = loginEmail.value.trim();
+      if(!email) return alert("Email required");
+      try {
+        await sendSignInLinkToEmail(auth, email, { url: window.location.href, handleCodeInApp: true });
+        window.localStorage.setItem('emailForSignIn', email);
+        loginMsg.innerHTML = "<b>Check your email!</b> A link has been sent.";
+      } catch (err) { alert(err.message); }
+    };
+
+    // --- LOAD TICKETS ---
+    async function loadTickets(user, role) {
+      const q = (role === 'admin' || role === 'it') 
+        ? query(collection(db, "tickets"), orderBy("createdAt", "desc"))
+        : query(collection(db, "tickets"), where("requesterUid", "==", user.uid), orderBy("createdAt", "desc"));
+
+      const snap = await getDocs(q);
+      tbody.innerHTML = snap.docs.map(d => {
+        const t = d.data();
+        return `<tr>
+          <td>${d.id.slice(-4)}</td>
+          <td>${t.summary}</td>
+          <td>${t.group || 'IT'}</td>
+          <td><span class="pill pill-open">${t.status || 'open'}</span></td>
+          <td>${t.createdAt ? new Date(t.createdAt.seconds*1000).toLocaleDateString() : ''}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById("viewHint").innerText = role === 'admin' ? "Admin View: All Tickets" : "Personal View: My Tickets";
+    }
+
+    // --- INIT ---
+    handleAuthTransition();
     watchAuth({
-      allowedRoles:["admin","it","viewer","staff"],
+      allowedRoles: ["admin", "it", "viewer", "staff"],
       whoEl,
-      onReady: async (user, role)=>{
+      onReady: async (user, role) => {
+        if (!user) { overlay.classList.remove("hidden"); return; }
+        overlay.classList.add("hidden");
         currentUser = user;
         currentRole = role;
-
-        if(!user){
-          alert("Please sign in to view your tickets.");
-          return;
-        }
-
-        submitBtn.addEventListener("click", ()=>{
-          window.location.href = "submit-request.html";
-        });
-
-        await loadTickets();
-        statusFilter.addEventListener("change", render);
-        searchInput.addEventListener("input", render);
+        await loadTickets(user, role);
       }
     });
 
-    function setStatus(msg){
-      statusBar.textContent = msg || "";
-    }
-
-    async function loadTickets(){
-      if(!currentUser) return;
-
-      setStatus("Loading tickets…");
-      viewHint.textContent = "Loading tickets…";
-
-      try{
-        let q;
-        if(AGENT_ROLES.includes(currentRole)){
-          // Agents see all tickets
-          q = query(
-            collection(db,"tickets"),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Agent view: showing all tickets in the system (filter by open/closed above).";
-        }else{
-          // Requesters see *only their own* tickets
-          q = query(
-            collection(db,"tickets"),
-            where("requesterUid","==",currentUser.uid),
-            orderBy("createdAt","desc")
-          );
-          viewHint.textContent =
-            "Requester view: showing tickets you submitted. Use the button above to create a new ticket.";
-        }
-
-        const snap = await getDocs(q);
-        allTickets = [];
-        snap.forEach(ds=>{
-          allTickets.push({
-            id: ds.id,
-            ...ds.data()
-          });
-        });
-
-        if(!allTickets.length){
-          tbody.innerHTML =
-            `<tr><td colspan="6">You have no tickets at the moment. Press “Submit a ticket” to create one.</td></tr>`;
-          setStatus("");
-          return;
-        }
-
-        render();
-        setStatus(`Loaded ${allTickets.length} ticket(s).`);
-      }catch(err){
-        console.error(err);
-        tbody.innerHTML =
-          `<tr><td colspan="6">Failed to load tickets.</td></tr>`;
-        setStatus("Error loading tickets: " + err.message);
-      }
-    }
-
-    function render(){
-      if(!allTickets.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets found.</td></tr>`;
-        return;
-      }
-
-      const statusVal = statusFilter.value; // "open" | "closed" | ""
-      const term = (searchInput.value || "").toLowerCase();
-
-      const rows = allTickets.filter(t=>{
-        const st = (t.status || "open").toLowerCase();
-
-        // status filter:
-        // "open"  -> anything that is NOT "closed"
-        // "closed"-> only closed
-        if(statusVal === "open" && st === "closed") return false;
-        if(statusVal === "closed" && st !== "closed") return false;
-
-        if(!term) return true;
-
-        const hay = [
-          t.summary,
-          t.description,
-          groupToLabel(t.group),
-          t.assigneeName,
-          t.requesterName,
-          t.requesterEmail
-        ].join(" ").toLowerCase();
-
-        return hay.includes(term);
-      });
-
-      if(!rows.length){
-        tbody.innerHTML =
-          `<tr><td colspan="6">No tickets match your filters.</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = rows.map((t)=>{
-        const st = (t.status || "open").toLowerCase();
-        let pillClass = "pill-open";
-        let statusLabel = "Open";
-        if(st === "in-progress"){ pillClass = "pill-progress"; statusLabel = "In progress"; }
-        else if(st === "resolved"){ pillClass = "pill-resolved"; statusLabel = "Resolved"; }
-        else if(st === "closed"){ pillClass = "pill-closed"; statusLabel = "Closed"; }
-
-        const createdOrUpdated = t.updatedAt || t.createdAt;
-        const ts = formatDate(createdOrUpdated);
-
-        const shortDesc = (t.description || "").length > 80
-          ? t.description.slice(0,77) + "…"
-          : (t.description || "");
-
-        return `
-          <tr>
-            <td>${escapeHtml(String(t.id).slice(-4))}</td>
-            <td>${escapeHtml(t.summary || "")}</td>
-            <td>${escapeHtml(shortDesc)}</td>
-            <td>${escapeHtml(groupToLabel(t.group))}</td>
-            <td><span class="pill ${pillClass}">${statusLabel}</span></td>
-            <td>${escapeHtml(ts)}</td>
-          </tr>
-        `;
-      }).join("");
-    }
-
-    function toDate(val){
-      if(!val) return null;
-      try{
-        if(val.toDate) return val.toDate();
-        return new Date(val);
-      }catch{
-        return null;
-      }
-    }
-
-    function formatDate(val){
-      const d = toDate(val);
-      if(!d || isNaN(d.getTime())) return "";
-      return d.toLocaleString();
-    }
-
-    function groupToLabel(g){
-      switch((g || "").toLowerCase()){
-        case "it": return "IT";
-        case "maintenance": return "Maintenance";
-        case "front-office": return "Front Office";
-        case "nurse": return "Nurse";
-        default: return g || "";
-      }
-    }
-
-    function escapeHtml(s){
-      if(!s) return "";
-      return String(s).replace(/[&<>"']/g,c=>(
-        { "&":"&amp;","<":"&lt;"," >":"&gt;","\"":"&quot;","'":"&#39;" }[c] || c
-      ));
-    }
+    document.getElementById("submitBtn").onclick = () => window.location.href = "submit-request.html";
   </script>
 </body>
 </html>
