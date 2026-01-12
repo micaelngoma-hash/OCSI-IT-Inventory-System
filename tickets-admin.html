@@ -59,12 +59,12 @@
     }
 
     /* MAIN CONTENT WRAPPER */
-    .wrap{ display:flex; justify-content:center; padding:34px 16px; }
+    .wrap{ display:flex; justify-content:center; padding:24px 16px; }
     .card-shell{
       background:white;
       border-radius:12px;
       border:1px solid var(--border);
-      max-width:1300px;
+      max-width:1400px;
       width:100%;
       padding:18px;
       box-shadow:0 10px 30px rgba(15,23,42,.06);
@@ -74,33 +74,32 @@
     h2{ font-size: 1.1rem; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; }
     .subtitle{ margin:0 0 14px; font-size:.9rem; color:#4a5568; }
 
-    /* LAYOUT GRID */
-    .admin-grid {
+    /* TOP GRID (Groups & Analytics) */
+    .top-dashboard-grid {
       display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: 1fr 1.5fr;
       gap: 20px;
-      margin-top: 20px;
+      margin-bottom: 24px;
     }
-    @media(max-width: 1000px){ .admin-grid { grid-template-columns: 1fr; } }
+
+    /* BOTTOM GRID (List & Details) */
+    .bottom-management-grid {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 20px;
+    }
+
+    @media(max-width: 1000px){
+      .top-dashboard-grid, .bottom-management-grid { grid-template-columns: 1fr; }
+    }
 
     .panel{
       background: #fff;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 16px;
-      margin-bottom: 20px;
+      height: 100%;
     }
-
-    /* TICKET TABLE */
-    .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:10px; flex-wrap:wrap; }
-    .search-box{ display:flex; align-items:center; gap:6px; border:1px solid var(--border); border-radius:999px; padding:4px 10px; max-width:320px; width:100%; }
-    .search-box input{ border:none; outline:none; font-size:.88rem; width:100%; }
-    
-    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow-y:auto; max-height:350px; }
-    table{ width:100%; border-collapse:collapse; min-width:750px; font-size:.85rem; }
-    th,td{ padding:10px; border-bottom:1px solid #f1f5f9; text-align:left; }
-    th{ background:#f8fafc; color:#4b5563; position:sticky; top:0; z-index:10; }
-    tr:hover td{ background:#f9fafb; cursor: pointer; }
 
     /* ANALYTICS */
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -108,22 +107,24 @@
     .stat-val { font-size: 1.5rem; font-weight: 700; display: block; }
     .stat-label { font-size: 0.7rem; color: #64748b; text-transform: uppercase; }
 
-    /* FORMS & CHIPS */
+    /* TABLE */
+    .table-wrap{ border-radius:10px; border:1px solid var(--border); overflow-y:auto; max-height:400px; margin-top:10px; }
+    table{ width:100%; border-collapse:collapse; min-width:700px; font-size:.85rem; }
+    th,td{ padding:10px; border-bottom:1px solid #f1f5f9; text-align:left; }
+    th{ background:#f8fafc; position:sticky; top:0; z-index:10; }
+    tr:hover td{ background:#f9fafb; cursor: pointer; }
+
+    /* UI ELEMENTS */
     .field-label{ font-size:.8rem; font-weight:600; margin-bottom:3px; margin-top:8px; }
     .field-input, .field-select, .field-textarea{ width:100%; padding:7px 9px; border-radius:8px; border:1px solid #cbd5e1; font-size:.9rem; }
-    .field-textarea{ min-height:80px; resize:vertical; }
-    .comment-list{ max-height:200px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:8px; background:#f9fafb; font-size:.82rem; }
-    
     .btn{ border:none; cursor:pointer; padding:6px 14px; border-radius:999px; font-size:.85rem; font-weight:500; display:inline-flex; align-items:center; gap:5px; }
     .btn-primary{ background:var(--brand); color:white; }
     .btn-ghost{ background:white; border:1px solid var(--btn-border); color:var(--btn-text); }
-
     .pill{ padding:2px 8px; border-radius:999px; font-size:.75rem; display:inline-block; }
     .pill-open{ background:#ebf8ff; color:#2b6cb0; }
     .pill-closed{ background:#e6fffa; color:#2c7a7b; }
     .pill-progress{ background:#fff3cd; color:#b7791f; }
     .hidden{ display:none; }
-
     .chip{ display:inline-flex; align-items:center; background:var(--chip-bg); padding:4px 10px; border-radius:999px; font-size:.82rem; margin:4px; }
     .chip button{ margin-left:6px; border:none; background:transparent; cursor:pointer; color:var(--red1); font-weight:bold; }
   </style>
@@ -144,140 +145,111 @@
 
 <main class="wrap">
   <section class="card-shell">
-    <h1>Admin Control Panel</h1>
-    <p class="subtitle">Live ticket management and departmental analytics.</p>
+    
+    <div class="top-dashboard-grid">
+      
+      <section class="panel">
+        <h2>Group Notifications</h2>
+        <div class="field-label">Department</div>
+        <select id="groupSelect" class="field-select" style="margin-bottom:10px;">
+          <option value="IT">IT</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Front Office">Front Office</option>
+          <option value="Nurse">Nurse</option>
+        </select>
 
-    <section class="panel">
-      <div class="toolbar">
-        <div class="search-box">
-          <span>🔍</span>
-          <input id="search" placeholder="Search summary, requester, location…"/>
+        <div id="emailChipContainer" style="min-height:45px; border:1px solid #f1f5f9; border-radius:8px; padding:5px; background:#fafafa;"></div>
+
+        <div style="margin-top:10px; display:flex; gap:6px;">
+          <input id="newEmailInput" class="field-input" placeholder="email@ocsi.org" style="margin-bottom:0;"/>
+          <button id="addEmailBtn" class="btn btn-primary">Add</button>
         </div>
-        <div class="filters">
-          <select id="groupFilter">
-            <option value="">All groups</option>
+        <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:10px; width:100%;">💾 Save Distribution List</button>
+        <div id="groupStatus" style="font-size:0.75rem; margin-top:5px; color:var(--success);"></div>
+      </section>
+
+      <section class="panel">
+        <h2>System Performance</h2>
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-label">Total Volume</span>
+            <span class="stat-val" id="statTotal">0</span>
+          </div>
+          <div class="stat-card" style="border-top: 3px solid var(--brand);">
+            <span class="stat-label">Active (Open)</span>
+            <span class="stat-val" id="statOpen" style="color:var(--brand);">0</span>
+          </div>
+          <div class="stat-card" style="border-top: 3px solid var(--success);">
+            <span class="stat-label">Resolved</span>
+            <span class="stat-val" id="statClosed" style="color:var(--success);">0</span>
+          </div>
+        </div>
+
+        <div class="field-label" style="margin-bottom:10px;">Workload by Department</div>
+        <div id="groupStatsContainer"></div>
+      </section>
+
+    </div>
+
+    <div class="bottom-management-grid">
+      
+      <section class="panel">
+        <h2>Live Ticket Feed</h2>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+          <input id="search" class="field-input" style="flex:1; min-width:200px;" placeholder="Search tickets..."/>
+          <select id="groupFilter" class="field-select" style="width:auto;">
+            <option value="">All Groups</option>
             <option value="IT">IT</option>
             <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
           </select>
-          <select id="statusFilter">
-            <option value="">All statuses</option>
-            <option value="open">Open</option>
-            <option value="in-progress">In progress</option>
-            <option value="closed">Closed</option>
-          </select>
-          <button id="newTicketBtn" class="btn btn-primary" type="button">➕ New ticket</button>
+          <button id="newTicketBtn" class="btn btn-primary">➕ New</button>
         </div>
-      </div>
-      
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:50px;">#</th>
-              <th>Summary</th>
-              <th>Group</th>
-              <th>Status</th>
-              <th>Requester</th>
-              <th>Created</th>
-            </tr>
-          </thead>
-          <tbody id="ticketsBody">
-            <tr><td colspan="6">Initializing real-time connection...</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p id="listStatus" style="font-size:0.75rem; color:#64748b; margin-top:8px;">Connecting...</p>
-    </section>
 
-    <div class="admin-grid">
-      
-      <div class="left-col">
-        <section class="panel">
-          <h2>Ticket Details</h2>
-          <div id="detailsPlaceholder">Select a ticket from the list above to edit.</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Summary</th>
+                <th>Status</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="ticketsBody">
+              <tr><td colspan="4">Loading real-time data...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p id="listStatus" style="font-size:0.7rem; color:#94a3b8; margin-top:8px;">Syncing...</p>
+      </section>
+
+      <section class="panel">
+        <h2>Ticket Resolution</h2>
+        <div id="detailsPlaceholder" style="color:#94a3b8; text-align:center; padding:40px 0;">
+          Select a ticket from the list to view or update.
+        </div>
+        
+        <div id="ticketEditBlock" class="hidden">
+          <div class="field-label">Status & Priority</div>
+          <div style="display:flex; gap:10px; margin-bottom:10px;">
+            <select id="statusInput" class="field-select"><option value="open">Open</option><option value="in-progress">In progress</option><option value="closed">Closed</option></select>
+            <select id="priorityInput" class="field-select"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option></select>
+          </div>
+
+          <div class="field-label">Summary</div>
+          <input id="summaryInput" class="field-input" readonly style="background:#f8fafc;"/>
+
+          <div class="field-label">Conversation</div>
+          <div id="commentsList" style="max-height:180px; overflow:auto; border:1px solid #edf2f7; padding:8px; border-radius:8px; background:#fdfdfd; font-size:0.85rem;"></div>
           
-          <div id="ticketEditBlock" class="hidden">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-              <div>
-                <div class="field-label">Status</div>
-                <select id="statusInput" class="field-select">
-                  <option value="open">Open</option>
-                  <option value="in-progress">In progress</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-              <div>
-                <div class="field-label">Priority</div>
-                <select id="priorityInput" class="field-select">
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="field-label">Summary</div>
-            <input id="summaryInput" class="field-input" readonly/>
-
-            <div class="field-label">Conversation</div>
-            <div id="commentsList" class="comment-list"></div>
-            
-            <textarea id="replyInput" class="field-textarea" style="margin-top:8px;" placeholder="Add a reply..."></textarea>
-            <div style="margin-top:10px; display:flex; gap:8px;">
-              <button id="saveTicketBtn" class="btn btn-primary">💾 Save Status</button>
-              <button id="addReplyBtn" class="btn btn-ghost">💬 Post Reply</button>
-            </div>
-            <div id="formStatus" style="font-size:0.8rem; margin-top:5px;"></div>
+          <textarea id="replyInput" class="field-textarea" style="margin-top:10px;" placeholder="Type a message..."></textarea>
+          <div style="margin-top:10px; display:flex; gap:8px;">
+            <button id="saveTicketBtn" class="btn btn-primary" style="flex:1;">Save Status</button>
+            <button id="addReplyBtn" class="btn btn-ghost" style="flex:1;">Post Reply</button>
           </div>
-        </section>
-
-        <section class="panel">
-          <h2>Group Notifications</h2>
-          <div class="field-label">Select Group</div>
-          <select id="groupSelect" class="field-select" style="margin-bottom:12px;">
-            <option value="IT">IT</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Front Office">Front Office</option>
-            <option value="Nurse">Nurse</option>
-          </select>
-
-          <div class="field-label">Members</div>
-          <div id="emailChipContainer" style="min-height:40px; border:1px solid #edf2f7; border-radius:8px; padding:5px;"></div>
-
-          <div style="margin-top:10px; display:flex; gap:6px;">
-            <input id="newEmailInput" class="field-input" placeholder="email@ocsi.org"/>
-            <button id="addEmailBtn" class="btn btn-primary">Add</button>
-          </div>
-          <button id="saveGroupBtn" class="btn btn-ghost" style="margin-top:10px; width:100%;">💾 Save Group List</button>
-          <div id="groupStatus" style="font-size:0.8rem; margin-top:5px;"></div>
-        </section>
-      </div>
-
-      <div class="right-col">
-        <section class="panel">
-          <h2>System Analytics</h2>
-          <div class="stats-row">
-            <div class="stat-card">
-              <span class="stat-label">Total</span>
-              <span class="stat-val" id="statTotal">0</span>
-            </div>
-            <div class="stat-card" style="border-top: 3px solid var(--brand);">
-              <span class="stat-label">Active</span>
-              <span class="stat-val" id="statOpen" style="color:var(--brand);">0</span>
-            </div>
-            <div class="stat-card" style="border-top: 3px solid var(--success);">
-              <span class="stat-label">Closed</span>
-              <span class="stat-val" id="statClosed" style="color:var(--success);">0</span>
-            </div>
-          </div>
-
-          <div class="field-label">Tickets by Department</div>
-          <div id="groupStatsContainer" style="margin-top:10px;">
-            </div>
-        </section>
-      </div>
+          <div id="formStatus" style="font-size:0.8rem; margin-top:5px; text-align:center;"></div>
+        </div>
+      </section>
 
     </div>
   </section>
@@ -290,13 +262,6 @@ import {
   serverTimestamp, query, orderBy, limit, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* DOM */
-const whoEl = document.getElementById("who");
-const ticketsBody = document.getElementById("ticketsBody");
-const listStatus = document.getElementById("listStatus");
-const ticketEditBlock = document.getElementById("ticketEditBlock");
-const detailsPlaceholder = document.getElementById("detailsPlaceholder");
-
 /* STATE */
 let currentUser = null;
 let allTickets = [];
@@ -306,68 +271,60 @@ let groupEmailList = [];
 /* AUTH */
 watchAuth({
   allowedRoles:["admin","it"],
-  whoEl,
-  onReady: async (user, role) => {
+  whoEl: document.getElementById("who"),
+  onReady: async (user) => {
     currentUser = user;
-    initListeners();
-    loadTickets(); // Start real-time sync
-    loadSelectedGroup();
+    init();
   }
 });
 
-function initListeners() {
+function init() {
   document.getElementById("logoutBtn").onclick = () => window.location.href="login.html";
   document.getElementById("newTicketBtn").onclick = () => window.location.href="submit-request.html";
-  
   document.getElementById("search").oninput = renderTickets;
   document.getElementById("groupFilter").onchange = renderTickets;
-  document.getElementById("statusFilter").onchange = renderTickets;
-  
-  ticketsBody.onclick = onRowClick;
-  document.getElementById("saveTicketBtn").onclick = saveTicket;
-  document.getElementById("addReplyBtn").onclick = addReply;
-
   document.getElementById("groupSelect").onchange = loadSelectedGroup;
   document.getElementById("addEmailBtn").onclick = addEmailToList;
   document.getElementById("saveGroupBtn").onclick = saveGroupEmails;
+  document.getElementById("saveTicketBtn").onclick = saveTicket;
+  document.getElementById("addReplyBtn").onclick = addReply;
+  document.getElementById("ticketsBody").onclick = onRowClick;
+
+  loadTickets();
+  loadSelectedGroup();
 }
 
-/* REAL-TIME TICKETS */
+/* REAL-TIME SYNC */
 function loadTickets() {
   const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
   onSnapshot(q, (snap) => {
     allTickets = snap.docs.map(ds => ({ id: ds.id, ...ds.data() }));
     renderTickets();
     updateAnalytics(allTickets);
-    listStatus.textContent = `Last update: ${new Date().toLocaleTimeString()}`;
+    document.getElementById("listStatus").textContent = `Live Sync: ${new Date().toLocaleTimeString()}`;
   });
 }
 
 function renderTickets() {
   const term = document.getElementById("search").value.toLowerCase();
   const gfilt = document.getElementById("groupFilter").value;
-  const sfilt = document.getElementById("statusFilter").value;
-
   const filtered = allTickets.filter(t => {
     if(gfilt && t.group !== gfilt) return false;
-    if(sfilt && t.status !== sfilt) return false;
-    if(term && !JSON.stringify(t).toLowerCase().includes(term)) return false;
+    if(term && !t.summary.toLowerCase().includes(term)) return false;
     return true;
   });
 
-  ticketsBody.innerHTML = filtered.map((t, i) => `
-    <tr data-id="${t.id}" class="${t.id === selectedTicketId ? 'selected-row' : ''}">
+  document.getElementById("ticketsBody").innerHTML = filtered.map((t, i) => `
+    <tr data-id="${t.id}" style="${t.id === selectedTicketId ? 'background:#edf2f7;' : ''}">
       <td>${i+1}</td>
-      <td>${t.summary || ''}</td>
-      <td>${t.group}</td>
+      <td>${t.summary}</td>
       <td>${statusPill(t.status)}</td>
-      <td>${t.requesterName || t.requesterEmail}</td>
       <td>${formatDate(t.createdAt)}</td>
     </tr>
   `).join("");
 }
 
-/* ANALYTICS LOGIC */
+/* ANALYTICS */
 function updateAnalytics(tickets) {
   const total = tickets.length;
   const active = tickets.filter(t => t.status !== 'closed').length;
@@ -378,53 +335,49 @@ function updateAnalytics(tickets) {
   document.getElementById('statClosed').textContent = closed;
 
   const groups = ["IT", "Maintenance", "Front Office", "Nurse"];
-  const container = document.getElementById('groupStatsContainer');
-  container.innerHTML = groups.map(g => {
+  document.getElementById('groupStatsContainer').innerHTML = groups.map(g => {
     const count = tickets.filter(t => t.group === g).length;
     const pct = total > 0 ? (count / total) * 100 : 0;
     return `
-      <div style="margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:3px;">
-          <span>${g}</span><span>${count}</span>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:4px;">
+          <span>${g}</span><strong>${count}</strong>
         </div>
-        <div style="height:8px; background:#edf2f7; border-radius:4px; overflow:hidden;">
-          <div style="width:${pct}%; height:100%; background:var(--brand); transition:width 0.5s;"></div>
+        <div style="height:8px; background:#f1f5f9; border-radius:4px; overflow:hidden;">
+          <div style="width:${pct}%; height:100%; background:var(--brand); transition:width 0.6s ease;"></div>
         </div>
-      </div>
-    `;
+      </div>`;
   }).join("");
 }
 
-/* TICKET SELECTION & ACTIONS */
-function onRowClick(e) {
+/* TICKET DETAIL ACTIONS */
+async function onRowClick(e) {
   const tr = e.target.closest("tr[data-id]");
   if(!tr) return;
-  const id = tr.dataset.id;
-  const ticket = allTickets.find(t => t.id === id);
-  if(ticket) {
-    selectedTicketId = id;
-    detailsPlaceholder.classList.add("hidden");
-    ticketEditBlock.classList.remove("hidden");
-    
-    document.getElementById("statusInput").value = ticket.status || "open";
-    document.getElementById("priorityInput").value = ticket.priority || "medium";
-    document.getElementById("summaryInput").value = ticket.summary;
-    loadComments(id);
-    renderTickets();
-  }
+  selectedTicketId = tr.dataset.id;
+  const t = allTickets.find(x => x.id === selectedTicketId);
+  
+  document.getElementById("detailsPlaceholder").classList.add("hidden");
+  document.getElementById("ticketEditBlock").classList.remove("hidden");
+  document.getElementById("statusInput").value = t.status || "open";
+  document.getElementById("priorityInput").value = t.priority || "medium";
+  document.getElementById("summaryInput").value = t.summary;
+  loadComments(selectedTicketId);
+  renderTickets();
 }
 
 async function saveTicket() {
-  if(!selectedTicketId) return;
-  const status = document.getElementById("statusInput").value;
-  const priority = document.getElementById("priorityInput").value;
-  await updateDoc(doc(db, "tickets", selectedTicketId), { status, priority, updatedAt: serverTimestamp() });
-  document.getElementById("formStatus").textContent = "Updated!";
+  await updateDoc(doc(db, "tickets", selectedTicketId), {
+    status: document.getElementById("statusInput").value,
+    priority: document.getElementById("priorityInput").value,
+    updatedAt: serverTimestamp()
+  });
+  document.getElementById("formStatus").textContent = "Saved!";
 }
 
 async function addReply() {
   const msg = document.getElementById("replyInput").value.trim();
-  if(!msg || !selectedTicketId) return;
+  if(!msg) return;
   await addDoc(collection(db, "tickets", selectedTicketId, "comments"), {
     message: msg,
     authorEmail: currentUser.email,
@@ -440,33 +393,28 @@ async function loadComments(id) {
   const snap = await getDocs(q);
   document.getElementById("commentsList").innerHTML = snap.docs.map(d => {
     const c = d.data();
-    return `<div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:4px;">
-      <small><b>${c.authorName}</b> • ${formatDate(c.createdAt)}</small><br>${c.message}
+    return `<div style="margin-bottom:10px; border-bottom:1px solid #f1f5f9; padding-bottom:5px;">
+      <small><strong>${c.authorName}</strong> • ${formatDate(c.createdAt)}</small><br>${c.message}
     </div>`;
-  }).join("") || "No messages yet.";
+  }).join("") || "No replies yet.";
 }
 
 /* GROUP EMAIL LOGIC */
 async function loadSelectedGroup() {
   const group = document.getElementById("groupSelect").value;
-  const docSnap = await getDocs(collection(db, "ticket_groups")); 
-  // Simplified for brevity - in production target specific doc
+  const snap = await getDocs(collection(db, "ticket_groups"));
   groupEmailList = [];
-  docSnap.forEach(d => { if(d.id === group) groupEmailList = d.data().emails || []; });
+  snap.forEach(d => { if(d.id === group) groupEmailList = d.data().emails || []; });
   renderEmailChips();
 }
 
 function renderEmailChips() {
-  const container = document.getElementById("emailChipContainer");
-  container.innerHTML = groupEmailList.map(email => `
+  document.getElementById("emailChipContainer").innerHTML = groupEmailList.map(email => `
     <span class="chip">${email}<button onclick="removeEmail('${email}')">×</button></span>
   `).join("") || "No members.";
 }
 
-window.removeEmail = (email) => {
-  groupEmailList = groupEmailList.filter(e => e !== email);
-  renderEmailChips();
-};
+window.removeEmail = (e) => { groupEmailList = groupEmailList.filter(x => x !== e); renderEmailChips(); };
 
 function addEmailToList() {
   const email = document.getElementById("newEmailInput").value.trim();
@@ -480,16 +428,16 @@ function addEmailToList() {
 async function saveGroupEmails() {
   const group = document.getElementById("groupSelect").value;
   await setDoc(doc(db, "ticket_groups", group), { emails: groupEmailList, updatedAt: serverTimestamp() });
-  document.getElementById("groupStatus").textContent = "Group updated!";
+  document.getElementById("groupStatus").textContent = "Members Updated!";
+  setTimeout(() => document.getElementById("groupStatus").textContent="", 3000);
 }
 
-/* HELPERS */
 function statusPill(s) {
   const cls = s === 'closed' ? 'pill-closed' : (s === 'in-progress' ? 'pill-progress' : 'pill-open');
   return `<span class="pill ${cls}">${s.toUpperCase()}</span>`;
 }
 function formatDate(v) { if(!v) return "..."; let d = v.toDate ? v.toDate() : new Date(v); return d.toLocaleDateString(); }
-
 </script>
+
 </body>
 </html>
