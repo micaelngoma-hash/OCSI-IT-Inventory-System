@@ -30,13 +30,19 @@ h1{margin:0 0 6px;font-size:1.4rem;}
 <body>
 <div class="topbar"><div><strong>OCSI IT Inventory</strong> – Device Details</div><div id="who">Checking session…</div></div>
 <div class="layout">
-<aside class="sidebar" id="sidebar-root"></aside>
+<aside class="sidebar" id="sidebar-root">
+    <nav style="display:flex; flex-direction:column; gap:10px;">
+        <a href="index.html" style="color:white; text-decoration:none;">📊 Dashboard</a>
+        <a href="inventory-list.html" style="color:white; text-decoration:none;">💻 Inventory</a>
+        <a href="scan.html" style="color:white; text-decoration:none;">📱 QR Scanner</a>
+    </nav>
+</aside>
 <main class="content">
 <h1 id="title">Device</h1><div class="sub" id="subtitle">Loading device…</div>
 <div class="toolbar">
 <a href="scan.html" class="btn btn-success">📱 Scan Another</a>
 <a id="editLink" class="btn btn-primary">✏️ Edit</a>
-<a id="qrLink" class="btn btn-ghost" target="_blank">📎 QR Code</a>
+<a id="qrLink" class="btn btn-ghost">📎 QR Code</a>
 <button id="btnDelete" class="btn btn-danger" style="display:none;">🗑️ Delete</button>
 <button class="btn btn-ghost" onclick="window.location.href='inventory-list.html'">⬅ Back</button>
 </div>
@@ -83,12 +89,14 @@ watchAuth({
     onReady: async (user, role) => {
         if (!itemId) {
             alert("No Device ID provided.");
+            window.location.href = "inventory-list.html";
             return;
         }
 
-        qrLink.href = `qr-generator.html?id=${encodeURIComponent(itemId)}`;
+        // Use current URL structure to avoid 404s on GitHub Pages
+        qrLink.href = `generate-qr.html?id=${encodeURIComponent(itemId)}`;
         
-        // UI Permissions
+        // UI Permissions based on role
         if (role === "viewer") { 
             editLink.style.display = "none"; 
             btnDelete.style.display = "none";
@@ -97,52 +105,48 @@ watchAuth({
             btnDelete.style.display = "inline-flex";
         }
 
-        // Fetch Data
-        const snap = await getDoc(doc(db, "items", itemId));
-        if (snap.exists()) {
-            const d = snap.data();
-            
-            // Render Fields
-            document.getElementById("title").textContent = d.deviceName || d.assetId || "Unnamed Device";
-            document.getElementById("subtitle").textContent = d.assetType || "Hardware Item";
-            document.getElementById("f_assetId").textContent = d.assetId || "–";
-            document.getElementById("f_deviceName").textContent = d.deviceName || "–";
-            document.getElementById("f_assetType").textContent = d.assetType || "–";
-            document.getElementById("f_manufacturer").textContent = d.manufacturer || "–";
-            document.getElementById("f_serialNumber").textContent = d.serialNumber || "–";
-            document.getElementById("f_status").textContent = d.status || "–";
-            document.getElementById("f_assignedTo").textContent = d.assignedTo || "–";
-            document.getElementById("f_department").textContent = d.department || "–";
-            document.getElementById("f_location").textContent = d.location || "–";
-            document.getElementById("f_buildingFloor").textContent = d.buildingFloor || "–";
-            document.getElementById("f_ipAddress").textContent = d.ipAddress || "–";
-            document.getElementById("f_macAddress").textContent = d.macAddress || "–";
-            document.getElementById("f_osVersion").textContent = d.osVersion || "–";
-            document.getElementById("f_notes").textContent = d.notes || "No notes recorded.";
+        try {
+            // Updated to "items" collection
+            const snap = await getDoc(doc(db, "items", itemId));
+            if (snap.exists()) {
+                const d = snap.data();
+                
+                // Map fields exactly as seen in Firestore
+                document.getElementById("title").textContent = d.deviceName || d.assetId || "Unnamed Device";
+                document.getElementById("subtitle").textContent = d.assetType || "Hardware Item";
+                document.getElementById("f_assetId").textContent = d.assetId || "–";
+                document.getElementById("f_deviceName").textContent = d.deviceName || "–";
+                document.getElementById("f_assetType").textContent = d.assetType || "–";
+                document.getElementById("f_manufacturer").textContent = d.manufacturer || "–";
+                document.getElementById("f_serialNumber").textContent = d.macAddress || "–"; // Assuming Mac is serial or needs mapping
+                document.getElementById("f_status").textContent = d.status || "–";
+                document.getElementById("f_assignedTo").textContent = d.assignedTo || "–";
+                document.getElementById("f_department").textContent = d.department || "–";
+                document.getElementById("f_location").textContent = d.location || "–";
+                document.getElementById("f_buildingFloor").textContent = d.buildingFloor || "–";
+                document.getElementById("f_ipAddress").textContent = d.ipAddress || "–";
+                document.getElementById("f_macAddress").textContent = d.macAddress || "–";
+                document.getElementById("f_osVersion").textContent = d.osVersion || "–";
+                document.getElementById("f_notes").textContent = d.notes || "No notes recorded.";
 
-            // LOG THE VIEW ACTION (Updates Audit Log)
-            await logAudit("view", d.assetId || itemId, `Viewed device details via dashboard/scan.`);
+                await logAudit("view", d.assetId || itemId, `Viewed device details.`);
 
-            // DELETE LOGIC
-            btnDelete.onclick = async () => {
-                if (confirm(`Are you sure you want to delete ${d.assetId}? This cannot be undone.`)) {
-                    try {
-                        await deleteDoc(doc(db, "items", itemId));
-                        
-                        // LOG THE DELETE ACTION
-                        await logAudit("delete", d.assetId || itemId, `Permanently removed device from inventory.`);
-                        
-                        alert("Device deleted successfully.");
-                        location.href = "inventory-list.html";
-                    } catch (err) {
-                        console.error(err);
-                        alert("Error deleting device. Check permissions.");
+                btnDelete.onclick = async () => {
+                    if (confirm(`Delete ${d.assetId || 'this device'}?`)) {
+                        try {
+                            await deleteDoc(doc(db, "items", itemId));
+                            await logAudit("delete", d.assetId || itemId, `Deleted device.`);
+                            alert("Deleted.");
+                            location.href = "inventory-list.html";
+                        } catch (err) { alert("Error deleting."); }
                     }
-                }
-            };
-
-        } else {
-            document.getElementById("subtitle").innerHTML = "<b style='color:red;'>Device not found in database.</b>";
+                };
+            } else {
+                document.getElementById("subtitle").innerHTML = "<b style='color:red;'>Device not found in 'items' collection.</b>";
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById("subtitle").textContent = "Error loading data.";
         }
     }
 });
