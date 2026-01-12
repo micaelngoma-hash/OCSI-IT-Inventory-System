@@ -28,7 +28,6 @@ export const IT_EMAILS = ["micael@ocsi.school","support@ocsi.school"];
 
 /**
  * LOG AUDIT FUNCTION
- * Call this whenever a change is made: logAudit("update", "OCSI-101", "Changed status to Repair")
  */
 export async function logAudit(action, targetId, details) {
   try {
@@ -36,7 +35,7 @@ export async function logAudit(action, targetId, details) {
     if (!user) return;
     await addDoc(collection(db, "audits"), {
       userEmail: user.email,
-      action: action.toLowerCase(), // create, update, delete, login
+      action: action.toLowerCase(),
       targetId: targetId || "N/A",
       details: details || "",
       timestamp: serverTimestamp()
@@ -46,21 +45,34 @@ export async function logAudit(action, targetId, details) {
   }
 }
 
-export function watchAuth({allowedRoles=["admin","it","viewer"], whoEl, onReady} = {}){
-  return onAuthStateChanged(auth, async user=>{
+/**
+ * UPDATED WATCH AUTH
+ * Maintains existing Admin login while allowing Tickets bypass.
+ */
+export function watchAuth({allowedRoles=["admin","it","viewer","staff"], whoEl, onReady} = {}){
+  return onAuthStateChanged(auth, async user => {
+    const isTicketsPage = window.location.pathname.includes("tickets.html");
+
     if(!user){
-      location.href = "login.html";
+      // Only redirect if NOT on the tickets page. 
+      // This allows the passwordless modal on tickets.html to function.
+      if(!isTicketsPage) {
+        location.href = "login.html";
+      } else {
+        if(onReady) onReady(null, null);
+      }
       return;
     }
 
     const userRef = doc(db,"users",user.uid);
     const snap    = await getDoc(userRef);
-    let role = "viewer";
+    let role = "staff"; // Default role for ticket system users
 
     if(snap.exists()){
-      role = snap.data().role || "viewer";
+      role = snap.data().role || "staff";
     } else {
       const email = user.email || "";
+      // Check if user should be Admin or IT based on hardcoded emails
       if(email === SUPER_ADMIN_EMAIL) role = "admin";
       else if(IT_EMAILS.includes(email)) role = "it";
 
@@ -74,13 +86,22 @@ export function watchAuth({allowedRoles=["admin","it","viewer"], whoEl, onReady}
       await logAudit("create", email, "New user profile initialized.");
     }
 
+    // Access control: If user role isn't allowed for this specific page
     if(!allowedRoles.includes(role)){
       alert("Access denied.");
       location.href = "login.html";
       return;
     }
 
-    if(whoEl) whoEl.innerHTML = `${user.email} <span class="badge">${role}</span>`;
+    // Update UI Header
+    if(whoEl) {
+      whoEl.innerHTML = `
+        ${user.email} 
+        <span class="badge" style="background:#4a5568; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-left:5px;">
+          ${role}
+        </span>`;
+    }
+    
     if(onReady) onReady(user, role);
   });
 }
@@ -95,5 +116,6 @@ export async function doLogout(){
   const email = auth.currentUser?.email;
   if(email) await logAudit("logout", email, "User logged out");
   await signOut(auth);
-  location.href = "login.html";
+  // Redirect back to login.html or tickets.html based on context
+  location.href = window.location.pathname.includes("tickets.html") ? "tickets.html" : "login.html";
 }
