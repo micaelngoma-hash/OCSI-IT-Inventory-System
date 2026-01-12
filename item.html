@@ -78,7 +78,6 @@ import { doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12
 
 const params = new URLSearchParams(location.search);
 const itemId = params.get("id");
-const qrLink = document.getElementById("qrLink");
 const editLink = document.getElementById("editLink");
 const btnDelete = document.getElementById("btnDelete");
 
@@ -92,13 +91,8 @@ watchAuth({
             return;
         }
 
-        // Get the directory path for the current repository
         const basePath = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
         
-        // Dynamic Links that work with GitHub Pages Subfolders
-        qrLink.href = `${basePath}generate-qr.html?id=${encodeURIComponent(itemId)}`;
-        
-        // UI Permissions based on role
         if (role === "viewer") { 
             editLink.style.display = "none"; 
             btnDelete.style.display = "none";
@@ -108,13 +102,11 @@ watchAuth({
         }
 
         try {
-            // Updated to "items" collection
             const snap = await getDoc(doc(db, "items", itemId));
             
             if (snap.exists()) {
                 const d = snap.data();
                 
-                // Map fields from Firestore
                 document.getElementById("title").textContent = d.deviceName || d.assetId || "Unnamed Device";
                 document.getElementById("subtitle").textContent = d.assetType || "Hardware Item";
                 document.getElementById("f_assetId").textContent = d.assetId || "–";
@@ -143,13 +135,12 @@ watchAuth({
                             location.href = "inventory-list.html";
                         } catch (err) { 
                             console.error("Delete Error:", err);
-                            alert("Error deleting device. Check console for details."); 
+                            alert("Error deleting device."); 
                         }
                     }
                 };
             } else {
                 document.getElementById("subtitle").innerHTML = "<b style='color:red;'>Device not found in database.</b>";
-                qrLink.style.display = "none";
                 editLink.style.display = "none";
             }
         } catch (err) {
