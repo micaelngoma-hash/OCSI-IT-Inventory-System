@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OCSI Service Request – Admin Tickets</title>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root{
       --red1:#c53030;
@@ -28,7 +30,7 @@
        ====================================== */
     body{
       margin:0;
-      padding-top:0; /* no offset needed for Option B */
+      padding-top:0;
       font-family:system-ui,-apple-system,Segoe UI,sans-serif;
       background:#f7fafc;
       color:#1a202c;
@@ -118,6 +120,35 @@
     .subtitle{ margin:0 0 14px; font-size:.9rem; color:#4a5568; }
 
     /* ==============================
+       ANALYTICS SECTION
+       ============================== */
+    .analytics-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .chart-container {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      height: 180px;
+      position: relative;
+    }
+    .chart-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: block;
+    }
+    @media(max-width: 800px) {
+      .analytics-row { grid-template-columns: 1fr; }
+    }
+
+    /* ==============================
        TOOLBAR
        ============================== */
     .toolbar{
@@ -171,13 +202,13 @@
     .btn-primary{ background:var(--brand); color:white; }
 
     /* ======================================
-       TICKET LIST PANEL (scroll inside)
+       TICKET LIST PANEL
        ====================================== */
     .table-wrap{
       border-radius:10px;
       border:1px solid var(--border);
       overflow-y:auto;
-      max-height:430px; /* scroll height */
+      max-height:430px;
       position:relative;
     }
 
@@ -199,7 +230,7 @@
       color:#4b5563;
       font-weight:600;
       position:sticky;
-      top:0;    /* sticks to top of panel, not page */
+      top:0;
       z-index:10;
     }
 
@@ -252,7 +283,6 @@
       resize:vertical;
     }
 
-    /* COMMENTS */
     .comment-list{
       max-height:220px;
       overflow:auto;
@@ -264,7 +294,6 @@
       margin-top:2px;
     }
 
-    /* GROUP EMAIL CHIPS */
     .chip{
       display:inline-flex;
       align-items:center;
@@ -288,13 +317,9 @@
 
 <body>
 
-<!-- ======================================
-     STICKY HEADER
-     ====================================== -->
 <header class="hero">
   <div class="hero-left">
     <div class="hero-title">OCSI Service Request</div>
-
     <nav class="hero-menu">
       <a href="tickets.html">Requester view</a>
     </nav>
@@ -306,16 +331,27 @@
   </div>
 </header>
 
-<!-- ======================================
-     MAIN CONTENT
-     ====================================== -->
 <main class="wrap">
   <section class="card-shell">
 
     <h1>Tickets (Admin view)</h1>
     <p class="subtitle">View and manage all service requests from staff. Update status, assign tickets, and reply to the requester.</p>
 
-    <!-- Toolbar -->
+    <div class="analytics-row">
+      <div class="chart-container">
+        <span class="chart-label">Tickets by Group</span>
+        <canvas id="groupChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <span class="chart-label">Priority Split</span>
+        <canvas id="priorityChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <span class="chart-label">Workload Status</span>
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+
     <div class="toolbar">
       <div class="search-box">
         <span>🔍</span>
@@ -344,9 +380,6 @@
 
     <p id="listStatus" class="small-text">Loading tickets…</p>
 
-    <!-- ======================================
-         SCROLLING TICKET LIST PANEL (Option B)
-         ====================================== -->
     <section class="panel">
       <h2>Ticket list</h2>
 
@@ -374,9 +407,6 @@
 
     <p class="small-text">Click a ticket in the list above to see details, update status, and reply.</p>
 
-    <!-- ======================================
-         TICKET DETAILS + REPLIES
-         ====================================== -->
     <section class="panel">
       <h2>Ticket details &amp; replies</h2>
 
@@ -466,14 +496,9 @@
 
     </section>
 
-    <!-- ======================================
-         GROUP EMAIL LIST
-         ====================================== -->
     <section class="panel">
       <h2>Group notification members</h2>
-
       <p class="muted">Select a group, add/remove email addresses, and save the distribution list.</p>
-
       <div style="margin-bottom:10px;">
         <label class="field-label">Select group</label>
         <select id="groupSelect" class="field-select" style="max-width:250px;">
@@ -483,28 +508,21 @@
           <option value="Nurse">Nurse</option>
         </select>
       </div>
-
       <div>
         <div class="field-label">Group members</div>
         <div id="emailChipContainer" style="min-height:40px;"></div>
       </div>
-
       <div style="margin-top:10px;display:flex;gap:6px;align-items:center;">
         <input id="newEmailInput" class="field-input" placeholder="Enter email address"/>
         <button id="addEmailBtn" class="action-btn primary" type="button">➕ Add</button>
       </div>
-
       <button id="saveGroupBtn" class="btn btn-ghost" type="button" style="margin-top:12px;">💾 Save group list</button>
-
       <div id="groupStatus" class="status-bar"></div>
     </section>
 
   </section>
 </main>
 
-<!-- ======================================
-     FULL JAVASCRIPT (unchanged logic)
-     ====================================== -->
 <script type="module">
 import { db, watchAuth } from "./firebase.js";
 import {
@@ -512,129 +530,139 @@ import {
   serverTimestamp, query, orderBy, limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* DOM ELEMENTS */
-const whoEl              = document.getElementById("who");
-const logoutBtn          = document.getElementById("logoutBtn");
-const ticketsBody        = document.getElementById("ticketsBody");
-const listStatus         = document.getElementById("listStatus");
-const detailsHint        = document.getElementById("detailsHint");
-const detailsPlaceholder = document.getElementById("detailsPlaceholder");
-
-const searchEl        = document.getElementById("search");
-const groupFilterEl   = document.getElementById("groupFilter");
-const statusFilterEl  = document.getElementById("statusFilter");
-const newTicketBtn    = document.getElementById("newTicketBtn");
-
-const ticketEditBlock = document.getElementById("ticketEditBlock");
-const groupInput      = document.getElementById("groupInput");
-const statusInput     = document.getElementById("statusInput");
-const priorityInput   = document.getElementById("priorityInput");
-const assigneeInput   = document.getElementById("assigneeInput");
-
-const assignMeBtn     = document.getElementById("assignMeBtn");
-const unassignBtn     = document.getElementById("unassignBtn");
-
-const summaryInput     = document.getElementById("summaryInput");
-const descriptionInput = document.getElementById("descriptionInput");
-const locationInput    = document.getElementById("locationInput");
-const dueDateInput     = document.getElementById("dueDateInput");
-const urgencyInput     = document.getElementById("urgencyInput");
-
-const saveTicketBtn    = document.getElementById("saveTicketBtn");
-const formStatus       = document.getElementById("formStatus");
-
-const commentsList = document.getElementById("commentsList");
-const replyInput   = document.getElementById("replyInput");
-const addReplyBtn  = document.getElementById("addReplyBtn");
-
-const groupSelect       = document.getElementById("groupSelect");
-const emailChipContainer= document.getElementById("emailChipContainer");
-const newEmailInput     = document.getElementById("newEmailInput");
-const addEmailBtn       = document.getElementById("addEmailBtn");
-const saveGroupBtn      = document.getElementById("saveGroupBtn");
-const groupStatus       = document.getElementById("groupStatus");
-
 /* STATE */
 let currentUser = null;
 let currentRole = "viewer";
 let allTickets = [];
 let selectedTicketId = null;
-
 let groupEmailList = [];
+let charts = {}; // Store chart instances
 
 const AGENT_ROLES = ["admin","it"];
 const VALID_STATUSES=["open","in-progress","closed"];
 
+/* DOM ELEMENTS */
+const whoEl = document.getElementById("who");
+const logoutBtn = document.getElementById("logoutBtn");
+const ticketsBody = document.getElementById("ticketsBody");
+const listStatus = document.getElementById("listStatus");
+const detailsHint = document.getElementById("detailsHint");
+const detailsPlaceholder = document.getElementById("detailsPlaceholder");
+const searchEl = document.getElementById("search");
+const groupFilterEl = document.getElementById("groupFilter");
+const statusFilterEl = document.getElementById("statusFilter");
+const newTicketBtn = document.getElementById("newTicketBtn");
+const ticketEditBlock = document.getElementById("ticketEditBlock");
+const groupInput = document.getElementById("groupInput");
+const statusInput = document.getElementById("statusInput");
+const priorityInput = document.getElementById("priorityInput");
+const assigneeInput = document.getElementById("assigneeInput");
+const assignMeBtn = document.getElementById("assignMeBtn");
+const unassignBtn = document.getElementById("unassignBtn");
+const summaryInput = document.getElementById("summaryInput");
+const descriptionInput = document.getElementById("descriptionInput");
+const locationInput = document.getElementById("locationInput");
+const dueDateInput = document.getElementById("dueDateInput");
+const urgencyInput = document.getElementById("urgencyInput");
+const saveTicketBtn = document.getElementById("saveTicketBtn");
+const formStatus = document.getElementById("formStatus");
+const commentsList = document.getElementById("commentsList");
+const replyInput = document.getElementById("replyInput");
+const addReplyBtn = document.getElementById("addReplyBtn");
+const groupSelect = document.getElementById("groupSelect");
+const emailChipContainer = document.getElementById("emailChipContainer");
+const newEmailInput = document.getElementById("newEmailInput");
+const addEmailBtn = document.getElementById("addEmailBtn");
+const saveGroupBtn = document.getElementById("saveGroupBtn");
+const groupStatus = document.getElementById("groupStatus");
+
 /* LOGOUT */
-logoutBtn.addEventListener("click",()=>{
-  window.location.href="login.html";
-});
+logoutBtn.addEventListener("click",()=>{ window.location.href="login.html"; });
 
 /* AUTH WATCHER */
 watchAuth({
   allowedRoles:["admin","it","viewer"],
   whoEl,
   onReady: async (user,role)=>{
-    currentUser=user;
-    currentRole=role;
-
+    currentUser=user; currentRole=role;
     if(!user || !AGENT_ROLES.includes(role)){
       alert("This page is for IT/Admin only.");
       window.location.href="tickets.html";
       return;
     }
-
     whoEl.textContent = `${user.email} ${role}`;
-
     newTicketBtn.addEventListener("click",()=>window.location.href="submit-request.html");
-
     searchEl.addEventListener("input",renderTickets);
     groupFilterEl.addEventListener("change",renderTickets);
     statusFilterEl.addEventListener("change",renderTickets);
     ticketsBody.addEventListener("click",onRowClick);
-
     saveTicketBtn.addEventListener("click",saveTicket);
     addReplyBtn.addEventListener("click",addReply);
-
-    assignMeBtn.addEventListener("click",()=>{
-      assigneeInput.value=currentUser.displayName||currentUser.email;
-    });
-
-    unassignBtn.addEventListener("click",()=>{
-      assigneeInput.value="Unassigned";
-    });
-
+    assignMeBtn.addEventListener("click",()=>{ assigneeInput.value=currentUser.displayName||currentUser.email; });
+    unassignBtn.addEventListener("click",()=>{ assigneeInput.value="Unassigned"; });
     groupSelect.addEventListener("change",loadSelectedGroup);
     addEmailBtn.addEventListener("click",addEmailToList);
     saveGroupBtn.addEventListener("click",saveGroupEmails);
-
     ticketEditBlock.classList.add("hidden");
-
     await loadTickets();
     await loadSelectedGroup();
   }
 });
 
+/* ANALYTICS LOGIC */
+function updateAnalytics(data) {
+  const counts = {
+    group: { IT:0, Maintenance:0, "Front Office":0, Nurse:0 },
+    priority: { high:0, medium:0, low:0 },
+    status: { open:0, "in-progress":0, closed:0 }
+  };
+
+  data.forEach(t => {
+    if(counts.group[t.group] !== undefined) counts.group[t.group]++;
+    const p = (t.priority || "medium").toLowerCase();
+    if(counts.priority[p] !== undefined) counts.priority[p]++;
+    const s = (t.status || "open").toLowerCase();
+    if(counts.status[s] !== undefined) counts.status[s]++;
+  });
+
+  // Destroy existing charts to avoid overlay issues
+  Object.values(charts).forEach(c => c.destroy());
+
+  const chartOptions = { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } };
+
+  charts.group = new Chart(document.getElementById('groupChart'), {
+    type: 'bar',
+    data: { labels: Object.keys(counts.group), datasets: [{ data: Object.values(counts.group), backgroundColor: '#3b82f6' }] },
+    options: chartOptions
+  });
+
+  charts.priority = new Chart(document.getElementById('priorityChart'), {
+    type: 'doughnut',
+    data: { labels: ['High','Med','Low'], datasets: [{ data: [counts.priority.high, counts.priority.medium, counts.priority.low], backgroundColor: ['#ef4444', '#f59e0b', '#10b981'] }] },
+    options: { ...chartOptions, cutout: '70%' }
+  });
+
+  charts.status = new Chart(document.getElementById('statusChart'), {
+    type: 'bar',
+    data: { labels: ['Open','Active','Done'], datasets: [{ data: [counts.status.open, counts.status["in-progress"], counts.status.closed], backgroundColor: '#6366f1' }] },
+    options: { ...chartOptions, indexAxis: 'y' }
+  });
+}
+
 /* LOAD TICKETS */
 async function loadTickets(){
   listStatus.textContent="Loading tickets…";
-
   try{
     const snap=await getDocs(collection(db,"tickets"));
     allTickets=snap.docs.map(ds=>({id:ds.id,...ds.data()}));
-
     allTickets.sort((a,b)=>{
       const ta=a.createdAt?.toMillis?.()??0;
       const tb=b.createdAt?.toMillis?.()??0;
       return tb-ta;
     });
-
     renderTickets();
     listStatus.textContent=`Showing ${allTickets.length} ticket(s)`;
-
-  }catch(err){
-    listStatus.textContent=err.message;
-  }
+  }catch(err){ listStatus.textContent=err.message; }
 }
 
 /* RENDER TICKET LIST */
@@ -646,25 +674,21 @@ function renderTickets(){
   const rows=allTickets.filter(t=>{
     const group=t.group||"";
     const status=(t.status||"open").toLowerCase();
-
     if(gfilt && group!==gfilt) return false;
     if(sfilt && status!==sfilt) return false;
-
     if(term){
-      const hay=[
-        t.summary,t.description,
-        t.requesterName,t.requesterEmail,t.location
-      ].join(" ").toLowerCase();
+      const hay=[t.summary,t.description,t.requesterName,t.requesterEmail,t.location].join(" ").toLowerCase();
       if(!hay.includes(term)) return false;
     }
     return true;
   });
 
+  updateAnalytics(rows); // Trigger Chart Update
+
   if(!rows.length){
     ticketsBody.innerHTML=`<tr><td colspan="8">No match.</td></tr>`;
     return;
   }
-
   ticketsBody.innerHTML=rows.map((t,i)=>`
     <tr data-id="${t.id}">
       <td>${i+1}</td>
@@ -683,14 +707,8 @@ function renderTickets(){
 function onRowClick(e){
   const tr=e.target.closest("tr[data-id]");
   if(!tr) return;
-
   const id=tr.getAttribute("data-id");
-
-  if(id===selectedTicketId && !ticketEditBlock.classList.contains("hidden")){
-    hideDetails();
-    return;
-  }
-
+  if(id===selectedTicketId && !ticketEditBlock.classList.contains("hidden")){ hideDetails(); return; }
   const ticket=allTickets.find(x=>x.id===id);
   if(ticket) selectTicket(ticket);
 }
@@ -706,136 +724,72 @@ function hideDetails(){
 /* SELECT TICKET */
 function selectTicket(t){
   selectedTicketId=t.id;
-
   detailsHint.textContent=`Ticket ${t.id.slice(0,8)} – ${t.requesterName||t.requesterEmail}`;
   detailsPlaceholder.textContent="";
   ticketEditBlock.classList.remove("hidden");
-
   groupInput.value=t.group||"IT";
   priorityInput.value=t.priority||"medium";
   statusInput.value=VALID_STATUSES.includes(t.status)?t.status:"open";
-
   assigneeInput.value=t.assigneeName||t.assigneeEmail||"Unassigned";
-
   summaryInput.value=t.summary||"";
   descriptionInput.value=t.description||"";
   locationInput.value=t.location||"";
   dueDateInput.value=t.requestedDate||t.requestedCompletionDate||"";
   urgencyInput.value=t.urgency??3;
-
   formStatus.textContent="";
   replyInput.value="";
-
   loadComments(t.id);
 }
 
 /* SAVE TICKET */
 async function saveTicket(){
-  if(!selectedTicketId){
-    formStatus.textContent="Select a ticket first.";
-    return;
-  }
-
+  if(!selectedTicketId){ formStatus.textContent="Select a ticket first."; return; }
   formStatus.textContent="Saving…";
-
   const payload={
-    group:groupInput.value,
-    priority:priorityInput.value,
-    status:statusInput.value,
-    urgency:Number(urgencyInput.value||3),
-    updatedAt:serverTimestamp()
+    group:groupInput.value, priority:priorityInput.value, status:statusInput.value,
+    urgency:Number(urgencyInput.value||3), updatedAt:serverTimestamp()
   };
-
   const raw=assigneeInput.value.trim();
-  if(raw && raw.toLowerCase()!=="unassigned"){
-    payload.assigneeName=raw;
-  } else {
-    payload.assigneeName="";
-    payload.assigneeEmail="";
-    payload.assigneeUid="";
-  }
-
+  if(raw && raw.toLowerCase()!=="unassigned"){ payload.assigneeName=raw; } 
+  else { payload.assigneeName=""; payload.assigneeEmail=""; payload.assigneeUid=""; }
   try{
     await updateDoc(doc(db,"tickets",selectedTicketId),payload);
-
     formStatus.textContent="Saved.";
-
     await loadTickets();
     const t=allTickets.find(x=>x.id===selectedTicketId);
     if(t) selectTicket(t);
-
-  }catch(err){
-    formStatus.textContent=err.message;
-  }
+  }catch(err){ formStatus.textContent=err.message; }
 }
 
 /* COMMENTS */
 async function loadComments(ticketId){
   commentsList.innerHTML="<div class='comment-muted'>Loading…</div>";
-
   try{
-    const q=query(
-      collection(db,"tickets",ticketId,"comments"),
-      orderBy("createdAt","asc"),
-      limit(200)
-    );
-
+    const q=query(collection(db,"tickets",ticketId,"comments"), orderBy("createdAt","asc"), limit(200));
     const snap=await getDocs(q);
     const arr=snap.docs.map(ds=>({id:ds.id,...ds.data()}));
-
-    if(!arr.length){
-      commentsList.innerHTML=`<div class="comment-muted">No replies yet.</div>`;
-      return;
-    }
-
+    if(!arr.length){ commentsList.innerHTML=`<div class="comment-muted">No replies yet.</div>`; return; }
     commentsList.innerHTML=arr.map(c=>`
       <div class="comment">
-        <div class="comment-meta">
-          ${escapeHtml(c.authorName||c.authorEmail||"Unknown")} • ${formatDate(c.createdAt)}
-        </div>
+        <div class="comment-meta">${escapeHtml(c.authorName||c.authorEmail||"Unknown")} • ${formatDate(c.createdAt)}</div>
         <div>${escapeHtml(c.message)}</div>
-      </div>
-    `).join("");
-
-  }catch(err){
-    commentsList.innerHTML=`<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`;
-  }
+      </div>`).join("");
+  }catch(err){ commentsList.innerHTML=`<div class="comment-muted">Failed: ${escapeHtml(err.message)}</div>`; }
 }
 
 async function addReply(){
-  if(!selectedTicketId){
-    alert("Select a ticket first.");
-    return;
-  }
-
+  if(!selectedTicketId){ alert("Select a ticket first."); return; }
   const msg=replyInput.value.trim();
   if(!msg) return;
-
   addReplyBtn.disabled=true;
-
   try{
-    await addDoc(
-      collection(db,"tickets",selectedTicketId,"comments"),
-      {
-        message:msg,
-        authorEmail:currentUser.email,
-        authorName:currentUser.displayName,
-        createdAt:serverTimestamp()
-      }
-    );
-
-    await updateDoc(doc(db,"tickets",selectedTicketId),{
-      updatedAt:serverTimestamp()
+    await addDoc(collection(db,"tickets",selectedTicketId,"comments"), {
+      message:msg, authorEmail:currentUser.email, authorName:currentUser.displayName, createdAt:serverTimestamp()
     });
-
+    await updateDoc(doc(db,"tickets",selectedTicketId),{ updatedAt:serverTimestamp() });
     replyInput.value="";
     await loadComments(selectedTicketId);
-
-  }catch(err){
-    alert(err.message);
-  }finally{
-    addReplyBtn.disabled=false;
-  }
+  }catch(err){ alert(err.message); } finally{ addReplyBtn.disabled=false; }
 }
 
 /* GROUP EMAIL LIST */
@@ -843,74 +797,35 @@ async function loadSelectedGroup(){
   const group=groupSelect.value;
   groupEmailList=[];
   emailChipContainer.innerHTML="Loading...";
-
   try{
     const snap=await getDocs(collection(db,"ticket_groups"));
-    const map={};
-    snap.forEach(ds=>map[ds.id]=ds.data());
-
-    if(map[group] && Array.isArray(map[group].emails)){
-      groupEmailList=[...map[group].emails];
-    }
-
-  }catch(err){
-    groupStatus.textContent="Error loading: "+err.message;
-  }
-
+    const map={}; snap.forEach(ds=>map[ds.id]=ds.data());
+    if(map[group] && Array.isArray(map[group].emails)){ groupEmailList=[...map[group].emails]; }
+  }catch(err){ groupStatus.textContent="Error loading: "+err.message; }
   renderEmailChips();
 }
 
 function renderEmailChips(){
-  if(!groupEmailList.length){
-    emailChipContainer.innerHTML=`<div class="comment-muted">No emails added yet.</div>`;
-    return;
-  }
-
+  if(!groupEmailList.length){ emailChipContainer.innerHTML=`<div class="comment-muted">No emails added yet.</div>`; return; }
   emailChipContainer.innerHTML=groupEmailList.map(email=>`
-    <span class="chip">
-      ${email}
-      <button onclick="removeEmail('${email}')">×</button>
-    </span>
-  `).join("");
+    <span class="chip">${email}<button onclick="removeEmail('${email}')">×</button></span>`).join("");
 }
 
 function addEmailToList(){
   const email=newEmailInput.value.trim();
-
-  if(!email) return;
-  if(!email.includes("@")){
-    alert("Invalid email format.");
-    return;
-  }
-  if(groupEmailList.includes(email)){
-    alert("Already added.");
-    return;
-  }
-
-  groupEmailList.push(email);
-  newEmailInput.value="";
-  renderEmailChips();
+  if(!email || !email.includes("@")){ alert("Invalid email format."); return; }
+  if(groupEmailList.includes(email)){ alert("Already added."); return; }
+  groupEmailList.push(email); newEmailInput.value=""; renderEmailChips();
 }
 
-window.removeEmail=function(email){
-  groupEmailList=groupEmailList.filter(e=>e!==email);
-  renderEmailChips();
-};
+window.removeEmail=function(email){ groupEmailList=groupEmailList.filter(e=>e!==email); renderEmailChips(); };
 
 async function saveGroupEmails(){
   const group=groupSelect.value;
-
   try{
-    await setDoc(doc(db,"ticket_groups",group),{
-      emails:groupEmailList,
-      updatedAt:serverTimestamp()
-    });
-
+    await setDoc(doc(db,"ticket_groups",group),{ emails:groupEmailList, updatedAt:serverTimestamp() });
     groupStatus.textContent=`Saved members for ${group}.`;
-
-  }catch(err){
-    groupStatus.textContent="Error saving: "+err.message;
-  }
+  }catch(err){ groupStatus.textContent="Error saving: "+err.message; }
 }
 
 /* HELPERS */
@@ -920,22 +835,9 @@ function statusPill(s){
   if(st==="in-progress") return `<span class="pill pill-progress">In progress</span>`;
   return `<span class="pill pill-open">Open</span>`;
 }
-
-function formatDate(v){
-  if(!v) return "";
-  let d=v.toDate?.()??v;
-  return d.toLocaleString();
-}
-
-function capitalize(s){
-  return s ? s.charAt(0).toUpperCase()+s.slice(1) : "";
-}
-
-function escapeHtml(s){
-  return String(s||"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
-  })[c]);
-}
+function formatDate(v){ if(!v) return ""; let d=v.toDate?.()??v; return d.toLocaleString(); }
+function capitalize(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : ""; }
+function escapeHtml(s){ return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]); }
 </script>
 
 </body>
